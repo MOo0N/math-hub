@@ -106,8 +106,14 @@ R(myModel);
 ## 四、协作开发规范
 
 1. **分支**：`main` 为可发布分支；功能开发用 `feature/xxx`，修复用 `fix/xxx`。
-2. **每次改动后**：`node --check` 检查改动的 JS 语法 → `python3 build.py` 重建 → 浏览器验证所有模型零错误、关键读数正确。
-3. **数学正确性优先**：几何模型改动须核对读数中的恒等式（如 `AC−BD=0`、`σ²` 计算），不能只看画面。
+2. **每次改动后运行一键门禁**：
+
+   ```bash
+   bash tests/check.sh
+   ```
+
+   它会依次执行：全量 `node --check` → `python3 build.py` 重建 → 逐模型无头渲染（查零运行时错误、读数无 `NaN/undefined`）→ **8 条几何恒等式自动断言** → 锁定/解锁交互测试。任一步失败即以非零码退出。依赖：Python 3 + Node.js + Playwright + Chromium。单独跑某项：`python3 tests/verify.py`（渲染+恒等式）、`python3 tests/test_lock.py`（锁定交互）。报告见 `tests/report.json`，截图见 `tests/shots/`（均为生成物，已 gitignore）。
+3. **数学正确性优先**：几何模型改动须核对读数中的恒等式（如 `AC−BD=0`、`σ²` 计算），不能只看画面。恒等式断言清单维护在 `tests/verify.py` 的 `IDENTITIES`，新增几何模型时同步补充。
 4. **坐标系**：新增几何模型一律 `yUp:true` + 数学坐标，避免重复历史 bug。
 5. **不引入外部依赖**：保持零依赖、单文件可直接部署。
 6. **中文注释与文档**：与现有代码风格一致。
