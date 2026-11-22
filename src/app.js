@@ -243,11 +243,14 @@
                 return '<span><i style="border-color:'+l.c+'"></i>'+l.t+'</span>';
               }).join('')+'</div>'+
               '<div class="mh-zoom">'+
-                '<button id="mh-lock" class="mh-lock" aria-pressed="false" title="锁定画布平移与缩放（节点仍可拖动）">🔓 解锁</button>'+
+                '<button id="mh-lock" class="mh-lock" aria-pressed="true" title="画布已锁定，点击解锁后可编辑">🔒 已锁定</button>'+
                 '<button id="mh-zo">－</button><span class="zlevel" data-mh-z="mh-svg">100%</span><button id="mh-zi">＋</button>'+
               '</div>'+
             '</div>'+
-            '<svg id="mh-svg" class="mh-canvas" viewBox="0 0 '+(m.W||900)+' '+(m.H||600)+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="'+esc(m.title)+'互动演示"></svg>'+
+            '<div class="mh-canvas-wrap">'+
+              '<svg id="mh-svg" class="mh-canvas" viewBox="0 0 '+(m.W||900)+' '+(m.H||600)+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="'+esc(m.title)+'互动演示"></svg>'+
+              '<div class="mh-lock-veil" id="mh-lock-veil" aria-hidden="false"><span class="mh-lock-msg">🔒 画布已锁定 · 点击右上角「解锁」后可编辑</span></div>'+
+            '</div>'+
             '<div class="mh-readout-wrap"><div id="mh-readout" aria-live="polite">准备就绪</div></div>'+
             '<div class="mh-hint">'+(m.interaction||'滚轮缩放，拖动图形空白处平移；拖动关键点观察变化。')+'</div>'+
           '</div>'+
@@ -276,14 +279,19 @@
     document.getElementById('mh-zfit').onclick=function(){currentBoard.resetView();};
     document.getElementById('mh-zin').onclick=function(){currentBoard.zoomAt(1.25);};
     document.getElementById('mh-zout').onclick=function(){currentBoard.zoomAt(0.8);};
-    // 画布锁定开关（每个 Board 实例独立，互不影响）
+    // 画布锁定开关：默认锁定，须手动解锁；每个 Board 实例独立
     var lockBtn=document.getElementById('mh-lock');
-    lockBtn.onclick=function(){
-      var locked=currentBoard.setLocked(!currentBoard.locked);
+    var lockVeil=document.getElementById('mh-lock-veil');
+    function syncLockUI(locked){
       lockBtn.textContent=locked?'🔒 已锁定':'🔓 解锁';
       lockBtn.setAttribute('aria-pressed',locked?'true':'false');
-      lockBtn.title=locked?'点击解锁，恢复画布平移与缩放':'锁定画布平移与缩放（节点仍可拖动）';
+      lockBtn.title=locked?'画布已锁定，点击解锁后可编辑（拖动点位、平移、缩放）':'点击锁定画布，锁定后不可编辑';
+      if(lockVeil){lockVeil.classList.toggle('hidden',!locked);lockVeil.setAttribute('aria-hidden',locked?'false':'true');}
+    }
+    lockBtn.onclick=function(){
+      syncLockUI(currentBoard.setLocked(!currentBoard.locked));
     };
+    syncLockUI(currentBoard.locked); // 初始化：Board 默认锁定
     document.getElementById('mh-done').onchange=function(e){
       done[m.id]=e.target.checked;store.set('done',done);
     };

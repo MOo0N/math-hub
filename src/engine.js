@@ -36,7 +36,7 @@
     this.pan=null;
     this.drag=null;
     this.playing=false;
-    this.locked=false; // 画布锁定：锁定时禁止拖动/缩放（每个 Board 实例独立）
+    this.locked=true; // 画布默认锁定：新建/加载即锁定，须手动解锁后才能编辑（每个 Board 实例独立）
     this.t=0;
     this.speed=1;
     this.reduced=global.matchMedia&&global.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -55,6 +55,7 @@
     if(model.init) model.init(this,this.state);
     this.applyView();
     this.draw();
+    this.svg.classList.toggle('mh-canvas-locked',this.locked);
   }
   Board.prototype._buildLayers=function(){
     var grid=document.createElementNS(NS,'g');
@@ -184,7 +185,7 @@
     if(this.locked)return; // 锁定后禁止复位视图（缩放）
     var b=this.baseView;this.view={x:b.x,y:b.y,w:b.w,h:b.h};this.applyView();
   };
-  /* 画布锁定开关：仅禁止画布平移与缩放；节点/点位仍可拖动编辑。返回当前锁定态 */
+  /* 画布锁定开关：锁定态禁止一切画布编辑（拖点/平移/缩放）；解锁后全部恢复。返回当前锁定态 */
   Board.prototype.setLocked=function(v){
     this.locked=!!v;
     this.drag=null;this.pan=null;
@@ -201,6 +202,7 @@
       self.zoomAt(e.deltaY<0?1.16:1/1.16,self.toView(e));
     },{passive:false});
     svg.addEventListener('pointerdown',function(e){
+      if(self.locked)return; // 锁定态：禁止一切画布编辑（拖点、平移、缩放）
       var w=self.toWorld(e);
       var best=null,bd=1e9;
       // _handles 由最近一次 draw() 收集，随状态更新保持最新
@@ -208,12 +210,12 @@
         var d=dist(w,h.p);if(d<bd){bd=d;best=h;}
       });
       if(best&&bd<(best.r||16)){
-        // 节点/点位：锁定状态下依然可选中并拖动（锁定只针对画布本身）
+        // 节点/点位：拖动命中点
         self.drag=best.name;
         svg.setPointerCapture(e.pointerId);svg.style.cursor='grabbing';
         if(self.model.onDragStart)self.model.onDragStart(self,best.name,w);
-      }else if(!self.locked){
-        // 画布空白区平移：仅未锁定时允许
+      }else{
+        // 画布空白区平移
         var p=self.toView(e);
         self.pan={base:{x:self.view.x,y:self.view.y},anchor:p};
         svg.setPointerCapture(e.pointerId);svg.style.cursor='grabbing';
@@ -221,28 +223,16 @@
     });
     svg.addEventListener('pointermove',function(e){
       if(self.pan){
-        if(!self.locked){
-          var p=self.toView(e),v=self.view;
-          v.x=self.pan.base.x-(p.x-self.pan.anchor.x);
-          v.y=self.pan.base.y-(p.y-self.pan.anchor.y);
-          self.applyView();
-        }
-        return;
+        var p=self.toView(e),v=self.view;
+        v.x=self.pan.base.x-(p.x-self.pan.anchor.x);
+        v.y=self.pan.base.y-(p.y-self.pan.anchor.y);
+        self.applyView();return;
       }
       if(self.drag){
         var w=self.toWorld(e);
         if(self.model.onDrag)self.model.onDrag(self,self.drag,w);
         else if(self.state[self.drag])self.state[self.drag]=w;
         self.draw(); // 拖动后重绘：否则 state 变了但画面/读数不更新
-        return;
-      }
-      // 空闲态：锁定画布时用光标区分「节点可拖(grab) / 画布不可平移(not-allowed)」
-      if(self.locked){
-        var hw=self.toWorld(e),hover=false;
-        (self._handles||[]).forEach(function(h){
-          if(dist(hw,h.p)<(h.r||16))hover=true;
-        });
-        svgCursor(svg,hover?'grab':'not-allowed');
       }
     });
     function end(e){

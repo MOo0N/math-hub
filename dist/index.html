@@ -199,11 +199,26 @@ button{font-family:inherit}
   background:var(--mh-primary);border-color:var(--mh-primary);color:#fff;
 }
 .mh-zoom .zlevel{font-size:11px;color:var(--mh-muted);min-width:38px;text-align:center}
+.mh-canvas-wrap{position:relative}
 .mh-canvas{
   width:100%;height:auto;display:block;background:var(--mh-canvas-bg);
   border:2px dashed var(--mh-line);border-radius:10px;touch-action:none;cursor:grab;
 }
 .mh-canvas.mh-canvas-locked{cursor:not-allowed}
+/* 锁定遮罩：半透明纸色覆盖画布，居中提示「点击解锁」，不拦截指针（逻辑层已禁交互） */
+.mh-lock-veil{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  pointer-events:none;border-radius:10px;background:rgba(251,247,240,.34);
+  border:2px dashed var(--mh-primary-line);z-index:2;transition:opacity .18s;
+}
+:root[data-mh-theme="dark"] .mh-lock-veil{background:rgba(38,32,25,.42)}
+.mh-lock-veil.hidden{display:none}
+.mh-lock-msg{
+  font-family:var(--mh-font-kai);font-size:15px;font-weight:700;color:var(--mh-primary);
+  background:var(--mh-canvas-bg);border:1.5px solid var(--mh-primary-line);
+  border-radius:999px;padding:8px 18px;box-shadow:0 3px 12px rgba(92,40,28,.12);
+  white-space:nowrap;max-width:92%;text-align:center;
+}
 .mh-readout-wrap{padding:8px 4px 2px}
 #mh-readout{
   font-size:12px;background:var(--mh-primary-soft);border:1px solid var(--mh-primary-line);
@@ -316,7 +331,7 @@ button{font-family:inherit}
     this.pan=null;
     this.drag=null;
     this.playing=false;
-    this.locked=false; // 画布锁定：锁定时禁止拖动/缩放（每个 Board 实例独立）
+    this.locked=true; // 画布默认锁定：新建/加载即锁定，须手动解锁后才能编辑（每个 Board 实例独立）
     this.t=0;
     this.speed=1;
     this.reduced=global.matchMedia&&global.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -335,6 +350,7 @@ button{font-family:inherit}
     if(model.init) model.init(this,this.state);
     this.applyView();
     this.draw();
+    this.svg.classList.toggle('mh-canvas-locked',this.locked);
   }
   Board.prototype._buildLayers=function(){
     var grid=document.createElementNS(NS,'g');
@@ -464,7 +480,7 @@ button{font-family:inherit}
     if(this.locked)return; // 锁定后禁止复位视图（缩放）
     var b=this.baseView;this.view={x:b.x,y:b.y,w:b.w,h:b.h};this.applyView();
   };
-  /* 画布锁定开关：仅禁止画布平移与缩放；节点/点位仍可拖动编辑。返回当前锁定态 */
+  /* 画布锁定开关：锁定态禁止一切画布编辑（拖点/平移/缩放）；解锁后全部恢复。返回当前锁定态 */
   Board.prototype.setLocked=function(v){
     this.locked=!!v;
     this.drag=null;this.pan=null;
@@ -481,6 +497,7 @@ button{font-family:inherit}
       self.zoomAt(e.deltaY<0?1.16:1/1.16,self.toView(e));
     },{passive:false});
     svg.addEventListener('pointerdown',function(e){
+      if(self.locked)return; // 锁定态：禁止一切画布编辑（拖点、平移、缩放）
       var w=self.toWorld(e);
       var best=null,bd=1e9;
       // _handles 由最近一次 draw() 收集，随状态更新保持最新
@@ -488,12 +505,12 @@ button{font-family:inherit}
         var d=dist(w,h.p);if(d<bd){bd=d;best=h;}
       });
       if(best&&bd<(best.r||16)){
-        // 节点/点位：锁定状态下依然可选中并拖动（锁定只针对画布本身）
+        // 节点/点位：拖动命中点
         self.drag=best.name;
         svg.setPointerCapture(e.pointerId);svg.style.cursor='grabbing';
         if(self.model.onDragStart)self.model.onDragStart(self,best.name,w);
-      }else if(!self.locked){
-        // 画布空白区平移：仅未锁定时允许
+      }else{
+        // 画布空白区平移
         var p=self.toView(e);
         self.pan={base:{x:self.view.x,y:self.view.y},anchor:p};
         svg.setPointerCapture(e.pointerId);svg.style.cursor='grabbing';
@@ -501,28 +518,16 @@ button{font-family:inherit}
     });
     svg.addEventListener('pointermove',function(e){
       if(self.pan){
-        if(!self.locked){
-          var p=self.toView(e),v=self.view;
-          v.x=self.pan.base.x-(p.x-self.pan.anchor.x);
-          v.y=self.pan.base.y-(p.y-self.pan.anchor.y);
-          self.applyView();
-        }
-        return;
+        var p=self.toView(e),v=self.view;
+        v.x=self.pan.base.x-(p.x-self.pan.anchor.x);
+        v.y=self.pan.base.y-(p.y-self.pan.anchor.y);
+        self.applyView();return;
       }
       if(self.drag){
         var w=self.toWorld(e);
         if(self.model.onDrag)self.model.onDrag(self,self.drag,w);
         else if(self.state[self.drag])self.state[self.drag]=w;
         self.draw(); // 拖动后重绘：否则 state 变了但画面/读数不更新
-        return;
-      }
-      // 空闲态：锁定画布时用光标区分「节点可拖(grab) / 画布不可平移(not-allowed)」
-      if(self.locked){
-        var hw=self.toWorld(e),hover=false;
-        (self._handles||[]).forEach(function(h){
-          if(dist(hw,h.p)<(h.r||16))hover=true;
-        });
-        svgCursor(svg,hover?'grab':'not-allowed');
       }
     });
     function end(e){
@@ -4008,11 +4013,14 @@ button{font-family:inherit}
                 return '<span><i style="border-color:'+l.c+'"></i>'+l.t+'</span>';
               }).join('')+'</div>'+
               '<div class="mh-zoom">'+
-                '<button id="mh-lock" class="mh-lock" aria-pressed="false" title="锁定画布平移与缩放（节点仍可拖动）">🔓 解锁</button>'+
+                '<button id="mh-lock" class="mh-lock" aria-pressed="true" title="画布已锁定，点击解锁后可编辑">🔒 已锁定</button>'+
                 '<button id="mh-zo">－</button><span class="zlevel" data-mh-z="mh-svg">100%</span><button id="mh-zi">＋</button>'+
               '</div>'+
             '</div>'+
-            '<svg id="mh-svg" class="mh-canvas" viewBox="0 0 '+(m.W||900)+' '+(m.H||600)+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="'+esc(m.title)+'互动演示"></svg>'+
+            '<div class="mh-canvas-wrap">'+
+              '<svg id="mh-svg" class="mh-canvas" viewBox="0 0 '+(m.W||900)+' '+(m.H||600)+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="'+esc(m.title)+'互动演示"></svg>'+
+              '<div class="mh-lock-veil" id="mh-lock-veil" aria-hidden="false"><span class="mh-lock-msg">🔒 画布已锁定 · 点击右上角「解锁」后可编辑</span></div>'+
+            '</div>'+
             '<div class="mh-readout-wrap"><div id="mh-readout" aria-live="polite">准备就绪</div></div>'+
             '<div class="mh-hint">'+(m.interaction||'滚轮缩放，拖动图形空白处平移；拖动关键点观察变化。')+'</div>'+
           '</div>'+
@@ -4041,14 +4049,19 @@ button{font-family:inherit}
     document.getElementById('mh-zfit').onclick=function(){currentBoard.resetView();};
     document.getElementById('mh-zin').onclick=function(){currentBoard.zoomAt(1.25);};
     document.getElementById('mh-zout').onclick=function(){currentBoard.zoomAt(0.8);};
-    // 画布锁定开关（每个 Board 实例独立，互不影响）
+    // 画布锁定开关：默认锁定，须手动解锁；每个 Board 实例独立
     var lockBtn=document.getElementById('mh-lock');
-    lockBtn.onclick=function(){
-      var locked=currentBoard.setLocked(!currentBoard.locked);
+    var lockVeil=document.getElementById('mh-lock-veil');
+    function syncLockUI(locked){
       lockBtn.textContent=locked?'🔒 已锁定':'🔓 解锁';
       lockBtn.setAttribute('aria-pressed',locked?'true':'false');
-      lockBtn.title=locked?'点击解锁，恢复画布平移与缩放':'锁定画布平移与缩放（节点仍可拖动）';
+      lockBtn.title=locked?'画布已锁定，点击解锁后可编辑（拖动点位、平移、缩放）':'点击锁定画布，锁定后不可编辑';
+      if(lockVeil){lockVeil.classList.toggle('hidden',!locked);lockVeil.setAttribute('aria-hidden',locked?'false':'true');}
+    }
+    lockBtn.onclick=function(){
+      syncLockUI(currentBoard.setLocked(!currentBoard.locked));
     };
+    syncLockUI(currentBoard.locked); // 初始化：Board 默认锁定
     document.getElementById('mh-done').onchange=function(e){
       done[m.id]=e.target.checked;store.set('done',done);
     };

@@ -192,11 +192,26 @@ button{font-family:inherit}
   background:var(--mh-primary);border-color:var(--mh-primary);color:#fff;
 }
 .mh-zoom .zlevel{font-size:11px;color:var(--mh-muted);min-width:38px;text-align:center}
+.mh-canvas-wrap{position:relative}
 .mh-canvas{
   width:100%;height:auto;display:block;background:var(--mh-canvas-bg);
   border:2px dashed var(--mh-line);border-radius:10px;touch-action:none;cursor:grab;
 }
 .mh-canvas.mh-canvas-locked{cursor:not-allowed}
+/* 锁定遮罩：半透明纸色覆盖画布，居中提示「点击解锁」，不拦截指针（逻辑层已禁交互） */
+.mh-lock-veil{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  pointer-events:none;border-radius:10px;background:rgba(251,247,240,.34);
+  border:2px dashed var(--mh-primary-line);z-index:2;transition:opacity .18s;
+}
+:root[data-mh-theme="dark"] .mh-lock-veil{background:rgba(38,32,25,.42)}
+.mh-lock-veil.hidden{display:none}
+.mh-lock-msg{
+  font-family:var(--mh-font-kai);font-size:15px;font-weight:700;color:var(--mh-primary);
+  background:var(--mh-canvas-bg);border:1.5px solid var(--mh-primary-line);
+  border-radius:999px;padding:8px 18px;box-shadow:0 3px 12px rgba(92,40,28,.12);
+  white-space:nowrap;max-width:92%;text-align:center;
+}
 .mh-readout-wrap{padding:8px 4px 2px}
 #mh-readout{
   font-size:12px;background:var(--mh-primary-soft);border:1px solid var(--mh-primary-line);

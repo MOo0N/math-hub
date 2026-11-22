@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""锁定交互测试：锁定仅禁画布平移/缩放，节点仍可拖动；解锁恢复；实例独立。
+"""锁定交互测试：画布默认锁定且完全不可编辑（拖点/平移/缩放均禁）+ 明确提示；
+解锁后全部恢复；实例间独立。
 
 用法：python3 tests/test_lock.py    退出码 0=通过，2=失败。
 """
@@ -52,54 +53,54 @@ def main():
             if not cond:
                 raise AssertionError(msg)
 
-        check('解锁' in btn.inner_text(), '按钮初始应为解锁态')
+        # ---- 1. 默认锁定态 ----
+        check('已锁定' in btn.inner_text() and btn.get_attribute('aria-pressed') == 'true',
+              '画布应默认锁定（按钮显示已锁定）')
+        check('mh-canvas-locked' in pg.get_attribute('#mh-svg', 'class'), '默认锁定 class 缺失')
+        check(pg.locator('#mh-lock-veil').is_visible(), '默认应显示锁定提示遮罩')
+        check('画布已锁定' in pg.locator('#mh-lock-veil').inner_text(), '锁定提示文案缺失')
 
-        # 未锁定：平移 / 拖点 / 侧栏缩放 / 滚轮 全正常
-        v0 = view(pg); drag_scr(pg, svg2screen(pg, 800, 500), 60, 40)
-        check(v0 != view(pg), '未锁定画布应可平移')
-        pg.click('#mh-zfit'); pg.wait_for_timeout(60)
-        a = handleA_svg(pg); s = svg2screen(pg, a[0], a[1])
-        r0 = readout(pg); drag_scr(pg, s, 50, 40)
-        check(r0 != readout(pg), '未锁定节点应可拖动')
-        pg.click('#mh-zfit'); pg.wait_for_timeout(60)
-        vb = view(pg); pg.click('#mh-zi'); pg.wait_for_timeout(60)
-        check(vb != view(pg), '未锁定侧栏缩放应生效')
-        pg.click('#mh-zfit'); pg.wait_for_timeout(60)
-
-        # 锁定
-        pg.click('#mh-lock'); pg.wait_for_timeout(100)
-        check('已锁定' in btn.inner_text() and btn.get_attribute('aria-pressed') == 'true', '锁定按钮状态错误')
-        check('mh-canvas-locked' in pg.get_attribute('#mh-svg', 'class'), '锁定 class 缺失')
+        # 锁定态：平移 / 拖点 / 侧栏缩放 / 滚轮 全部禁止
         vb = view(pg)
         drag_scr(pg, svg2screen(pg, 800, 500), 60, 40)
         check(vb == view(pg), '锁定时画布平移应被禁止')
-        pg.click('#mh-zi'); pg.click('#mh-zo'); pg.click('#mh-zfit'); pg.wait_for_timeout(60)
-        check(vb == view(pg), '锁定时侧栏缩放应被禁止')
-        c = svg2screen(pg, 450, 300)
-        pg.mouse.move(c['x'], c['y']); pg.mouse.wheel(0, -300); pg.wait_for_timeout(80)
-        check(vb == view(pg), '锁定时滚轮缩放应被禁止')
         a = handleA_svg(pg); s = svg2screen(pg, a[0], a[1])
         r0 = readout(pg); drag_scr(pg, s, 50, 40)
-        check(r0 != readout(pg), '锁定时节点仍应可拖动')
+        check(r0 == readout(pg), '锁定时节点拖动应被禁止（读数不应变化）')
+        pg.click('#mh-zi'); pg.click('#mh-zo'); pg.click('#mh-zfit'); pg.wait_for_timeout(60)
+        check(vb == view(pg), '锁定时侧栏缩放应被禁止')
+        pg.mouse.move(svg2screen(pg, 450, 300)['x'], svg2screen(pg, 450, 300)['y'])
+        pg.mouse.wheel(0, -300); pg.wait_for_timeout(80)
+        check(vb == view(pg), '锁定时滚轮缩放应被禁止')
+        pg.screenshot(path=__import__('os').path.join(SHOTS, 'lock-default.png'), full_page=False)
 
-        # 解锁恢复
+        # ---- 2. 解锁后全部恢复 ----
         pg.click('#mh-lock'); pg.wait_for_timeout(100)
         check('解锁' in btn.inner_text() and btn.get_attribute('aria-pressed') == 'false', '解锁按钮状态错误')
+        check(not pg.locator('#mh-lock-veil').is_visible(), '解锁后遮罩应隐藏')
         vb = view(pg); drag_scr(pg, svg2screen(pg, 800, 500), 60, 40)
         check(vb != view(pg), '解锁后画布平移应恢复')
         pg.click('#mh-zfit'); pg.wait_for_timeout(60)
         vb = view(pg); pg.click('#mh-zi'); pg.wait_for_timeout(60)
-        check(vb != view(pg), '解锁后缩放应恢复')
+        check(vb != view(pg), '解锁后侧栏缩放应恢复')
+        pg.click('#mh-zfit'); pg.wait_for_timeout(60)
+        a = handleA_svg(pg); s = svg2screen(pg, a[0], a[1])
+        r0 = readout(pg); drag_scr(pg, s, 50, 40)
+        check(r0 != readout(pg), '解锁后节点应可拖动')
+        pg.screenshot(path=__import__('os').path.join(SHOTS, 'lock-unlocked.png'), full_page=False)
 
-        # 实例独立
+        # ---- 3. 实例独立：每个新画布默认锁定，互不影响 ----
         pg.evaluate("location.hash='#/m/pythagoras'"); pg.wait_for_timeout(200)
-        check('解锁' in pg.locator('#mh-lock').inner_text(), '新画布应为未锁定')
-        pg.click('#mh-lock'); pg.wait_for_timeout(60)
-        check('已锁定' in pg.locator('#mh-lock').inner_text(), '新画布应可独立锁定')
+        check('已锁定' in pg.locator('#mh-lock').inner_text(), '新画布应默认锁定')
+        check(pg.locator('#mh-lock-veil').is_visible(), '新画布应显示锁定遮罩')
+        pg.click('#mh-lock'); pg.wait_for_timeout(60)   # 解锁勾股
+        check('解锁' in pg.locator('#mh-lock').inner_text(), '新画布应可独立解锁')
         pg.evaluate("location.hash='#/m/cong-hand-equilateral'"); pg.wait_for_timeout(200)
-        check('解锁' in pg.locator('#mh-lock').inner_text(), '切回画布应为独立未锁定态')
+        check('已锁定' in pg.locator('#mh-lock').inner_text(), '切回画布应仍为默认锁定态')
+        pg.click('#mh-lock'); pg.wait_for_timeout(60)   # 再解锁手拉手
+        pg.evaluate("location.hash='#/m/pythagoras'"); pg.wait_for_timeout(200)
+        check('已锁定' in pg.locator('#mh-lock').inner_text(), '切回勾股应重新默认锁定（实例独立）')
 
-        pg.screenshot(path=__import__('os').path.join(SHOTS, 'lock-state.png'), full_page=False)
         check(not errs, '存在运行时错误: %s' % errs[:3])
         b.close()
     print('锁定交互测试: ALL PASS')
