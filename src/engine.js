@@ -226,6 +226,7 @@
         var w=self.toWorld(e);
         if(self.model.onDrag)self.model.onDrag(self,self.drag,w);
         else if(self.state[self.drag])self.state[self.drag]=w;
+        self.draw(); // 拖动后重绘：否则 state 变了但画面/读数不更新
       }
     });
     function end(e){

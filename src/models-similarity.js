@@ -100,7 +100,7 @@
       var r1=AC/BE,r2=dist(C1,E)/EDlen,r3=dist(A,E)/dist(B2,Dd);
       b.readout('AC/BE='+r1.toFixed(3)+'　CE/ED='+r2.toFixed(3)+'　AE/BD='+r3.toFixed(3)+'　（三者相等 → 相似）');
     },
-    onDrag:function(b,n,w){if(n==='E')b.state_E=L(w);}
+    onDrag:function(b,n,w){if(n==='E')b.state_E=w;}
   };
   R(threeEqSame);
 
@@ -220,7 +220,7 @@
       var r1=dist(A,O0)/dist(C1,O0),r2=dist(B2,O0)/dist(Dd,O0),r3=dist(A,B2)/dist(Dd,C1);
       b.readout((s.par?'位似(相似)：':'非位似：')+'OA/OC='+r1.toFixed(3)+'　OB/OD='+r2.toFixed(3)+'　AB/CD='+r3.toFixed(3)+(s.par?'　(相等→△AOB∽△COD)':''));
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else b.state.B=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else b.state.B=w;}
   };
   R(xType);
 
@@ -324,7 +324,7 @@
       var areaABP=area(A,B2,Pp),areaACP=area(A,C1,Pp),BD=dist(B2,D),DC=dist(D,C1);
       b.readout('BD/DC='+(BD/DC).toFixed(3)+'　S△ABP/S△ACP='+(areaABP/areaACP).toFixed(3)+'　（相等 → 燕尾定理）');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='P')b.state.P=q;else b.state.A=q;}
+    onDrag:function(b,n,w){if(n==='P')b.state.P=w;else b.state.A=w;}
   };
   R(swallowtail);
 
