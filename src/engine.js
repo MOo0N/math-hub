@@ -34,6 +34,7 @@
     this.pan=null;
     this.drag=null;
     this.playing=false;
+    this.locked=false; // 画布锁定：锁定时禁止拖动/缩放（每个 Board 实例独立）
     this.t=0;
     this.speed=1;
     this.reduced=global.matchMedia&&global.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -169,6 +170,7 @@
     if(lbl)lbl.textContent=Math.round(this.baseView.w/v.w*100)+'%';
   };
   Board.prototype.zoomAt=function(factor,anchor){
+    if(this.locked)return; // 锁定后禁止缩放
     var v=this.view,p=anchor||{x:v.x+v.w/2,y:v.y+v.h/2};
     var nw=Math.max(160,Math.min(this.W*3,v.w/factor));
     var nh=nw*(v.h/v.w);
@@ -177,15 +179,26 @@
     v.w=nw;v.h=nh;this.applyView();
   };
   Board.prototype.resetView=function(){
+    if(this.locked)return; // 锁定后禁止复位视图（缩放）
     var b=this.baseView;this.view={x:b.x,y:b.y,w:b.w,h:b.h};this.applyView();
   };
+  /* 画布锁定开关：锁定时禁止拖动、拖点与缩放；返回当前锁定态 */
+  Board.prototype.setLocked=function(v){
+    this.locked=!!v;
+    if(this.locked){this.drag=null;this.pan=null;svgCursor(this.svg,'');}
+    this.svg.classList.toggle('mh-canvas-locked',this.locked);
+    return this.locked;
+  };
+  function svgCursor(svg,c){if(svg)svg.style.cursor=c;}
   Board.prototype._bindView=function(){
     var self=this,svg=this.svg;
     svg.addEventListener('wheel',function(e){
+      if(self.locked)return; // 锁定后滚轮不缩放
       e.preventDefault();
       self.zoomAt(e.deltaY<0?1.16:1/1.16,self.toView(e));
     },{passive:false});
     svg.addEventListener('pointerdown',function(e){
+      if(self.locked)return; // 锁定后禁止拖动（平移与拖点）
       var w=self.toWorld(e);
       var best=null,bd=1e9;
       // _handles 由最近一次 draw() 收集，随状态更新保持最新

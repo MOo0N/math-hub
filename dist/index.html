@@ -176,11 +176,16 @@ button{font-family:inherit}
   border:1px solid var(--mh-line);background:var(--mh-panel);color:var(--mh-ink);
   border-radius:7px;padding:3px 9px;font-size:13px;cursor:pointer;min-width:30px;
 }
+.mh-zoom .mh-lock{font-size:12px;white-space:nowrap;min-width:74px}
+.mh-zoom .mh-lock[aria-pressed="true"]{
+  background:var(--mh-primary);border-color:var(--mh-primary);color:#fff;
+}
 .mh-zoom .zlevel{font-size:11px;color:var(--mh-muted);min-width:38px;text-align:center}
 .mh-canvas{
   width:100%;height:auto;display:block;background:var(--mh-canvas-bg);
   border:1px solid var(--mh-line);border-radius:10px;touch-action:none;cursor:grab;
 }
+.mh-canvas.mh-canvas-locked{cursor:not-allowed}
 .mh-readout-wrap{padding:8px 4px 2px}
 #mh-readout{
   font-size:12px;background:var(--mh-primary-soft);border:1px solid var(--mh-primary-line);
@@ -288,6 +293,7 @@ button{font-family:inherit}
     this.pan=null;
     this.drag=null;
     this.playing=false;
+    this.locked=false; // 画布锁定：锁定时禁止拖动/缩放（每个 Board 实例独立）
     this.t=0;
     this.speed=1;
     this.reduced=global.matchMedia&&global.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -423,6 +429,7 @@ button{font-family:inherit}
     if(lbl)lbl.textContent=Math.round(this.baseView.w/v.w*100)+'%';
   };
   Board.prototype.zoomAt=function(factor,anchor){
+    if(this.locked)return; // 锁定后禁止缩放
     var v=this.view,p=anchor||{x:v.x+v.w/2,y:v.y+v.h/2};
     var nw=Math.max(160,Math.min(this.W*3,v.w/factor));
     var nh=nw*(v.h/v.w);
@@ -431,15 +438,26 @@ button{font-family:inherit}
     v.w=nw;v.h=nh;this.applyView();
   };
   Board.prototype.resetView=function(){
+    if(this.locked)return; // 锁定后禁止复位视图（缩放）
     var b=this.baseView;this.view={x:b.x,y:b.y,w:b.w,h:b.h};this.applyView();
   };
+  /* 画布锁定开关：锁定时禁止拖动、拖点与缩放；返回当前锁定态 */
+  Board.prototype.setLocked=function(v){
+    this.locked=!!v;
+    if(this.locked){this.drag=null;this.pan=null;svgCursor(this.svg,'');}
+    this.svg.classList.toggle('mh-canvas-locked',this.locked);
+    return this.locked;
+  };
+  function svgCursor(svg,c){if(svg)svg.style.cursor=c;}
   Board.prototype._bindView=function(){
     var self=this,svg=this.svg;
     svg.addEventListener('wheel',function(e){
+      if(self.locked)return; // 锁定后滚轮不缩放
       e.preventDefault();
       self.zoomAt(e.deltaY<0?1.16:1/1.16,self.toView(e));
     },{passive:false});
     svg.addEventListener('pointerdown',function(e){
+      if(self.locked)return; // 锁定后禁止拖动（平移与拖点）
       var w=self.toWorld(e);
       var best=null,bd=1e9;
       // _handles 由最近一次 draw() 收集，随状态更新保持最新
@@ -3914,7 +3932,10 @@ button{font-family:inherit}
               '<div class="mh-legend">'+(m.legend||[]).map(function(l){
                 return '<span><i style="border-color:'+l.c+'"></i>'+l.t+'</span>';
               }).join('')+'</div>'+
-              '<div class="mh-zoom"><button id="mh-zo">－</button><span class="zlevel" data-mh-z="mh-svg">100%</span><button id="mh-zi">＋</button></div>'+
+              '<div class="mh-zoom">'+
+                '<button id="mh-lock" class="mh-lock" aria-pressed="false" title="锁定画布：禁止拖动与缩放">🔓 解锁</button>'+
+                '<button id="mh-zo">－</button><span class="zlevel" data-mh-z="mh-svg">100%</span><button id="mh-zi">＋</button>'+
+              '</div>'+
             '</div>'+
             '<svg id="mh-svg" class="mh-canvas" viewBox="0 0 '+(m.W||900)+' '+(m.H||600)+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="'+esc(m.title)+'互动演示"></svg>'+
             '<div class="mh-readout-wrap"><div id="mh-readout" aria-live="polite">准备就绪</div></div>'+
@@ -3945,6 +3966,14 @@ button{font-family:inherit}
     document.getElementById('mh-zfit').onclick=function(){currentBoard.resetView();};
     document.getElementById('mh-zin').onclick=function(){currentBoard.zoomAt(1.25);};
     document.getElementById('mh-zout').onclick=function(){currentBoard.zoomAt(0.8);};
+    // 画布锁定开关（每个 Board 实例独立，互不影响）
+    var lockBtn=document.getElementById('mh-lock');
+    lockBtn.onclick=function(){
+      var locked=currentBoard.setLocked(!currentBoard.locked);
+      lockBtn.textContent=locked?'🔒 已锁定':'🔓 解锁';
+      lockBtn.setAttribute('aria-pressed',locked?'true':'false');
+      lockBtn.title=locked?'点击解锁，恢复拖动与缩放':'锁定画布：禁止拖动与缩放';
+    };
     document.getElementById('mh-done').onchange=function(e){
       done[m.id]=e.target.checked;store.set('done',done);
     };

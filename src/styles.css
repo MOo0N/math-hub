@@ -169,11 +169,16 @@ button{font-family:inherit}
   border:1px solid var(--mh-line);background:var(--mh-panel);color:var(--mh-ink);
   border-radius:7px;padding:3px 9px;font-size:13px;cursor:pointer;min-width:30px;
 }
+.mh-zoom .mh-lock{font-size:12px;white-space:nowrap;min-width:74px}
+.mh-zoom .mh-lock[aria-pressed="true"]{
+  background:var(--mh-primary);border-color:var(--mh-primary);color:#fff;
+}
 .mh-zoom .zlevel{font-size:11px;color:var(--mh-muted);min-width:38px;text-align:center}
 .mh-canvas{
   width:100%;height:auto;display:block;background:var(--mh-canvas-bg);
   border:1px solid var(--mh-line);border-radius:10px;touch-action:none;cursor:grab;
 }
+.mh-canvas.mh-canvas-locked{cursor:not-allowed}
 .mh-readout-wrap{padding:8px 4px 2px}
 #mh-readout{
   font-size:12px;background:var(--mh-primary-soft);border:1px solid var(--mh-primary-line);

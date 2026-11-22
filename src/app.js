@@ -241,7 +241,10 @@
               '<div class="mh-legend">'+(m.legend||[]).map(function(l){
                 return '<span><i style="border-color:'+l.c+'"></i>'+l.t+'</span>';
               }).join('')+'</div>'+
-              '<div class="mh-zoom"><button id="mh-zo">－</button><span class="zlevel" data-mh-z="mh-svg">100%</span><button id="mh-zi">＋</button></div>'+
+              '<div class="mh-zoom">'+
+                '<button id="mh-lock" class="mh-lock" aria-pressed="false" title="锁定画布：禁止拖动与缩放">🔓 解锁</button>'+
+                '<button id="mh-zo">－</button><span class="zlevel" data-mh-z="mh-svg">100%</span><button id="mh-zi">＋</button>'+
+              '</div>'+
             '</div>'+
             '<svg id="mh-svg" class="mh-canvas" viewBox="0 0 '+(m.W||900)+' '+(m.H||600)+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="'+esc(m.title)+'互动演示"></svg>'+
             '<div class="mh-readout-wrap"><div id="mh-readout" aria-live="polite">准备就绪</div></div>'+
@@ -272,6 +275,14 @@
     document.getElementById('mh-zfit').onclick=function(){currentBoard.resetView();};
     document.getElementById('mh-zin').onclick=function(){currentBoard.zoomAt(1.25);};
     document.getElementById('mh-zout').onclick=function(){currentBoard.zoomAt(0.8);};
+    // 画布锁定开关（每个 Board 实例独立，互不影响）
+    var lockBtn=document.getElementById('mh-lock');
+    lockBtn.onclick=function(){
+      var locked=currentBoard.setLocked(!currentBoard.locked);
+      lockBtn.textContent=locked?'🔒 已锁定':'🔓 解锁';
+      lockBtn.setAttribute('aria-pressed',locked?'true':'false');
+      lockBtn.title=locked?'点击解锁，恢复拖动与缩放':'锁定画布：禁止拖动与缩放';
+    };
     document.getElementById('mh-done').onchange=function(e){
       done[m.id]=e.target.checked;store.set('done',done);
     };
