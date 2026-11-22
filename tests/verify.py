@@ -75,6 +75,45 @@ def _id_similarity(r):
     return True, "三比相等=%.3f" % vals[0]
 
 
+def _id_parallelogram(r):
+    ab = _f(r"AB=([\d.]+)", r); cd = _f(r"CD=([\d.]+)", r)
+    ad = _f(r"AD=([\d.]+)", r); bc = _f(r"BC=([\d.]+)", r)
+    mm = _f(r"对角线中点距=([\d.]+)", r)
+    if None in (ab, cd, ad, bc, mm): return False, "未解析到平行四边形读数"
+    if abs(ab - cd) > 0.02 or abs(ad - bc) > 0.02 or mm > 0.01:
+        return False, "对边不等或中点不重合: %s,%s,%s,%s,mm=%s" % (ab, cd, ad, bc, mm)
+    return True, "AB=CD=%.2f, AD=BC=%.2f, 中点距0" % (ab, ad)
+
+
+def _id_special_quad(r):
+    ac = _f(r"AC=([\d.]+)", r); bd = _f(r"BD=([\d.]+)", r); dot = _f(r"对角线点积=([-\d.]+)", r)
+    if None in (ac, bd, dot): return False, "未解析到特殊四边形读数"
+    if abs(ac - bd) > 0.02 or abs(dot) > 0.01: return False, "正方形对角线不满足相等且垂直"
+    return True, "AC=BD=%.2f, 点积=%.2f" % (ac, dot)
+
+
+def _id_tangent(r):
+    lhs = _f(r"PT²=([\d.]+)", r); rhs = _f(r"OP²−r²=([\d.]+)", r)
+    if lhs is None or rhs is None: return False, "未解析到切线读数"
+    if abs(lhs - rhs) > 0.5: return False, "PT²≠OP²−r²: %s vs %s" % (lhs, rhs)
+    return True, "PT²=OP²−r²=%.0f" % lhs
+
+
+def _id_vieta(r):
+    s1 = _f(r"x₁\+x₂=([-\d.]+)", r); s2 = _f(r"−b/a=([-\d.]+)", r)
+    p1 = _f(r"x₁·x₂=([-\d.]+)", r); p2 = _f(r"c/a=([-\d.]+)", r)
+    if None in (s1, s2, p1, p2): return False, "未解析到韦达读数"
+    if abs(s1 - s2) > 0.005 or abs(p1 - p2) > 0.005: return False, "和与积与系数不符"
+    return True, "和=%.2f, 积=%.2f" % (s1, p1)
+
+
+def _id_midline(r):
+    de = _f(r"DE=([\d.]+)", r); half = _f(r"BC/2=([\d.]+)", r); cross = _f(r"平行判定\(叉积\)=([-\d.]+)", r)
+    if None in (de, half, cross): return False, "未解析到中位线读数"
+    if abs(de - half) > 0.02 or abs(cross) > 0.01: return False, "DE≠BC/2 或不平行"
+    return True, "DE=BC/2=%.2f, 叉积0" % de
+
+
 IDENTITIES = [
     ("cong-hand-equilateral", "手拉手 AC−BD=0", _id_hand_eq),
     ("cong-hand-right", "直角手拉手 AC=BD", _id_hand_right),
@@ -84,6 +123,11 @@ IDENTITIES = [
     ("ang-bi-inner", "角平分 ∠BPC=90°+½∠A", _id_bisector),
     ("quadratic-function", "二次函数 对称轴/Δ", _id_quadratic),
     ("sim-x-type", "X型相似 三比相等", _id_similarity),
+    ("quad-parallelogram", "平行四边形 对边相等/中点重合", _id_parallelogram),
+    ("quad-special", "正方形 对角线相等且垂直", _id_special_quad),
+    ("circle-tangent", "切线 PT²=OP²−r²", _id_tangent),
+    ("vieta", "韦达 和/积与系数一致", _id_vieta),
+    ("triangle-midline", "中位线 DE=BC/2 且平行", _id_midline),
 ]
 
 

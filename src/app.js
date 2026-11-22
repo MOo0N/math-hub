@@ -314,6 +314,21 @@
       (Array.isArray(m.tips)?m.tips:[m.tips]).forEach(function(t){h+='<li>'+t+'</li>';});
       h+='</ul>';
     }
+    // 扩展内容：适用场景 / 图示需求 / 典型例题 / 易错点（复用现有样式，保持风格一致）
+    function block(title,val,ordered){
+      if(!val)return '';
+      var s='<h3>'+title+'</h3>';
+      if(Array.isArray(val)){
+        s+=ordered?'<ol>':'<ul>';
+        val.forEach(function(t){s+='<li>'+t+'</li>';});
+        s+=ordered?'</ol>':'</ul>';
+      }else s+='<p>'+val+'</p>';
+      return s;
+    }
+    h+=block('🎯 适用场景',m.scenario);
+    h+=block('🖼 图示需求',m.figure);
+    h+=block('📝 典型例题',m.example,true);
+    h+=block('⚠️ 易错点',m.mistakes);
     h+='<div style="margin-top:18px">'+
       '<span class="mh-tag">'+LEVEL_NAME[m.level]+'</span>'+
       '<span class="mh-tag">'+(m.tags||[]).join(' · ')+'</span></div>';
