@@ -242,7 +242,7 @@
                 return '<span><i style="border-color:'+l.c+'"></i>'+l.t+'</span>';
               }).join('')+'</div>'+
               '<div class="mh-zoom">'+
-                '<button id="mh-lock" class="mh-lock" aria-pressed="false" title="锁定画布：禁止拖动与缩放">🔓 解锁</button>'+
+                '<button id="mh-lock" class="mh-lock" aria-pressed="false" title="锁定画布平移与缩放（节点仍可拖动）">🔓 解锁</button>'+
                 '<button id="mh-zo">－</button><span class="zlevel" data-mh-z="mh-svg">100%</span><button id="mh-zi">＋</button>'+
               '</div>'+
             '</div>'+
@@ -281,7 +281,7 @@
       var locked=currentBoard.setLocked(!currentBoard.locked);
       lockBtn.textContent=locked?'🔒 已锁定':'🔓 解锁';
       lockBtn.setAttribute('aria-pressed',locked?'true':'false');
-      lockBtn.title=locked?'点击解锁，恢复拖动与缩放':'锁定画布：禁止拖动与缩放';
+      lockBtn.title=locked?'点击解锁，恢复画布平移与缩放':'锁定画布平移与缩放（节点仍可拖动）';
     };
     document.getElementById('mh-done').onchange=function(e){
       done[m.id]=e.target.checked;store.set('done',done);
