@@ -205,7 +205,7 @@
       });}
       if(L.type==='circle'){
         b.circle(L.O,L.r,C.purple,'#faf5ff',2.6,'8 6',.6);
-        b.line(L.D,L.E,'#a78bfa',2,'6 5');
+        b.line(L.D,L.E,'#9d5b7a',2,'6 5');
         b.circle(L.O,4,C.purple,'#fff',2);
         b.circle(L.D,6,C.blue,'#fff',2.4);
         b.circle(L.E,6,C.orange,'#fff',2.4);

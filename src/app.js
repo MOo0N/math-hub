@@ -5,11 +5,12 @@
   var models=M.models;
 
   /* ---------- 领域与主题元数据 ---------- */
+  /* 风格 A「几何手账」领域色板（与 styles.css / engine.js 同源） */
   var DOMAINS=[
-    {id:'algebra',name:'数与代数',color:'#2563eb',desc:'从数轴到函数，让抽象的代数关系看得见、拖得动。'},
-    {id:'geometry',name:'图形与几何',color:'#7c3aed',desc:'平移旋转、全等相似、圆与最值，图形在指尖变化中显露出规律。'},
-    {id:'stats',name:'统计与概率',color:'#ea580c',desc:'用大数模拟和动态图表，把随机与数据的直觉建立起来。'},
-    {id:'practice',name:'综合与实践',color:'#059669',desc:'经典几何模型与真实测量场景，连接课堂与生活中的数学。'}
+    {id:'algebra',name:'数与代数',color:'#3c6e8f',desc:'从数轴到函数，让抽象的代数关系看得见、拖得动。'},
+    {id:'geometry',name:'图形与几何',color:'#c2563c',desc:'平移旋转、全等相似、圆与最值，图形在指尖变化中显露出规律。'},
+    {id:'stats',name:'统计与概率',color:'#c2703a',desc:'用大数模拟和动态图表，把随机与数据的直觉建立起来。'},
+    {id:'practice',name:'综合与实践',color:'#4f7a5b',desc:'经典几何模型与真实测量场景，连接课堂与生活中的数学。'}
   ];
   var TOPICS={
     algebra:[

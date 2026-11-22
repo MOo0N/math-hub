@@ -7,8 +7,10 @@
 (function(global){
   'use strict';
   var NS='http://www.w3.org/2000/svg';
-  var COLORS={blue:'#2563eb',orange:'#ea580c',purple:'#7c3aed',green:'#059669',
-    red:'#dc2626',teal:'#0d9488',slate:'#475569',gray:'#94a3b8'};
+  /* 风格 A「几何手账」图形色板：低饱和暖调，与 CSS 变量同源，仍保证多图形可辨。
+     红/橙/绿保留色相，故模型文案中「红色点/橙色虚线/绿色构造点」依旧准确。 */
+  var COLORS={blue:'#3c6e8f',orange:'#c2703a',purple:'#9d5b7a',green:'#4f7a5b',
+    red:'#b8402f',teal:'#2f7d74',slate:'#6b5c49',gray:'#a89a85'};
 
   /* ---------- 向量工具（暴露给模型） ---------- */
   function add(a,b){return {x:a.x+b.x,y:a.y+b.y};}

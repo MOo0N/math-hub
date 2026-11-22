@@ -152,8 +152,8 @@
       var tx=2,ty=s.k*tx+s.b;
       b.line(P(0,s.b),P(tx,s.b),'#10b981',2,'5 4');
       b.line(P(tx,s.b),P(tx,ty),'#10b981',2,'5 4');
-      b.text({x:P(tx/2,s.b).x,y:P(tx/2,s.b).y+18},'Δx='+tx,'#059669',11,'middle');
-      b.text({x:P(tx,(s.b+ty)/2).x+8,y:P(tx,(s.b+ty)/2).y},'Δy='+(s.k*tx).toFixed(1),'#059669',11,'start');
+      b.text({x:P(tx/2,s.b).x,y:P(tx/2,s.b).y+18},'Δx='+tx,'#4f7a5b',11,'middle');
+      b.text({x:P(tx,(s.b+ty)/2).x+8,y:P(tx,(s.b+ty)/2).y},'Δy='+(s.k*tx).toFixed(1),'#4f7a5b',11,'start');
       b.readout('y = '+s.k.toFixed(1)+'x '+(s.b>=0?'+ ':'− ')+Math.abs(s.b).toFixed(1)+'　'+(s.k>0?'↗ 递增':s.k<0?'↘ 递减':'→ 水平'));
     }
   };
@@ -290,7 +290,7 @@
       b.text({x:v1.x+10,y:v1.y-8},'('+s.h.toFixed(1)+','+s.k.toFixed(1)+')',C.orange,12,'start',700);
       // 位移虚线
       b.line(v0,v1,C.green,1.8,'4 4');
-      b.text({x:(v0.x+v1.x)/2,y:(v0.y+v1.y)/2-10},'位移','#059669',11,'middle');
+      b.text({x:(v0.x+v1.x)/2,y:(v0.y+v1.y)/2-10},'位移','#4f7a5b',11,'middle');
       var htxt=s.h>0?'右移 '+s.h.toFixed(1):s.h<0?'左移 '+Math.abs(s.h).toFixed(1):'不左右移';
       var ktxt=s.k>0?'上移 '+s.k.toFixed(1):s.k<0?'下移 '+Math.abs(s.k).toFixed(1):'不上下移';
       b.readout('y = (x−'+s.h.toFixed(1)+')² + '+s.k.toFixed(1)+'　'+htxt+'、'+ktxt);

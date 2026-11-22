@@ -313,7 +313,7 @@
       s.pts.forEach(function(p){
         b.circle({x:cx+p.x*r,y:cy-p.y*r},2.6,p.in?C.blue:C.orange,p.in?C.blue:C.orange,1);
       });
-      b.text({x:cx,y:cy},'π/4 ≈ 0.785','#7c3aed',15,'middle',800);
+      b.text({x:cx,y:cy},'π/4 ≈ 0.785','#9d5b7a',15,'middle',800);
       var ratio=s.n?s.inside/s.n:0,piEst=ratio*4;
       b.readout('投点 '+s.n+'　圆内 '+s.inside+'　频率 '+(s.n?ratio.toFixed(4):'—')+' → π/4　估计 π ≈ '+(s.n?piEst.toFixed(3):'—'));
     }
