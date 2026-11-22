@@ -2,7 +2,7 @@
 
 面向初中数学的交互式课件网站：把定理、公式与几何模型做成可拖动、可调节、可播放的交互演示。
 
-- **在线演示（免登录）**：https://a8e5d1101c207a8a9.app.workbuddy.host/?sharecode=KZ22F4YBOA
+- **在线演示（免登录）**：https://ab27bfee7434d8773.app.workbuddy.host/?sharecode=62JK46YNB7
 - **规模**：4 大领域 / 15 个主题 / 62 个交互模型
 - **技术**：单文件 HTML、原生 JS + SVG、零外部依赖、零构建工具链
 
