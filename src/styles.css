@@ -159,9 +159,17 @@ button{font-family:inherit}
   background:var(--mh-panel);border:1.5px solid var(--mh-line);
   border-radius:var(--mh-radius);box-shadow:var(--mh-shadow);
 }
-.mh-side{padding:16px;position:sticky;top:80px}
-.mh-side h3{font-size:14px;margin:0 0 4px;font-family:var(--mh-font-kai)}
+.mh-side{padding:16px;position:sticky;top:80px;order:-1;grid-row:1 / span 2}
+.mh-stage-col{order:0;min-width:0;grid-column:2;grid-row:1}
+.mh-notes{grid-column:2;grid-row:2}
+.mh-side h3,.mh-side .mh-side-h{font-size:14px;margin:0 0 4px;font-family:var(--mh-font-kai)}
 .mh-side .mh-side-sub{font-size:11px;color:var(--mh-muted);margin:0 0 12px}
+/* 面板折叠开关：桌面端隐藏，移动端显示 */
+.mh-fold{display:none;width:100%;align-items:center;justify-content:space-between;
+  border:0;background:none;color:var(--mh-ink);font-size:14px;font-weight:700;
+  font-family:var(--mh-font-kai);padding:0;cursor:pointer}
+.mh-fold-caret{font-size:12px;color:var(--mh-muted);transition:transform .18s}
+.mh-side.collapsed .mh-fold-caret{transform:rotate(-90deg)}
 .mh-ctl{margin-bottom:14px}
 .mh-ctl-lab{display:flex;justify-content:space-between;font-size:12px;color:var(--mh-muted);margin-bottom:5px}
 .mh-ctl-lab b{color:var(--mh-ink);font-variant-numeric:tabular-nums}
@@ -272,8 +280,26 @@ button{font-family:inherit}
   .mh-hero:after{display:none}
   .mh-domains{grid-template-columns:1fr}
   .mh-cards{grid-template-columns:1fr}
-  .mh-work{grid-template-columns:1fr}
-  .mh-side{position:static}
+  /* 模型工作台：画布优先，控制面板折叠为抽屉 */
+  .mh-work{display:flex;flex-direction:column;gap:12px}
+  .mh-stage-col{order:1;width:100%}
+  .mh-side{order:2;width:100%;position:static;padding:12px 14px;grid-row:auto}
+  .mh-notes{order:3;width:100%;grid-column:auto;grid-row:auto}
+  /* 折叠态：只保留开关条，隐藏控件体 */
+  .mh-fold{display:flex}
+  .mh-side .mh-side-body{display:block;margin-top:12px}
+  .mh-side.collapsed .mh-side-body{display:none}
+  .mh-side.collapsed{padding:11px 14px}
+  /* 画布占比：尽量高、减少留白 */
+  .mh-stage{padding:9px}
+  .mh-stage-head{gap:6px;padding:2px 2px 7px}
+  .mh-legend{gap:9px;font-size:10.5px}
+  .mh-canvas{width:100%}
+  .mh-lock-msg{font-size:11px;padding:8px 13px;max-width:88%}
+  /* 按钮压缩：减小内边距与字号，减少纵向占位 */
+  .mh-mini{padding:4px 8px;font-size:11.5px;border-radius:7px}
+  .mh-btnrow{gap:5px;margin:8px 0}
+  .mh-zoom button,.mh-lock{padding:3px 7px;font-size:11.5px;min-width:26px}
   .mh-notes{padding:15px 16px}
 }
 @media(min-width:2000px){

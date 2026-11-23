@@ -116,7 +116,6 @@
     legend:[{c:C.blue,t:'△ADE'},{c:C.orange,t:'△BEC'},{c:C.slate,t:'共线 A-E-B'}],
     hint:'等角的补角相等 → AA',interaction:'拖动点，观察异侧型下两三角形相似比恒定。',
     yUp:true,
-    controls:[{type:'range',key:'theta',label:'等角 θ °',min:35,max:75,step:1,digits:0}],
     init:function(b,s){s.t=0.5;},
     controls:[{type:'range',key:'t',label:'E 点位置',min:0.3,max:0.7,step:0.01,digits:2}],
     draw:function(b,s){

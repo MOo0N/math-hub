@@ -562,10 +562,10 @@
     idea:'作 sinα=k 的射线，过 P 作 PH⊥射线，则 PH=k·PA。于是 k·PA+PB = PH+PB ≥ 点 B 到射线的垂线段长，B、P、H 共线且 BH⊥射线时取到。',
     proof:['作 ∠(l,射线)=α 使 sinα=k，从 A 向 l 异侧作这条射线。','过 P 作 PH⊥射线于 H，则在 Rt△APH 中 PH = PA·sinα = k·PA。','于是 k·PA+PB = PH+PB ≥ B 到射线的垂线段，当 B、P、H 共线且 BH⊥射线时取到。'],
     formula:'min(k·PA+PB) = 3cosα + 4sinα　（α = arcsin k，A、B 距离按模型给定）',
-    tips:['拖动 P 沿 l 运动，观察读数','改 k 会重新构造射线，注意 PH（紫）始终垂直射线','橙线 BH 只在最优点垂直射线，移动中不垂直是正常的'],
-    legend:[{c:C.blue,t:'PA'},{c:C.orange,t:'PB'},{c:C.purple,t:'构造射线与垂线 PH'}],
-    hint:'系数 k → sinα → 垂线段 → 拉直最短',
-    interaction:'拖动 P 沿 l 运动；改 k 会重新构造射线。注意 PH（紫）始终垂直射线，BH（橙）只在最优点垂直。',
+    tips:['拖动 P 沿 l 运动，观察折线 H-P-B 的长度变化',"改 k 会重新构造射线，紫色 PH 始终垂直射线且恒等于 k·PA",'最优点处红线 BH 垂直到射线——折线拉直，此时 k·PA+PB 最小','注意 PA 画成灰色虚线：它已被等长的 PH 替代'],
+    legend:[{c:'#0f766e',t:'构造射线 sinα=k'},{c:C.purple,t:'垂线 PH=k·PA'},{c:C.orange,t:'PB'},{c:C.red,t:'最优垂线 BH'}],
+    hint:'系数 k → sinα → 垂线 PH → 拉直为 BH 最短',
+    interaction:'拖动 P 沿 l 运动；紫色 PH 恒=k·PA 且垂直射线。拖到最优点时，B、P、H 共线，红色 BH 垂直于射线，折线被拉直，读数达到最小。',
     controls:[
       {type:'range',key:'k',label:'k = sinα',min:0.1,max:0.95,step:0.01,digits:2},
       {type:'check',key:'show',label:'显示构造射线与垂线 PH'},
@@ -583,27 +583,44 @@
     draw:function(b,s){
       var g=b.scene,m=b.model,hw=m.hw,u=m.u(s),A={x:0,y:0},B={x:4,y:3};
       var P={x:s.p,y:0},Hh=m.hPoint(s),re=m.rayEnd(s);
+      var isBest=Math.abs(s.p-m.opt(s))<.035;
+      // 基准直线 l
       b.line(hw({x:-1,y:0}),hw({x:6,y:0}),'#94a3b8',2);
       b.text({x:hw({x:6,y:0}).x+8,y:hw({x:6,y:0}).y-12},'l','#64748b',13,'start',700);
       if(s.show){
+        // 构造射线：sinα = k
         b.line(hw(A),hw(re),'#0f766e',2.2,'8 5');
-        b.line(hw(P),hw(Hh),C.purple,2.6,'6 4');
-        var e=.22,Hp=add(Hh,mul(u,e)),Pn=unit(sub(P,Hh)),Pq=add(Hh,mul(Pn,e));
+        b.text({x:hw(re).x+8,y:hw(re).y-6},'射线（sinα=k）','#0f766e',12,'start',700);
+        // 关键转化：PH ⊥ 射线，PH = PA·sinα = k·PA（紫色实线）
+        b.line(hw(P),hw(Hh),C.purple,3);
+        var e=.2,Hp=add(Hh,mul(u,e)),Pn=unit(sub(P,Hh)),Pq=add(Hh,mul(Pn,e));
         b.line(hw(Hp),hw(add(Hp,mul(Pn,e))),C.purple,2);
         b.line(hw(add(Hp,mul(Pn,e))),hw(Pq),C.purple,2);
-        b.line(hw(Hh),hw(B),C.orange,1.8,'5 4');
+        // 折线 H-P-B = PH+PB = k·PA+PB
+        b.line(hw(P),hw(B),C.orange,2.6);
+        if(isBest){
+          // 最优点：B、P、H 三点共线，BH ⊥ 射线——这才是胡不归的“作垂线拉直”解法
+          b.line(hw(B),hw(Hh),C.red,4);
+          b.text({x:(hw(Hh).x+hw(B).x)/2+10,y:(hw(Hh).y+hw(B).y)/2},'BH⊥射线·最短',C.red,12,'start',700);
+        }else{
+          b.line(hw(Hh),hw(B),'#94a3b8',1.6,'4 4');
+          b.text({x:(hw(Hh).x+hw(B).x)/2,y:(hw(Hh).y+hw(B).y)/2-8},'拖到最优点 → 拉直成垂线 BH','#94a3b8',11,'middle',600);
+        }
         b.circle(hw(Hh),5,C.purple,'#fff',2.3);
-        b.text({x:hw(re).x+8,y:hw(re).y-6},'射线','#0f766e',12,'start',700);
         b.text({x:hw(Hh).x+9,y:hw(Hh).y-8},'H',C.purple,13,'start',800);
+        var mpa={x:(hw(P).x+hw(Hh).x)/2,y:(hw(P).y+hw(Hh).y)/2};
+        b.text({x:mpa.x+8,y:mpa.y},'PH=k·PA',C.purple,11,'start',600);
       }
-      b.line(hw(A),hw(P),C.blue,2.6);b.line(hw(B),hw(P),C.orange,2.6);
+      // PA 弱化为虚线：k·PA 已由 PH 替代
+      b.line(hw(A),hw(P),'#94a3b8',1.8,'5 4');
       [[A,'A',C.blue],[B,'B',C.orange],[P,'P',C.purple]].forEach(function(t,i){
         b.circle(hw(t[0]),i===2?8:6,t[2],'#fff',2.5);
         b.text({x:hw(t[0]).x+11,y:hw(t[0]).y+(i===2?-10:12)},t[1],t[2],14,'start',800);
       });
       b.handle(hw(P),'P',16);
       var val=s.k*Math.abs(s.p)+dist(B,P);
-      b.readout(s.k.toFixed(2)+'·PA+PB = '+val.toFixed(3)+' · 最小 '+m.min(s).toFixed(3)+(Math.abs(val-m.min(s))<.03?'  ✓':''));
+      b.readout('k·PA+PB = PH+PB = '+val.toFixed(3)+'　最小值 '+m.min(s).toFixed(3)+
+        (isBest?'  ✓ 最优：BH⊥射线（折线已拉直）':'  ← 拖到最优点，从 B 向射线作垂线 BH'));
     },
     onDrag:function(b,n,w){
       var s=b.state;if(n==='P')s.p=Math.max(0,Math.min(6,(w.x-450)/70));

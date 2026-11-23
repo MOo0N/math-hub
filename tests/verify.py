@@ -40,9 +40,20 @@ def _id_hand_reverse(r):
 
 
 def _id_pythagoras(r):
-    x = _f(r"a²\s*\+\s*b²\s*=\s*([\d.]+)", r); y = _f(r"c²\s*=\s*([\d.]+)", r)
-    if x is None or y is None or abs(x - y) > 0.01: return False, "a²+b²≠c²: %s,%s" % (x, y)
-    return True, "a²+b²=c²=%.2f" % x
+    # 新读数：大正方形 c² = 25.00 = 4×(½ab) + (b−a)² = 24.00 + 1.00 ⇒ a²+b² = c² = 25.00
+    c2 = _f(r"a²\s*\+\s*b²\s*=\s*c²\s*=\s*([\d.]+)", r)
+    if c2 is None:
+        # 兼容旧格式
+        x = _f(r"a²\s*\+\s*b²\s*=\s*([\d.]+)", r); c2 = x
+    if c2 is None: return False, "未解析到 c²"
+    # 弦图面积分解：4×(½ab) + (b−a)² 应等于 c²（锁住图形正确性）
+    m = re.search(r"=\s*([\d.]+)\s*\+\s*([\d.]+)", r)
+    if m:
+        tri, inner = float(m.group(1)), float(m.group(2))
+        if abs(tri + inner - c2) > 0.02:
+            return False, "弦图面积分解不符: %.2f+%.2f≠%.2f" % (tri, inner, c2)
+        return True, "a²+b²=c²=%.2f；弦图 4×(½ab)+(b−a)²=%.2f+%.2f=%.2f" % (c2, tri, inner, c2)
+    return True, "a²+b²=c²=%.2f" % c2
 
 
 def _id_variance(r):

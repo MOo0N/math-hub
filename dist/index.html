@@ -166,9 +166,17 @@ button{font-family:inherit}
   background:var(--mh-panel);border:1.5px solid var(--mh-line);
   border-radius:var(--mh-radius);box-shadow:var(--mh-shadow);
 }
-.mh-side{padding:16px;position:sticky;top:80px}
-.mh-side h3{font-size:14px;margin:0 0 4px;font-family:var(--mh-font-kai)}
+.mh-side{padding:16px;position:sticky;top:80px;order:-1;grid-row:1 / span 2}
+.mh-stage-col{order:0;min-width:0;grid-column:2;grid-row:1}
+.mh-notes{grid-column:2;grid-row:2}
+.mh-side h3,.mh-side .mh-side-h{font-size:14px;margin:0 0 4px;font-family:var(--mh-font-kai)}
 .mh-side .mh-side-sub{font-size:11px;color:var(--mh-muted);margin:0 0 12px}
+/* 面板折叠开关：桌面端隐藏，移动端显示 */
+.mh-fold{display:none;width:100%;align-items:center;justify-content:space-between;
+  border:0;background:none;color:var(--mh-ink);font-size:14px;font-weight:700;
+  font-family:var(--mh-font-kai);padding:0;cursor:pointer}
+.mh-fold-caret{font-size:12px;color:var(--mh-muted);transition:transform .18s}
+.mh-side.collapsed .mh-fold-caret{transform:rotate(-90deg)}
 .mh-ctl{margin-bottom:14px}
 .mh-ctl-lab{display:flex;justify-content:space-between;font-size:12px;color:var(--mh-muted);margin-bottom:5px}
 .mh-ctl-lab b{color:var(--mh-ink);font-variant-numeric:tabular-nums}
@@ -279,8 +287,26 @@ button{font-family:inherit}
   .mh-hero:after{display:none}
   .mh-domains{grid-template-columns:1fr}
   .mh-cards{grid-template-columns:1fr}
-  .mh-work{grid-template-columns:1fr}
-  .mh-side{position:static}
+  /* 模型工作台：画布优先，控制面板折叠为抽屉 */
+  .mh-work{display:flex;flex-direction:column;gap:12px}
+  .mh-stage-col{order:1;width:100%}
+  .mh-side{order:2;width:100%;position:static;padding:12px 14px;grid-row:auto}
+  .mh-notes{order:3;width:100%;grid-column:auto;grid-row:auto}
+  /* 折叠态：只保留开关条，隐藏控件体 */
+  .mh-fold{display:flex}
+  .mh-side .mh-side-body{display:block;margin-top:12px}
+  .mh-side.collapsed .mh-side-body{display:none}
+  .mh-side.collapsed{padding:11px 14px}
+  /* 画布占比：尽量高、减少留白 */
+  .mh-stage{padding:9px}
+  .mh-stage-head{gap:6px;padding:2px 2px 7px}
+  .mh-legend{gap:9px;font-size:10.5px}
+  .mh-canvas{width:100%}
+  .mh-lock-msg{font-size:11px;padding:8px 13px;max-width:88%}
+  /* 按钮压缩：减小内边距与字号，减少纵向占位 */
+  .mh-mini{padding:4px 8px;font-size:11.5px;border-radius:7px}
+  .mh-btnrow{gap:5px;margin:8px 0}
+  .mh-zoom button,.mh-lock{padding:3px 7px;font-size:11.5px;min-width:26px}
   .mh-notes{padding:15px 16px}
 }
 @media(min-width:2000px){
@@ -2759,10 +2785,10 @@ button{font-family:inherit}
     idea:'作 sinα=k 的射线，过 P 作 PH⊥射线，则 PH=k·PA。于是 k·PA+PB = PH+PB ≥ 点 B 到射线的垂线段长，B、P、H 共线且 BH⊥射线时取到。',
     proof:['作 ∠(l,射线)=α 使 sinα=k，从 A 向 l 异侧作这条射线。','过 P 作 PH⊥射线于 H，则在 Rt△APH 中 PH = PA·sinα = k·PA。','于是 k·PA+PB = PH+PB ≥ B 到射线的垂线段，当 B、P、H 共线且 BH⊥射线时取到。'],
     formula:'min(k·PA+PB) = 3cosα + 4sinα　（α = arcsin k，A、B 距离按模型给定）',
-    tips:['拖动 P 沿 l 运动，观察读数','改 k 会重新构造射线，注意 PH（紫）始终垂直射线','橙线 BH 只在最优点垂直射线，移动中不垂直是正常的'],
-    legend:[{c:C.blue,t:'PA'},{c:C.orange,t:'PB'},{c:C.purple,t:'构造射线与垂线 PH'}],
-    hint:'系数 k → sinα → 垂线段 → 拉直最短',
-    interaction:'拖动 P 沿 l 运动；改 k 会重新构造射线。注意 PH（紫）始终垂直射线，BH（橙）只在最优点垂直。',
+    tips:['拖动 P 沿 l 运动，观察折线 H-P-B 的长度变化',"改 k 会重新构造射线，紫色 PH 始终垂直射线且恒等于 k·PA",'最优点处红线 BH 垂直到射线——折线拉直，此时 k·PA+PB 最小','注意 PA 画成灰色虚线：它已被等长的 PH 替代'],
+    legend:[{c:'#0f766e',t:'构造射线 sinα=k'},{c:C.purple,t:'垂线 PH=k·PA'},{c:C.orange,t:'PB'},{c:C.red,t:'最优垂线 BH'}],
+    hint:'系数 k → sinα → 垂线 PH → 拉直为 BH 最短',
+    interaction:'拖动 P 沿 l 运动；紫色 PH 恒=k·PA 且垂直射线。拖到最优点时，B、P、H 共线，红色 BH 垂直于射线，折线被拉直，读数达到最小。',
     controls:[
       {type:'range',key:'k',label:'k = sinα',min:0.1,max:0.95,step:0.01,digits:2},
       {type:'check',key:'show',label:'显示构造射线与垂线 PH'},
@@ -2780,27 +2806,44 @@ button{font-family:inherit}
     draw:function(b,s){
       var g=b.scene,m=b.model,hw=m.hw,u=m.u(s),A={x:0,y:0},B={x:4,y:3};
       var P={x:s.p,y:0},Hh=m.hPoint(s),re=m.rayEnd(s);
+      var isBest=Math.abs(s.p-m.opt(s))<.035;
+      // 基准直线 l
       b.line(hw({x:-1,y:0}),hw({x:6,y:0}),'#94a3b8',2);
       b.text({x:hw({x:6,y:0}).x+8,y:hw({x:6,y:0}).y-12},'l','#64748b',13,'start',700);
       if(s.show){
+        // 构造射线：sinα = k
         b.line(hw(A),hw(re),'#0f766e',2.2,'8 5');
-        b.line(hw(P),hw(Hh),C.purple,2.6,'6 4');
-        var e=.22,Hp=add(Hh,mul(u,e)),Pn=unit(sub(P,Hh)),Pq=add(Hh,mul(Pn,e));
+        b.text({x:hw(re).x+8,y:hw(re).y-6},'射线（sinα=k）','#0f766e',12,'start',700);
+        // 关键转化：PH ⊥ 射线，PH = PA·sinα = k·PA（紫色实线）
+        b.line(hw(P),hw(Hh),C.purple,3);
+        var e=.2,Hp=add(Hh,mul(u,e)),Pn=unit(sub(P,Hh)),Pq=add(Hh,mul(Pn,e));
         b.line(hw(Hp),hw(add(Hp,mul(Pn,e))),C.purple,2);
         b.line(hw(add(Hp,mul(Pn,e))),hw(Pq),C.purple,2);
-        b.line(hw(Hh),hw(B),C.orange,1.8,'5 4');
+        // 折线 H-P-B = PH+PB = k·PA+PB
+        b.line(hw(P),hw(B),C.orange,2.6);
+        if(isBest){
+          // 最优点：B、P、H 三点共线，BH ⊥ 射线——这才是胡不归的“作垂线拉直”解法
+          b.line(hw(B),hw(Hh),C.red,4);
+          b.text({x:(hw(Hh).x+hw(B).x)/2+10,y:(hw(Hh).y+hw(B).y)/2},'BH⊥射线·最短',C.red,12,'start',700);
+        }else{
+          b.line(hw(Hh),hw(B),'#94a3b8',1.6,'4 4');
+          b.text({x:(hw(Hh).x+hw(B).x)/2,y:(hw(Hh).y+hw(B).y)/2-8},'拖到最优点 → 拉直成垂线 BH','#94a3b8',11,'middle',600);
+        }
         b.circle(hw(Hh),5,C.purple,'#fff',2.3);
-        b.text({x:hw(re).x+8,y:hw(re).y-6},'射线','#0f766e',12,'start',700);
         b.text({x:hw(Hh).x+9,y:hw(Hh).y-8},'H',C.purple,13,'start',800);
+        var mpa={x:(hw(P).x+hw(Hh).x)/2,y:(hw(P).y+hw(Hh).y)/2};
+        b.text({x:mpa.x+8,y:mpa.y},'PH=k·PA',C.purple,11,'start',600);
       }
-      b.line(hw(A),hw(P),C.blue,2.6);b.line(hw(B),hw(P),C.orange,2.6);
+      // PA 弱化为虚线：k·PA 已由 PH 替代
+      b.line(hw(A),hw(P),'#94a3b8',1.8,'5 4');
       [[A,'A',C.blue],[B,'B',C.orange],[P,'P',C.purple]].forEach(function(t,i){
         b.circle(hw(t[0]),i===2?8:6,t[2],'#fff',2.5);
         b.text({x:hw(t[0]).x+11,y:hw(t[0]).y+(i===2?-10:12)},t[1],t[2],14,'start',800);
       });
       b.handle(hw(P),'P',16);
       var val=s.k*Math.abs(s.p)+dist(B,P);
-      b.readout(s.k.toFixed(2)+'·PA+PB = '+val.toFixed(3)+' · 最小 '+m.min(s).toFixed(3)+(Math.abs(val-m.min(s))<.03?'  ✓':''));
+      b.readout('k·PA+PB = PH+PB = '+val.toFixed(3)+'　最小值 '+m.min(s).toFixed(3)+
+        (isBest?'  ✓ 最优：BH⊥射线（折线已拉直）':'  ← 拖到最优点，从 B 向射线作垂线 BH'));
     },
     onDrag:function(b,n,w){
       var s=b.state;if(n==='P')s.p=Math.max(0,Math.min(6,(w.x-450)/70));
@@ -2892,31 +2935,34 @@ button{font-family:inherit}
     ],
     init:function(b,s){s.a=3;s.b=4;},
     draw:function(b,s){
-      var g=b.scene,a=s.a*70,bb=s.b*70,c=Math.hypot(s.a,s.b)*70;
-      var cx=450,cy=300,ox=cx-c/2,oy=cy+c/2;
-      // 大正方形（旋转的，顶点是四个斜边端点）。构造：向外偏移
-      // 用标准弦图：大正方形边长 c，四个角放直角三角形
-      // 取大正方形轴对齐，边长 c，四角三角形
-      var L=c,left=cx-L/2,top=cy-L/2;
-      b.poly([{x:left,y:top},{x:left+L,y:top},{x:left+L,y:top+L},{x:left,y:top+L}],'#faf5ff',.5,C.purple,2.5);
-      // 四个直角三角形围出中央 (b-a) 正方形
-      var d=bb-a; // 可能为负
-      // 顶点序列
-      var P0={x:left+a,y:top},P1={x:left+L,y:top+a},P2={x:left+L-a,y:top+L},P3={x:left,y:top+L-a};
-      var Q0={x:left+a,y:top+a},Q1={x:left+L-a,y:top+a},Q2={x:left+L-a,y:top+L-a},Q3={x:left+a,y:top+L-a};
-      var tris=[
-        [{x:left,y:top},P0,Q0],[{x:left+L,y:top},P1,Q1],
-        [{x:left+L,y:top+L},P2,Q2],[{x:left,y:top+L},P3,Q3]
-      ];
-      tris.forEach(function(t){b.poly(t,C.blue,.28,C.blue,1.6);});
-      // 中央正方形（可能自交时用 abs）
-      var inner=[{x:left+a,y:top+a},{x:left+L-a,y:top+a},{x:left+L-a,y:top+L-a},{x:left+a,y:top+L-a}];
-      b.poly(inner,C.orange,.4,C.orange,2);
+      // 标准赵爽弦图：大正方形边长 c（斜边），内放四个直角边为 a、b 的全等三角形，
+      // 它们在中央围出边长 |b−a| 的小正方形。面积关系：c² = 4·(ab/2) + (b−a)² = a²+b²。
+      var a=s.a*70,bb=s.b*70,c=Math.hypot(s.a,s.b)*70;
+      var cx=450,cy=300,left=cx-c/2,top=cy-c/2;
+      var TL={x:left,y:top},TR={x:left+c,y:top},BR={x:left+c,y:top+c},BL={x:left,y:top+c};
+      b.poly([TL,TR,BR,BL],'#faf5ff',.5,C.purple,2.5);
+      // 各三角形直角顶点：斜边端点投影比例 b²/c、高 ab/c（保证两直角边为 a、b）
+      var a2=a*a,b2=bb*bb,ab=a*bb;
+      var Pt={x:left+b2/c,y:top+ab/c};
+      var Pr={x:left+c-ab/c,y:top+b2/c};
+      var Pb={x:left+c-b2/c,y:top+c-ab/c};
+      var Pl={x:left+ab/c,y:top+c-b2/c};
+      b.poly([TL,TR,Pt],C.blue,.28,C.blue,1.8);
+      b.poly([TR,BR,Pr],C.blue,.28,C.blue,1.8);
+      b.poly([BR,BL,Pb],C.blue,.28,C.blue,1.8);
+      b.poly([BL,TL,Pl],C.blue,.28,C.blue,1.8);
+      // 中央小正方形边长 = |b−a|
+      b.poly([Pt,Pr,Pb,Pl],C.orange,.42,C.orange,2);
       b.text({x:cx,y:cy+5},'(b−a)²','#c2410c',13,'middle',800);
-      b.text({x:left+a/2,y:top+a/2-4},'a','var(--mh-ink)',12,'middle',700);
-      var lhs=s.a*s.a+s.b*s.b,rhs=s.b*s.b; // c^2 computed below
+      // 给上边三角形的两条直角边标注 a、b，斜边 c
+      b.text({x:(TL.x+Pt.x)/2-4,y:(TL.y+Pt.y)/2},'b',C.blue,12,'middle',700);
+      b.text({x:(TR.x+Pt.x)/2+4,y:(TR.y+Pt.y)/2},'a',C.blue,12,'middle',700);
+      b.text({x:cx,y:top-10},'斜边 c',C.purple,12,'middle',700);
+      // 读数与图形一致：大正方形面积 = 四个三角形 + 中央小正方形
       var c2=s.a*s.a+s.b*s.b;
-      b.readout('a² + b² = '+(s.a*s.a+s.b*s.b).toFixed(2)+' = c² = '+c2.toFixed(2)+'　c = '+Math.sqrt(c2).toFixed(2));
+      b.readout('大正方形 c² = '+c2.toFixed(2)+' = 4×(½ab) + (b−a)² = '+
+        (2*s.a*s.b).toFixed(2)+' + '+Math.pow(s.b-s.a,2).toFixed(2)+
+        '　⇒　a² + b² = c² = '+c2.toFixed(2)+'　c = '+Math.sqrt(c2).toFixed(2));
     }
   };
   R(pythagoras);
@@ -2954,17 +3000,23 @@ button{font-family:inherit}
       ['A′','B′','C′'].forEach(function(n,i){b.circle(T2[i],5,C.orange,'#fff',2);
         b.text({x:T2[i].x+10,y:T2[i].y-8},n,C.orange,12,'start',700);});
       // 标记已知相等元素
-      function tick(p,q,color){var m=mid(p,q),d=unit(sub(q,p)),perp={x:-d.y,y:d.x};
-        b.line(add(m,mul(perp,-6)),add(m,mul(perp,6)),color||C.green,2.4);}
+      function tick(p,q,color,n){var m=mid(p,q),d=unit(sub(q,p)),perp={x:-d.y,y:d.x};
+        n=n||1;var gap=5,span=(n-1)*gap/2;
+        for(var i=0;i<n;i++){var off=(i*gap-span);var c=add(m,mul(perp,off));
+          b.line(add(c,mul(perp,-4.5)),add(c,mul(perp,4.5)),color||C.green,2.2);}}
       function angleMark(v,p,q,color){
         var a1=Math.atan2(p.y-v.y,p.x-v.x),a2=Math.atan2(q.y-v.y,q.x-v.x);
         b.arc(v,22,a1,a2,color||C.green,2);
       }
       var info='';
       if(method==='SSS'){
-        [[T1[0],T1[1]],[T1[1],T1[2]],[T1[0],T1[2]]].forEach(function(e){tick(e[0],e[1]);tick(T2[0],T2[1]);});
-        // 两组各标三边（简化：只标一组代表）
-        info='SSS：三组对应边分别相等（三边打相同记号）';
+        // 三组对应边各打不同道数的刻痕（1/2/3 道），两个三角形对应边记号一致
+        var pairs=[[0,1],[1,2],[0,2]];
+        pairs.forEach(function(pr,i){
+          tick(T1[pr[0]],T1[pr[1]],C.green,i+1);
+          tick(T2[pr[0]],T2[pr[1]],C.green,i+1);
+        });
+        info='SSS：三组对应边分别相等（对应边刻痕 1/2/3 道一致）';
       }else if(method==='SAS'){
         tick(T1[0],T1[1]);tick(T2[0],T2[1]);
         tick(T1[0],T1[2]);tick(T2[0],T2[2]);
@@ -3032,11 +3084,18 @@ button{font-family:inherit}
         b.circle(t[0],6,t[2],'#fff',2.4);b.text({x:t[0].x+9,y:t[0].y-8},t[1],t[2],13,'start',800);});
       b.handle(C,'C',16);
       b.circle(O,5,'#334155','#fff',2);b.text({x:O.x+9,y:O.y+6},'O','#334155',12,'start',700);
-      // 计算角
+      // 计算角：圆周角等于它所对弧圆心角的一半。若 C 落在劣弧 AB 上，
+      // 则 ∠ACB 对的是优弧，应取 (360−central)/2，而不是 central/2。
       var central=Math.abs(angDiff(s.aA*Math.PI/180,s.aB*Math.PI/180))*180/Math.PI;
-      if(central>180)central=360-central;
-      var circum=central/2;
-      b.readout('圆心角 ∠AOB = '+central.toFixed(1)+'°　圆周角 ∠ACB = '+circum.toFixed(1)+'°　（½ 关系'+(Math.abs(central-180)<1?'：直径对直角 ✓':'')+'）');
+      if(central>180)central=360-central; // 劣弧 AB 的圆心角
+      function norm(x){x=x%360;if(x<0)x+=360;return x;}
+      // 判断 C 是否位于 A→B 的劣弧上
+      var a=norm(s.aA),bb=norm(s.aB),cc=norm(s.aC);
+      var span=(bb-a+360)%360; // A 逆时针到 B 的角度
+      var cOnMinor = span<=180 ? (cc>a && cc<bb) : (cc<bb || cc>a);
+      var circum=cOnMinor?(360-central)/2:central/2;
+      b.readout('圆心角(劣弧) ∠AOB = '+central.toFixed(1)+'°　圆周角 ∠ACB = '+circum.toFixed(1)+'°'+
+        (cOnMinor?'（C 在劣弧上，对优弧，(360−'+central.toFixed(0)+'°)/2）':'（½ 关系'+(Math.abs(central-180)<1?'：直径对直角 ✓':'')+'）'));
     },
     onDrag:function(b,n,w){
       var s=b.state;if(n==='C'){s.aC=Math.atan2(-(w.y-300),w.x-450)*180/Math.PI;if(s.aC<0)s.aC+=360;}
@@ -3927,7 +3986,6 @@ button{font-family:inherit}
     legend:[{c:C.blue,t:'△ADE'},{c:C.orange,t:'△BEC'},{c:C.slate,t:'共线 A-E-B'}],
     hint:'等角的补角相等 → AA',interaction:'拖动点，观察异侧型下两三角形相似比恒定。',
     yUp:true,
-    controls:[{type:'range',key:'theta',label:'等角 θ °',min:35,max:75,step:1,digits:0}],
     init:function(b,s){s.t=0.5;},
     controls:[{type:'range',key:'t',label:'E 点位置',min:0.3,max:0.7,step:0.01,digits:2}],
     draw:function(b,s){
@@ -4363,23 +4421,7 @@ button{font-family:inherit}
     var playable=isPlayable(m);
     var html=crumb([['首页','#/'],[d.name,'#/d/'+d.id],[topicName(m.domain,m.topic),'#/d/'+d.id],[m.title,null]])+
       '<div class="mh-work">'+
-        '<aside class="mh-panel mh-side" id="mh-side">'+
-          '<h3>调节与操作</h3><p class="mh-side-sub">'+(m.hint||'拖动点、调节参数，观察规律')+'</p>'+
-          '<div id="mh-controls"></div>'+
-          '<div class="mh-side-divider"></div>'+
-          '<div class="mh-btnrow">'+
-            (playable?'<button class="mh-mini" id="mh-play">▶ 播放</button>':'')+
-            '<button class="mh-mini" id="mh-reset">↺ 重置</button>'+
-          '</div>'+
-          '<div class="mh-btnrow">'+
-            '<button class="mh-mini" id="mh-zin">＋ 放大</button>'+
-            '<button class="mh-mini" id="mh-zout">－ 缩小</button>'+
-            '<button class="mh-mini" id="mh-zfit">适配</button>'+
-          '</div>'+
-          '<div class="mh-side-divider"></div>'+
-          '<label class="mh-check"><input type="checkbox" id="mh-done"'+(done[m.id]?' checked':'')+'><span>标记为已学</span></label>'+
-        '</aside>'+
-        '<section>'+
+        '<section class="mh-stage-col">'+
           '<div class="mh-panel mh-stage">'+
             '<div class="mh-stage-head">'+
               '<div class="mh-legend">'+(m.legend||[]).map(function(l){
@@ -4397,8 +4439,27 @@ button{font-family:inherit}
             '<div class="mh-readout-wrap"><div id="mh-readout" aria-live="polite">准备就绪</div></div>'+
             '<div class="mh-hint">'+(m.interaction||'滚轮缩放，拖动图形空白处平移；拖动关键点观察变化。')+'</div>'+
           '</div>'+
-          '<div class="mh-panel mh-notes" id="mh-notes"></div>'+
         '</section>'+
+        '<aside class="mh-panel mh-side" id="mh-side">'+
+          '<button class="mh-fold" id="mh-fold" aria-expanded="false"><span class="mh-fold-t">调节与操作</span><span class="mh-fold-caret">▾</span></button>'+
+          '<div class="mh-side-body" id="mh-side-body">'+
+            '<h3 class="mh-side-h">调节与操作</h3><p class="mh-side-sub">'+(m.hint||'拖动点、调节参数，观察规律')+'</p>'+
+            '<div id="mh-controls"></div>'+
+            '<div class="mh-side-divider"></div>'+
+            '<div class="mh-btnrow">'+
+              (playable?'<button class="mh-mini" id="mh-play">▶ 播放</button>':'')+
+              '<button class="mh-mini" id="mh-reset">↺ 重置</button>'+
+            '</div>'+
+            '<div class="mh-btnrow">'+
+              '<button class="mh-mini" id="mh-zin">＋ 放大</button>'+
+              '<button class="mh-mini" id="mh-zout">－ 缩小</button>'+
+              '<button class="mh-mini" id="mh-zfit">适配</button>'+
+            '</div>'+
+            '<div class="mh-side-divider"></div>'+
+            '<label class="mh-check"><input type="checkbox" id="mh-done"'+(done[m.id]?' checked':'')+'><span>标记为已学</span></label>'+
+          '</div>'+
+        '</aside>'+
+        '<div class="mh-panel mh-notes" id="mh-notes"></div>'+
       '</div>';
     document.getElementById('mh-view').innerHTML=html;
     bindCrumb();
@@ -4435,6 +4496,15 @@ button{font-family:inherit}
       syncLockUI(currentBoard.setLocked(!currentBoard.locked));
     };
     syncLockUI(currentBoard.locked); // 初始化：Board 默认锁定
+    // 控制面板折叠：移动端首屏优先画布，控件默认收起；桌面端默认展开
+    var foldBtn=document.getElementById('mh-fold');
+    var sideEl=document.getElementById('mh-side');
+    function setFold(collapsed){
+      sideEl.classList.toggle('collapsed',collapsed);
+      if(foldBtn)foldBtn.setAttribute('aria-expanded',collapsed?'false':'true');
+    }
+    if(foldBtn)foldBtn.onclick=function(){setFold(!sideEl.classList.contains('collapsed'));};
+    setFold(window.matchMedia&&window.matchMedia('(max-width:760px)').matches);
     document.getElementById('mh-done').onchange=function(e){
       done[m.id]=e.target.checked;store.set('done',done);
     };

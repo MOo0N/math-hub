@@ -80,31 +80,34 @@
     ],
     init:function(b,s){s.a=3;s.b=4;},
     draw:function(b,s){
-      var g=b.scene,a=s.a*70,bb=s.b*70,c=Math.hypot(s.a,s.b)*70;
-      var cx=450,cy=300,ox=cx-c/2,oy=cy+c/2;
-      // 大正方形（旋转的，顶点是四个斜边端点）。构造：向外偏移
-      // 用标准弦图：大正方形边长 c，四个角放直角三角形
-      // 取大正方形轴对齐，边长 c，四角三角形
-      var L=c,left=cx-L/2,top=cy-L/2;
-      b.poly([{x:left,y:top},{x:left+L,y:top},{x:left+L,y:top+L},{x:left,y:top+L}],'#faf5ff',.5,C.purple,2.5);
-      // 四个直角三角形围出中央 (b-a) 正方形
-      var d=bb-a; // 可能为负
-      // 顶点序列
-      var P0={x:left+a,y:top},P1={x:left+L,y:top+a},P2={x:left+L-a,y:top+L},P3={x:left,y:top+L-a};
-      var Q0={x:left+a,y:top+a},Q1={x:left+L-a,y:top+a},Q2={x:left+L-a,y:top+L-a},Q3={x:left+a,y:top+L-a};
-      var tris=[
-        [{x:left,y:top},P0,Q0],[{x:left+L,y:top},P1,Q1],
-        [{x:left+L,y:top+L},P2,Q2],[{x:left,y:top+L},P3,Q3]
-      ];
-      tris.forEach(function(t){b.poly(t,C.blue,.28,C.blue,1.6);});
-      // 中央正方形（可能自交时用 abs）
-      var inner=[{x:left+a,y:top+a},{x:left+L-a,y:top+a},{x:left+L-a,y:top+L-a},{x:left+a,y:top+L-a}];
-      b.poly(inner,C.orange,.4,C.orange,2);
+      // 标准赵爽弦图：大正方形边长 c（斜边），内放四个直角边为 a、b 的全等三角形，
+      // 它们在中央围出边长 |b−a| 的小正方形。面积关系：c² = 4·(ab/2) + (b−a)² = a²+b²。
+      var a=s.a*70,bb=s.b*70,c=Math.hypot(s.a,s.b)*70;
+      var cx=450,cy=300,left=cx-c/2,top=cy-c/2;
+      var TL={x:left,y:top},TR={x:left+c,y:top},BR={x:left+c,y:top+c},BL={x:left,y:top+c};
+      b.poly([TL,TR,BR,BL],'#faf5ff',.5,C.purple,2.5);
+      // 各三角形直角顶点：斜边端点投影比例 b²/c、高 ab/c（保证两直角边为 a、b）
+      var a2=a*a,b2=bb*bb,ab=a*bb;
+      var Pt={x:left+b2/c,y:top+ab/c};
+      var Pr={x:left+c-ab/c,y:top+b2/c};
+      var Pb={x:left+c-b2/c,y:top+c-ab/c};
+      var Pl={x:left+ab/c,y:top+c-b2/c};
+      b.poly([TL,TR,Pt],C.blue,.28,C.blue,1.8);
+      b.poly([TR,BR,Pr],C.blue,.28,C.blue,1.8);
+      b.poly([BR,BL,Pb],C.blue,.28,C.blue,1.8);
+      b.poly([BL,TL,Pl],C.blue,.28,C.blue,1.8);
+      // 中央小正方形边长 = |b−a|
+      b.poly([Pt,Pr,Pb,Pl],C.orange,.42,C.orange,2);
       b.text({x:cx,y:cy+5},'(b−a)²','#c2410c',13,'middle',800);
-      b.text({x:left+a/2,y:top+a/2-4},'a','var(--mh-ink)',12,'middle',700);
-      var lhs=s.a*s.a+s.b*s.b,rhs=s.b*s.b; // c^2 computed below
+      // 给上边三角形的两条直角边标注 a、b，斜边 c
+      b.text({x:(TL.x+Pt.x)/2-4,y:(TL.y+Pt.y)/2},'b',C.blue,12,'middle',700);
+      b.text({x:(TR.x+Pt.x)/2+4,y:(TR.y+Pt.y)/2},'a',C.blue,12,'middle',700);
+      b.text({x:cx,y:top-10},'斜边 c',C.purple,12,'middle',700);
+      // 读数与图形一致：大正方形面积 = 四个三角形 + 中央小正方形
       var c2=s.a*s.a+s.b*s.b;
-      b.readout('a² + b² = '+(s.a*s.a+s.b*s.b).toFixed(2)+' = c² = '+c2.toFixed(2)+'　c = '+Math.sqrt(c2).toFixed(2));
+      b.readout('大正方形 c² = '+c2.toFixed(2)+' = 4×(½ab) + (b−a)² = '+
+        (2*s.a*s.b).toFixed(2)+' + '+Math.pow(s.b-s.a,2).toFixed(2)+
+        '　⇒　a² + b² = c² = '+c2.toFixed(2)+'　c = '+Math.sqrt(c2).toFixed(2));
     }
   };
   R(pythagoras);
@@ -142,17 +145,23 @@
       ['A′','B′','C′'].forEach(function(n,i){b.circle(T2[i],5,C.orange,'#fff',2);
         b.text({x:T2[i].x+10,y:T2[i].y-8},n,C.orange,12,'start',700);});
       // 标记已知相等元素
-      function tick(p,q,color){var m=mid(p,q),d=unit(sub(q,p)),perp={x:-d.y,y:d.x};
-        b.line(add(m,mul(perp,-6)),add(m,mul(perp,6)),color||C.green,2.4);}
+      function tick(p,q,color,n){var m=mid(p,q),d=unit(sub(q,p)),perp={x:-d.y,y:d.x};
+        n=n||1;var gap=5,span=(n-1)*gap/2;
+        for(var i=0;i<n;i++){var off=(i*gap-span);var c=add(m,mul(perp,off));
+          b.line(add(c,mul(perp,-4.5)),add(c,mul(perp,4.5)),color||C.green,2.2);}}
       function angleMark(v,p,q,color){
         var a1=Math.atan2(p.y-v.y,p.x-v.x),a2=Math.atan2(q.y-v.y,q.x-v.x);
         b.arc(v,22,a1,a2,color||C.green,2);
       }
       var info='';
       if(method==='SSS'){
-        [[T1[0],T1[1]],[T1[1],T1[2]],[T1[0],T1[2]]].forEach(function(e){tick(e[0],e[1]);tick(T2[0],T2[1]);});
-        // 两组各标三边（简化：只标一组代表）
-        info='SSS：三组对应边分别相等（三边打相同记号）';
+        // 三组对应边各打不同道数的刻痕（1/2/3 道），两个三角形对应边记号一致
+        var pairs=[[0,1],[1,2],[0,2]];
+        pairs.forEach(function(pr,i){
+          tick(T1[pr[0]],T1[pr[1]],C.green,i+1);
+          tick(T2[pr[0]],T2[pr[1]],C.green,i+1);
+        });
+        info='SSS：三组对应边分别相等（对应边刻痕 1/2/3 道一致）';
       }else if(method==='SAS'){
         tick(T1[0],T1[1]);tick(T2[0],T2[1]);
         tick(T1[0],T1[2]);tick(T2[0],T2[2]);
@@ -220,11 +229,18 @@
         b.circle(t[0],6,t[2],'#fff',2.4);b.text({x:t[0].x+9,y:t[0].y-8},t[1],t[2],13,'start',800);});
       b.handle(C,'C',16);
       b.circle(O,5,'#334155','#fff',2);b.text({x:O.x+9,y:O.y+6},'O','#334155',12,'start',700);
-      // 计算角
+      // 计算角：圆周角等于它所对弧圆心角的一半。若 C 落在劣弧 AB 上，
+      // 则 ∠ACB 对的是优弧，应取 (360−central)/2，而不是 central/2。
       var central=Math.abs(angDiff(s.aA*Math.PI/180,s.aB*Math.PI/180))*180/Math.PI;
-      if(central>180)central=360-central;
-      var circum=central/2;
-      b.readout('圆心角 ∠AOB = '+central.toFixed(1)+'°　圆周角 ∠ACB = '+circum.toFixed(1)+'°　（½ 关系'+(Math.abs(central-180)<1?'：直径对直角 ✓':'')+'）');
+      if(central>180)central=360-central; // 劣弧 AB 的圆心角
+      function norm(x){x=x%360;if(x<0)x+=360;return x;}
+      // 判断 C 是否位于 A→B 的劣弧上
+      var a=norm(s.aA),bb=norm(s.aB),cc=norm(s.aC);
+      var span=(bb-a+360)%360; // A 逆时针到 B 的角度
+      var cOnMinor = span<=180 ? (cc>a && cc<bb) : (cc<bb || cc>a);
+      var circum=cOnMinor?(360-central)/2:central/2;
+      b.readout('圆心角(劣弧) ∠AOB = '+central.toFixed(1)+'°　圆周角 ∠ACB = '+circum.toFixed(1)+'°'+
+        (cOnMinor?'（C 在劣弧上，对优弧，(360−'+central.toFixed(0)+'°)/2）':'（½ 关系'+(Math.abs(central-180)<1?'：直径对直角 ✓':'')+'）'));
     },
     onDrag:function(b,n,w){
       var s=b.state;if(n==='C'){s.aC=Math.atan2(-(w.y-300),w.x-450)*180/Math.PI;if(s.aC<0)s.aC+=360;}

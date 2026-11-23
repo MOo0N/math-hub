@@ -220,23 +220,7 @@
     var playable=isPlayable(m);
     var html=crumb([['首页','#/'],[d.name,'#/d/'+d.id],[topicName(m.domain,m.topic),'#/d/'+d.id],[m.title,null]])+
       '<div class="mh-work">'+
-        '<aside class="mh-panel mh-side" id="mh-side">'+
-          '<h3>调节与操作</h3><p class="mh-side-sub">'+(m.hint||'拖动点、调节参数，观察规律')+'</p>'+
-          '<div id="mh-controls"></div>'+
-          '<div class="mh-side-divider"></div>'+
-          '<div class="mh-btnrow">'+
-            (playable?'<button class="mh-mini" id="mh-play">▶ 播放</button>':'')+
-            '<button class="mh-mini" id="mh-reset">↺ 重置</button>'+
-          '</div>'+
-          '<div class="mh-btnrow">'+
-            '<button class="mh-mini" id="mh-zin">＋ 放大</button>'+
-            '<button class="mh-mini" id="mh-zout">－ 缩小</button>'+
-            '<button class="mh-mini" id="mh-zfit">适配</button>'+
-          '</div>'+
-          '<div class="mh-side-divider"></div>'+
-          '<label class="mh-check"><input type="checkbox" id="mh-done"'+(done[m.id]?' checked':'')+'><span>标记为已学</span></label>'+
-        '</aside>'+
-        '<section>'+
+        '<section class="mh-stage-col">'+
           '<div class="mh-panel mh-stage">'+
             '<div class="mh-stage-head">'+
               '<div class="mh-legend">'+(m.legend||[]).map(function(l){
@@ -254,8 +238,27 @@
             '<div class="mh-readout-wrap"><div id="mh-readout" aria-live="polite">准备就绪</div></div>'+
             '<div class="mh-hint">'+(m.interaction||'滚轮缩放，拖动图形空白处平移；拖动关键点观察变化。')+'</div>'+
           '</div>'+
-          '<div class="mh-panel mh-notes" id="mh-notes"></div>'+
         '</section>'+
+        '<aside class="mh-panel mh-side" id="mh-side">'+
+          '<button class="mh-fold" id="mh-fold" aria-expanded="false"><span class="mh-fold-t">调节与操作</span><span class="mh-fold-caret">▾</span></button>'+
+          '<div class="mh-side-body" id="mh-side-body">'+
+            '<h3 class="mh-side-h">调节与操作</h3><p class="mh-side-sub">'+(m.hint||'拖动点、调节参数，观察规律')+'</p>'+
+            '<div id="mh-controls"></div>'+
+            '<div class="mh-side-divider"></div>'+
+            '<div class="mh-btnrow">'+
+              (playable?'<button class="mh-mini" id="mh-play">▶ 播放</button>':'')+
+              '<button class="mh-mini" id="mh-reset">↺ 重置</button>'+
+            '</div>'+
+            '<div class="mh-btnrow">'+
+              '<button class="mh-mini" id="mh-zin">＋ 放大</button>'+
+              '<button class="mh-mini" id="mh-zout">－ 缩小</button>'+
+              '<button class="mh-mini" id="mh-zfit">适配</button>'+
+            '</div>'+
+            '<div class="mh-side-divider"></div>'+
+            '<label class="mh-check"><input type="checkbox" id="mh-done"'+(done[m.id]?' checked':'')+'><span>标记为已学</span></label>'+
+          '</div>'+
+        '</aside>'+
+        '<div class="mh-panel mh-notes" id="mh-notes"></div>'+
       '</div>';
     document.getElementById('mh-view').innerHTML=html;
     bindCrumb();
@@ -292,6 +295,15 @@
       syncLockUI(currentBoard.setLocked(!currentBoard.locked));
     };
     syncLockUI(currentBoard.locked); // 初始化：Board 默认锁定
+    // 控制面板折叠：移动端首屏优先画布，控件默认收起；桌面端默认展开
+    var foldBtn=document.getElementById('mh-fold');
+    var sideEl=document.getElementById('mh-side');
+    function setFold(collapsed){
+      sideEl.classList.toggle('collapsed',collapsed);
+      if(foldBtn)foldBtn.setAttribute('aria-expanded',collapsed?'false':'true');
+    }
+    if(foldBtn)foldBtn.onclick=function(){setFold(!sideEl.classList.contains('collapsed'));};
+    setFold(window.matchMedia&&window.matchMedia('(max-width:760px)').matches);
     document.getElementById('mh-done').onchange=function(e){
       done[m.id]=e.target.checked;store.set('done',done);
     };
