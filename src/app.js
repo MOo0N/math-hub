@@ -303,7 +303,7 @@
       if(foldBtn)foldBtn.setAttribute('aria-expanded',collapsed?'false':'true');
     }
     if(foldBtn)foldBtn.onclick=function(){setFold(!sideEl.classList.contains('collapsed'));};
-    setFold(window.matchMedia&&window.matchMedia('(max-width:760px)').matches);
+    setFold(window.matchMedia&&window.matchMedia('(max-width:900px)').matches);
     document.getElementById('mh-done').onchange=function(e){
       done[m.id]=e.target.checked;store.set('done',done);
     };
