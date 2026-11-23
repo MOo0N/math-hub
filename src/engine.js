@@ -7,8 +7,10 @@
 (function(global){
   'use strict';
   var NS='http://www.w3.org/2000/svg';
-  var COLORS={blue:'#2563eb',orange:'#ea580c',purple:'#7c3aed',green:'#059669',
-    red:'#dc2626',teal:'#0d9488',slate:'#475569',gray:'#94a3b8'};
+  /* 风格 A「几何手账」图形色板：低饱和暖调，与 CSS 变量同源，仍保证多图形可辨。
+     红/橙/绿保留色相，故模型文案中「红色点/橙色虚线/绿色构造点」依旧准确。 */
+  var COLORS={blue:'#3c6e8f',orange:'#c2703a',purple:'#9d5b7a',green:'#4f7a5b',
+    red:'#b8402f',teal:'#2f7d74',slate:'#6b5c49',gray:'#a89a85'};
 
   /* ---------- 向量工具（暴露给模型） ---------- */
   function add(a,b){return {x:a.x+b.x,y:a.y+b.y};}
@@ -34,6 +36,7 @@
     this.pan=null;
     this.drag=null;
     this.playing=false;
+    this.locked=true; // 画布默认锁定：新建/加载即锁定，须手动解锁后才能编辑（每个 Board 实例独立）
     this.t=0;
     this.speed=1;
     this.reduced=global.matchMedia&&global.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -52,6 +55,7 @@
     if(model.init) model.init(this,this.state);
     this.applyView();
     this.draw();
+    this.svg.classList.toggle('mh-canvas-locked',this.locked);
   }
   Board.prototype._buildLayers=function(){
     var grid=document.createElementNS(NS,'g');
@@ -169,6 +173,7 @@
     if(lbl)lbl.textContent=Math.round(this.baseView.w/v.w*100)+'%';
   };
   Board.prototype.zoomAt=function(factor,anchor){
+    if(this.locked)return; // 锁定后禁止缩放
     var v=this.view,p=anchor||{x:v.x+v.w/2,y:v.y+v.h/2};
     var nw=Math.max(160,Math.min(this.W*3,v.w/factor));
     var nh=nw*(v.h/v.w);
@@ -177,15 +182,27 @@
     v.w=nw;v.h=nh;this.applyView();
   };
   Board.prototype.resetView=function(){
+    if(this.locked)return; // 锁定后禁止复位视图（缩放）
     var b=this.baseView;this.view={x:b.x,y:b.y,w:b.w,h:b.h};this.applyView();
   };
+  /* 画布锁定开关：锁定态禁止一切画布编辑（拖点/平移/缩放）；解锁后全部恢复。返回当前锁定态 */
+  Board.prototype.setLocked=function(v){
+    this.locked=!!v;
+    this.drag=null;this.pan=null;
+    svgCursor(this.svg,''); // 清除内联光标，交给 CSS / pointermove 动态接管
+    this.svg.classList.toggle('mh-canvas-locked',this.locked);
+    return this.locked;
+  };
+  function svgCursor(svg,c){if(svg)svg.style.cursor=c;}
   Board.prototype._bindView=function(){
     var self=this,svg=this.svg;
     svg.addEventListener('wheel',function(e){
+      if(self.locked)return; // 锁定后滚轮不缩放
       e.preventDefault();
       self.zoomAt(e.deltaY<0?1.16:1/1.16,self.toView(e));
     },{passive:false});
     svg.addEventListener('pointerdown',function(e){
+      if(self.locked)return; // 锁定态：禁止一切画布编辑（拖点、平移、缩放）
       var w=self.toWorld(e);
       var best=null,bd=1e9;
       // _handles 由最近一次 draw() 收集，随状态更新保持最新
@@ -193,10 +210,12 @@
         var d=dist(w,h.p);if(d<bd){bd=d;best=h;}
       });
       if(best&&bd<(best.r||16)){
+        // 节点/点位：拖动命中点
         self.drag=best.name;
         svg.setPointerCapture(e.pointerId);svg.style.cursor='grabbing';
         if(self.model.onDragStart)self.model.onDragStart(self,best.name,w);
       }else{
+        // 画布空白区平移
         var p=self.toView(e);
         self.pan={base:{x:self.view.x,y:self.view.y},anchor:p};
         svg.setPointerCapture(e.pointerId);svg.style.cursor='grabbing';
@@ -213,6 +232,7 @@
         var w=self.toWorld(e);
         if(self.model.onDrag)self.model.onDrag(self,self.drag,w);
         else if(self.state[self.drag])self.state[self.drag]=w;
+        self.draw(); // 拖动后重绘：否则 state 变了但画面/读数不更新
       }
     });
     function end(e){

@@ -126,10 +126,15 @@
         var ratio=dist(A,D)/dist(A,B);
         b.readout('DE∥BC ⇒ △ADE∽△ABC　相似比 AD/AB = '+ratio.toFixed(2)+'　DE/BC = '+ratio.toFixed(2));
       }else{
-        var A={x:300,y:180},B={x:420,y:180},Cc={x:380,y:460},D={x:500,y:460};
-        var O={x:410,y:310};
-        b.line(A,Cc,C.blue,2.6);b.line(B,D,C.blue,2.6);
-        b.line(A,B,C.orange,3);b.line(Cc,D,C.orange,3);
+        // X 型（8 字型）：上下两条平行线 AB∥CD，交叉线 AD 与 BC 交于 O
+        var A={x:300,y:180},B={x:420,y:180},Cc={x:360,y:460},D={x:500,y:460};
+        // 求 AD 与 BC 的真实交点（保证对顶角存在）
+        var ux=D.x-A.x,uy=D.y-A.y,vx=Cc.x-B.x,vy=Cc.y-B.y;
+        var den=ux*vy-uy*vx;
+        var tt=den!==0?((B.x-A.x)*vy-(B.y-A.y)*vx)/den:0.5;
+        var O={x:A.x+ux*tt,y:A.y+uy*tt};
+        b.line(A,D,C.blue,2.6);b.line(B,Cc,C.blue,2.6); // 交叉线（对顶角在 O）
+        b.line(A,B,C.orange,3);b.line(Cc,D,C.orange,3); // 平行线 AB∥CD
         [[A,'A'],[B,'B'],[Cc,'C'],[D,'D'],[O,'O']].forEach(function(p){
           b.circle(p[0],5,p[1]==='O'?'#334155':C.blue,'#fff',2.2);
           b.text({x:p[0].x-9,y:p[0].y-7},p[1],'#334155',12,'end',700);});

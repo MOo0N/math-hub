@@ -3,3 +3,8 @@ package-lock.json
 *.log
 .DS_Store
 shots/
+# tests/ 生成的报告与截图
+tests/report.json
+tests/shots/
+tests/__pycache__/
+*.pyc

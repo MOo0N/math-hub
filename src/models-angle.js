@@ -6,6 +6,7 @@
   var D2R=Math.PI/180,R2D=180/Math.PI;
   function O(){return{x:450,y:300};}
   function P(x,y){return{x:450+x,y:300+y};}
+  function L(w){return{x:w.x-450,y:w.y-300};} // 世界→局部（相对画布中心）
   function angleAt(vertex,p,q){ // ∠pvq 的角度（度）
     var a=Math.atan2(p.y-vertex.y,p.x-vertex.x),b=Math.atan2(q.y-vertex.y,q.x-vertex.x);
     var d=Math.abs(a-b)*R2D;while(d>180)d=360-d;return d;
@@ -44,7 +45,7 @@
       var angA=angleAt(A,B,Cc),angP=angleAt(I,B,Cc);
       b.readout('∠A='+angA.toFixed(1)+'°　∠BPC='+angP.toFixed(1)+'°　90°+½∠A='+(90+angA/2).toFixed(1)+'°　✓');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else if(n==='B')b.state.B=q;else b.state.C=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else if(n==='B')b.state.B=w;else b.state.C=w;}
   };
   R(biInner);
 
@@ -79,7 +80,7 @@
       var angA=angleAt(A,B,Cc),angQ=angleAt(Q,B,Cc);
       b.readout('∠A='+angA.toFixed(1)+'°　∠BQC='+angQ.toFixed(1)+'°　90°−½∠A='+(90-angA/2).toFixed(1)+'°　✓');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else if(n==='B')b.state.B=q;else b.state.C=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else if(n==='B')b.state.B=w;else b.state.C=w;}
   };
   R(biOuter);
 
@@ -113,7 +114,7 @@
       var angA=angleAt(A,B,Cc),angD=angleAt(D,B,Cc);
       b.readout('∠A='+angA.toFixed(1)+'°　∠D='+angD.toFixed(1)+'°　½∠A='+(angA/2).toFixed(1)+'°　✓');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else if(n==='B')b.state.B=q;else b.state.C=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else if(n==='B')b.state.B=w;else b.state.C=w;}
   };
   R(biMixed);
 
@@ -145,7 +146,7 @@
       var angC=angleAt(C1,Dd,O0),angD=angleAt(Dd,C1,O0);
       b.readout('∠A+∠B='+(angA+angB).toFixed(1)+'°　∠C+∠D='+(angC+angD).toFixed(1)+'°　（8字两侧内角和相等）');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else b.state.B=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else b.state.B=w;}
   };
   R(eightAngle);
 
@@ -176,7 +177,7 @@
       var notchAngle=angleAt(Dd,B,Cc);
       b.readout('∠A+∠B+∠C='+(angA+angB+angC).toFixed(1)+'°　凹角∠BDC='+notchAngle.toFixed(1)+'°　（相等 → 飞镖模型）');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else if(n==='B')b.state.B=q;else if(n==='C')b.state.C=q;else b.state.D=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else if(n==='B')b.state.B=w;else if(n==='C')b.state.C=w;else b.state.D=w;}
   };
   R(dart);
 
@@ -280,7 +281,7 @@
       var angDAE=angleAt(A,D,E);
       b.readout('∠B='+angB.toFixed(1)+'°　∠C='+angC.toFixed(1)+'°　∠DAE='+angDAE.toFixed(1)+'°　½|∠C−∠B|='+(Math.abs(angC-angB)/2).toFixed(1)+'°');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else if(n==='B')b.state.B=q;else b.state.C=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else if(n==='B')b.state.B=w;else b.state.C=w;}
   };
   R(altBisector);
 

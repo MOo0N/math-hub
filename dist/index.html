@@ -5,21 +5,24 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="description" content="初中数学互动模型实验室：把定理、公式和最值模型变成可拖动、可调节、可播放的交互课件。">
 <title>数学互动实验室 · 初中交互模型课件库</title>
-<style>/* ============ MathHub 设计系统 ============ */
+<style>/* ============ MathHub 设计系统 · 风格 A「几何手账」 ============
+   暖米纸底 + 楷体标题 + 朱砂主色 + 虚线手账描边 + 方格纸画布
+   几何图形配色见 src/engine.js 的 COLORS（与本文件色板同源）        */
 :root{
-  --mh-bg:#f4f6fa; --mh-panel:#ffffff; --mh-ink:#1f2937; --mh-muted:#6b7280;
-  --mh-line:#e5e7eb; --mh-grid:#eef2f7; --mh-canvas-bg:#fbfcfe;
-  --mh-primary:#6d28d9; --mh-primary-soft:#f5f3ff; --mh-primary-line:#ddd6fe;
-  --mh-blue:#2563eb; --mh-orange:#ea580c; --mh-green:#059669; --mh-red:#dc2626;
-  --mh-teal:#0d9488; --mh-shadow:0 1px 3px rgba(16,24,40,.06),0 1px 2px rgba(16,24,40,.04);
+  --mh-font-kai:"STKaiti","KaiTi","STSong","Songti SC",serif;
+  --mh-bg:#fbf7f0; --mh-panel:#fffdf8; --mh-ink:#3d3229; --mh-muted:#8a7a68;
+  --mh-line:#e8ddcc; --mh-grid:#f1e7d5; --mh-canvas-bg:#fdfaf3;
+  --mh-primary:#c2563c; --mh-primary-soft:#fbf0e7; --mh-primary-line:#efcdbc;
+  --mh-blue:#3c6e8f; --mh-orange:#c2703a; --mh-green:#4f7a5b; --mh-red:#b8402f;
+  --mh-teal:#2f7d74; --mh-shadow:0 3px 0 rgba(120,90,55,.08);
   --mh-radius:14px;
 }
 :root[data-mh-theme="dark"]{
-  --mh-bg:#0f1117; --mh-panel:#1a1d26; --mh-ink:#e8eaef; --mh-muted:#9ca3af;
-  --mh-line:#2d3240; --mh-grid:#232836; --mh-canvas-bg:#151924;
-  --mh-primary:#a78bfa; --mh-primary-soft:#2a2140; --mh-primary-line:#4c3d7a;
-  --mh-blue:#60a5fa; --mh-orange:#fb923c; --mh-green:#34d399; --mh-red:#f87171;
-  --mh-teal:#2dd4bf; --mh-shadow:0 1px 3px rgba(0,0,0,.4);
+  --mh-bg:#221d17; --mh-panel:#2c261e; --mh-ink:#f1e7d7; --mh-muted:#ab9c85;
+  --mh-line:#4a3f32; --mh-grid:#3a3127; --mh-canvas-bg:#262019;
+  --mh-primary:#e8856d; --mh-primary-soft:#3a2a22; --mh-primary-line:#6f4637;
+  --mh-blue:#8fbcd8; --mh-orange:#e0a468; --mh-green:#8fc09a; --mh-red:#e48b7a;
+  --mh-teal:#79bdb3; --mh-shadow:0 3px 0 rgba(0,0,0,.25);
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -28,13 +31,18 @@ body{
   background:var(--mh-bg);color:var(--mh-ink);line-height:1.6;font-size:14px;
   -webkit-font-smoothing:antialiased;
 }
+/* 手账纸底：极淡的横向横线纹理（可见于大面积留白处） */
+body:before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.5;
+  background:repeating-linear-gradient(0deg,transparent,transparent 31px,rgba(160,130,90,.045) 32px);
+}
 a{color:var(--mh-primary);text-decoration:none}
 button{font-family:inherit}
 
 /* ---------- 顶栏 ---------- */
 .mh-top{
   position:sticky;top:0;z-index:50;background:var(--mh-panel);
-  border-bottom:1px solid var(--mh-line);box-shadow:var(--mh-shadow);
+  border-bottom:2px dashed var(--mh-line);box-shadow:var(--mh-shadow);
 }
 .mh-top-in{
   max-width:1280px;margin:0 auto;padding:10px 20px;
@@ -42,24 +50,24 @@ button{font-family:inherit}
 }
 .mh-brand{display:flex;align-items:center;gap:10px;cursor:pointer;flex-shrink:0}
 .mh-logo{
-  width:34px;height:34px;border-radius:9px;flex-shrink:0;
-  background:linear-gradient(135deg,#6d28d9,#a78bfa);
+  width:38px;height:38px;border:2px solid var(--mh-primary);border-radius:11px;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
-  color:#fff;font-weight:800;font-size:17px;letter-spacing:-1px;
+  color:var(--mh-primary);font-weight:900;font-size:18px;letter-spacing:-1px;
+  transform:rotate(-5deg);font-family:var(--mh-font-kai);
 }
-.mh-brand-txt b{font-size:16px;display:block;line-height:1.2}
+.mh-brand-txt b{font-size:17px;display:block;line-height:1.2;font-family:var(--mh-font-kai)}
 .mh-brand-txt span{font-size:11px;color:var(--mh-muted)}
 .mh-search{
   flex:1;min-width:160px;max-width:360px;margin-left:auto;position:relative;
 }
 .mh-search input{
-  width:100%;padding:8px 12px 8px 34px;border:1px solid var(--mh-line);
-  border-radius:9px;background:var(--mh-bg);color:var(--mh-ink);font-size:13px;outline:none;
+  width:100%;padding:8px 12px 8px 34px;border:1.5px dashed var(--mh-line);
+  border-radius:9px;background:var(--mh-canvas-bg);color:var(--mh-ink);font-size:13px;outline:none;
 }
-.mh-search input:focus{border-color:var(--mh-primary)}
+.mh-search input:focus{border-color:var(--mh-primary);border-style:solid}
 .mh-search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:.5}
 .mh-iconbtn{
-  border:1px solid var(--mh-line);background:var(--mh-panel);color:var(--mh-ink);
+  border:1.5px solid var(--mh-line);background:var(--mh-panel);color:var(--mh-ink);
   border-radius:9px;padding:7px 11px;cursor:pointer;font-size:13px;flex-shrink:0;
 }
 .mh-iconbtn:hover{border-color:var(--mh-primary);color:var(--mh-primary)}
@@ -68,10 +76,10 @@ button{font-family:inherit}
 .mh-search-wrap{position:relative;flex:1;min-width:160px;max-width:360px;margin-left:auto}
 .mh-search-results{
   position:absolute;top:calc(100% + 6px);left:0;right:0;
-  background:var(--mh-panel);border:1px solid var(--mh-line);border-radius:11px;
-  box-shadow:0 12px 32px rgba(16,24,40,.15);max-height:420px;overflow:auto;z-index:80;
+  background:var(--mh-panel);border:1.5px solid var(--mh-line);border-radius:11px;
+  box-shadow:0 12px 32px rgba(90,62,38,.15);max-height:420px;overflow:auto;z-index:80;
 }
-.mh-sr-item{padding:9px 13px;cursor:pointer;border-bottom:1px solid var(--mh-line)}
+.mh-sr-item{padding:9px 13px;cursor:pointer;border-bottom:1px dashed var(--mh-line)}
 .mh-sr-item:last-child{border-bottom:0}
 .mh-sr-item:hover{background:var(--mh-primary-soft)}
 .mh-sr-item b{font-size:13px;display:block}
@@ -87,54 +95,64 @@ button{font-family:inherit}
 
 /* ---------- 首页 hero ---------- */
 .mh-hero{
-  border-radius:18px;padding:30px 34px;margin-bottom:24px;
-  background:linear-gradient(135deg,#f5f3ff 0%,#eef2ff 55%,#ecfeff 100%);
-  border:1px solid var(--mh-primary-line);
+  border-radius:18px;padding:30px 34px;margin-bottom:24px;position:relative;overflow:hidden;
+  background:var(--mh-panel);border:2px solid var(--mh-line);box-shadow:var(--mh-shadow);
 }
-:root[data-mh-theme="dark"] .mh-hero{background:linear-gradient(135deg,#241b3a,#182540)}
-.mh-hero h1{margin:0 0 8px;font-size:28px;line-height:1.3}
+.mh-hero:after{
+  content:"∑  ∩  △  ∠  ≌  ∵  ∴";position:absolute;right:18px;top:16px;
+  font-size:16px;color:var(--mh-line);letter-spacing:9px;font-family:var(--mh-font-kai);
+}
+.mh-hero h1{margin:0 0 8px;font-size:30px;line-height:1.3;color:var(--mh-primary);font-family:var(--mh-font-kai)}
 .mh-hero p{margin:0;color:var(--mh-muted);max-width:720px;font-size:14px}
 .mh-hero-stats{display:flex;gap:26px;margin-top:20px;flex-wrap:wrap}
-.mh-hero-stats div b{font-size:22px;color:var(--mh-primary);display:block;line-height:1.1}
+.mh-hero-stats div b{font-size:24px;color:var(--mh-orange);display:block;line-height:1.1;font-family:var(--mh-font-kai)}
 .mh-hero-stats div span{font-size:12px;color:var(--mh-muted)}
 
 /* ---------- 领域卡片 ---------- */
-.mh-section-title{font-size:17px;font-weight:700;margin:26px 0 13px;display:flex;align-items:center;gap:9px}
-.mh-section-title i{width:4px;height:18px;border-radius:3px;background:var(--mh-primary);display:inline-block}
+.mh-section-title{
+  font-size:18px;font-weight:700;margin:26px 0 13px;display:flex;align-items:center;gap:9px;
+  font-family:var(--mh-font-kai);
+}
+.mh-section-title:before{content:"✦";color:var(--mh-orange);font-size:15px}
+.mh-section-title i{display:none}
 .mh-domains{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
 .mh-domain{
-  background:var(--mh-panel);border:1px solid var(--mh-line);border-radius:var(--mh-radius);
-  padding:20px;cursor:pointer;box-shadow:var(--mh-shadow);transition:transform .15s,border-color .15s;
-  border-top:4px solid var(--dc,var(--mh-primary));
+  background:var(--mh-panel);border:1.5px solid var(--mh-line);border-radius:var(--mh-radius);
+  padding:20px;cursor:pointer;box-shadow:var(--mh-shadow);transition:transform .18s,border-color .18s;
+  border-top:5px solid var(--dc,var(--mh-primary));
 }
-.mh-domain:hover{transform:translateY(-3px);border-color:var(--dc,var(--mh-primary))}
-.mh-domain h3{margin:0 0 6px;font-size:17px}
+.mh-domain:hover{transform:translateY(-3px) rotate(-.5deg)}
+.mh-domain h3{margin:0 0 6px;font-size:18px;font-family:var(--mh-font-kai)}
 .mh-domain p{margin:0 0 14px;font-size:12px;color:var(--mh-muted);min-height:34px}
 .mh-domain .mh-dom-meta{display:flex;gap:12px;font-size:11px;color:var(--mh-muted);flex-wrap:wrap}
-.mh-domain .mh-dom-meta b{color:var(--dc,var(--mh-primary));font-size:15px;display:block}
+.mh-domain .mh-dom-meta b{color:var(--dc,var(--mh-primary));font-size:17px;display:block;font-family:var(--mh-font-kai)}
 
 /* ---------- 主题 / 模型网格 ---------- */
 .mh-topic{margin-bottom:26px}
-.mh-topic h3{font-size:15px;margin:0 0 11px;display:flex;align-items:center;gap:8px}
-.mh-topic h3 small{font-weight:400;color:var(--mh-muted);font-size:12px}
+.mh-topic h3{font-size:16px;margin:0 0 11px;display:flex;align-items:center;gap:8px;font-family:var(--mh-font-kai)}
+.mh-topic h3 small{font-weight:400;color:var(--mh-muted);font-size:12px;font-family:sans-serif}
 .mh-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .mh-card{
-  background:var(--mh-panel);border:1px solid var(--mh-line);border-radius:12px;
-  padding:14px 16px;cursor:pointer;box-shadow:var(--mh-shadow);transition:transform .15s,border-color .15s;
-  position:relative;
+  background:var(--mh-panel);border:1.5px solid var(--mh-line);border-radius:12px;
+  padding:14px 16px;cursor:pointer;box-shadow:var(--mh-shadow);transition:transform .18s,border-color .18s;
+  position:relative;border-top:4px solid var(--mh-line);
 }
-.mh-card:hover{transform:translateY(-2px);border-color:var(--mh-primary)}
-.mh-card h4{margin:0 0 5px;font-size:14px;padding-right:52px}
+.mh-card:nth-child(4n+1){border-top-color:var(--mh-primary)}
+.mh-card:nth-child(4n+2){border-top-color:var(--mh-blue)}
+.mh-card:nth-child(4n+3){border-top-color:var(--mh-orange)}
+.mh-card:nth-child(4n+4){border-top-color:var(--mh-green)}
+.mh-card:hover{transform:translateY(-3px) rotate(-.4deg);border-color:var(--mh-primary)}
+.mh-card h4{margin:0 0 5px;font-size:15px;padding-right:52px;font-family:var(--mh-font-kai)}
 .mh-card p{margin:0;font-size:12px;color:var(--mh-muted);line-height:1.5}
 .mh-level{
   position:absolute;top:12px;right:12px;font-size:10px;padding:2px 7px;border-radius:999px;font-weight:600;
 }
-.mh-level-1{background:#ecfdf5;color:#047857}
-.mh-level-2{background:#fff7ed;color:#c2410c}
-.mh-level-3{background:#fef2f2;color:#b91c1c}
-:root[data-mh-theme="dark"] .mh-level-1{background:#064e3b;color:#6ee7b7}
-:root[data-mh-theme="dark"] .mh-level-2{background:#7c2d12;color:#fdba74}
-:root[data-mh-theme="dark"] .mh-level-3{background:#7f1d1d;color:#fca5a5}
+.mh-level-1{background:#e8f3ea;color:#356b45}
+.mh-level-2{background:#faf0dd;color:#96601f}
+.mh-level-3{background:#f9e6e0;color:#a33c2a}
+:root[data-mh-theme="dark"] .mh-level-1{background:#274a32;color:#a7d8b4}
+:root[data-mh-theme="dark"] .mh-level-2{background:#5a421d;color:#f0c887}
+:root[data-mh-theme="dark"] .mh-level-3{background:#5e2c23;color:#f3b3a4}
 .mh-fav{
   position:absolute;bottom:12px;right:12px;font-size:15px;cursor:pointer;opacity:.35;
   border:0;background:none;color:var(--mh-orange);padding:2px;
@@ -145,12 +163,20 @@ button{font-family:inherit}
 /* ---------- 模型工作台 ---------- */
 .mh-work{display:grid;grid-template-columns:280px minmax(0,1fr);gap:16px;align-items:start}
 .mh-panel{
-  background:var(--mh-panel);border:1px solid var(--mh-line);
+  background:var(--mh-panel);border:1.5px solid var(--mh-line);
   border-radius:var(--mh-radius);box-shadow:var(--mh-shadow);
 }
-.mh-side{padding:16px;position:sticky;top:74px}
-.mh-side h3{font-size:13px;margin:0 0 4px}
+.mh-side{padding:16px;position:sticky;top:80px;order:-1;grid-row:1 / span 2}
+.mh-stage-col{order:0;min-width:0;grid-column:2;grid-row:1}
+.mh-notes{grid-column:2;grid-row:2}
+.mh-side h3,.mh-side .mh-side-h{font-size:14px;margin:0 0 4px;font-family:var(--mh-font-kai)}
 .mh-side .mh-side-sub{font-size:11px;color:var(--mh-muted);margin:0 0 12px}
+/* 面板折叠开关：桌面端隐藏，移动端显示 */
+.mh-fold{display:none;width:100%;align-items:center;justify-content:space-between;
+  border:0;background:none;color:var(--mh-ink);font-size:14px;font-weight:700;
+  font-family:var(--mh-font-kai);padding:0;cursor:pointer}
+.mh-fold-caret{font-size:12px;color:var(--mh-muted);transition:transform .18s}
+.mh-side.collapsed .mh-fold-caret{transform:rotate(-90deg)}
 .mh-ctl{margin-bottom:14px}
 .mh-ctl-lab{display:flex;justify-content:space-between;font-size:12px;color:var(--mh-muted);margin-bottom:5px}
 .mh-ctl-lab b{color:var(--mh-ink);font-variant-numeric:tabular-nums}
@@ -159,13 +185,13 @@ button{font-family:inherit}
 .mh-check input{accent-color:var(--mh-primary);width:15px;height:15px;cursor:pointer}
 .mh-btnrow{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
 .mh-mini{
-  border:1px solid var(--mh-line);background:var(--mh-panel);color:var(--mh-ink);
-  border-radius:7px;padding:5px 9px;font-size:12px;cursor:pointer;
+  border:1.5px solid var(--mh-line);background:var(--mh-canvas-bg);color:var(--mh-ink);
+  border-radius:8px;padding:5px 9px;font-size:12px;cursor:pointer;transition:.15s;
 }
 .mh-mini:hover{border-color:var(--mh-primary);color:var(--mh-primary)}
 .mh-mini.on{background:var(--mh-primary);border-color:var(--mh-primary);color:#fff}
 .mh-wide{width:100%;margin:6px 0}
-.mh-side-divider{height:1px;background:var(--mh-line);margin:14px 0}
+.mh-side-divider{height:0;border-top:1px dashed var(--mh-line);margin:14px 0}
 
 .mh-stage{padding:12px}
 .mh-stage-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding:2px 4px 9px}
@@ -173,34 +199,56 @@ button{font-family:inherit}
 .mh-legend i{display:inline-block;width:14px;height:0;border-top:3px solid;vertical-align:3px;margin-right:4px;border-radius:2px}
 .mh-zoom{display:flex;gap:4px;align-items:center;margin-left:auto}
 .mh-zoom button{
-  border:1px solid var(--mh-line);background:var(--mh-panel);color:var(--mh-ink);
-  border-radius:7px;padding:3px 9px;font-size:13px;cursor:pointer;min-width:30px;
+  border:1.5px solid var(--mh-line);background:var(--mh-canvas-bg);color:var(--mh-ink);
+  border-radius:8px;padding:3px 9px;font-size:13px;cursor:pointer;min-width:30px;
+}
+.mh-zoom .mh-lock{font-size:12px;white-space:nowrap;min-width:74px}
+.mh-zoom .mh-lock[aria-pressed="true"]{
+  background:var(--mh-primary);border-color:var(--mh-primary);color:#fff;
 }
 .mh-zoom .zlevel{font-size:11px;color:var(--mh-muted);min-width:38px;text-align:center}
+.mh-canvas-wrap{position:relative}
 .mh-canvas{
   width:100%;height:auto;display:block;background:var(--mh-canvas-bg);
-  border:1px solid var(--mh-line);border-radius:10px;touch-action:none;cursor:grab;
+  border:2px dashed var(--mh-line);border-radius:10px;touch-action:none;cursor:grab;
+}
+.mh-canvas.mh-canvas-locked{cursor:not-allowed}
+/* 锁定遮罩：半透明纸色覆盖画布，居中提示「点击解锁」，不拦截指针（逻辑层已禁交互） */
+.mh-lock-veil{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  pointer-events:none;border-radius:10px;background:rgba(251,247,240,.34);
+  border:2px dashed var(--mh-primary-line);z-index:2;transition:opacity .18s;
+}
+:root[data-mh-theme="dark"] .mh-lock-veil{background:rgba(38,32,25,.42)}
+.mh-lock-veil.hidden{display:none}
+.mh-lock-msg{
+  font-family:var(--mh-font-kai);font-size:15px;font-weight:700;color:var(--mh-primary);
+  background:var(--mh-canvas-bg);border:1.5px solid var(--mh-primary-line);
+  border-radius:999px;padding:8px 18px;box-shadow:0 3px 12px rgba(92,40,28,.12);
+  white-space:nowrap;max-width:92%;text-align:center;
 }
 .mh-readout-wrap{padding:8px 4px 2px}
 #mh-readout{
   font-size:12px;background:var(--mh-primary-soft);border:1px solid var(--mh-primary-line);
+  border-left:4px solid var(--mh-primary);
   color:var(--mh-ink);border-radius:8px;padding:6px 11px;font-variant-numeric:tabular-nums;
 }
 .mh-hint{font-size:11.5px;color:var(--mh-muted);padding:8px 4px 2px}
 
 /* ---------- 说明区 ---------- */
 .mh-notes{padding:18px 22px;margin-top:16px;font-size:13px}
-.mh-notes h3{font-size:15px;margin:0 0 8px;display:flex;align-items:center;gap:7px}
+.mh-notes h3{font-size:16px;margin:0 0 8px;display:flex;align-items:center;gap:7px;font-family:var(--mh-font-kai)}
 .mh-notes h3:not(:first-child){margin-top:18px}
+.mh-notes h3:before{content:"✦";color:var(--mh-orange);font-size:13px}
 .mh-notes p{margin:6px 0}
 .mh-notes .mh-oneline{
   background:var(--mh-primary-soft);border:1px solid var(--mh-primary-line);
-  border-left:3px solid var(--mh-primary);border-radius:8px;padding:10px 13px;color:var(--mh-ink);
+  border-left:4px solid var(--mh-primary);border-radius:8px;padding:10px 13px;color:var(--mh-ink);
 }
 .mh-notes ol,.mh-notes ul{padding-left:22px;margin:6px 0}
 .mh-notes li{margin:5px 0}
 .mh-formula{
-  background:var(--mh-bg);border:1px solid var(--mh-line);border-left:3px solid var(--mh-primary);
+  background:var(--mh-canvas-bg);border:1px dashed var(--mh-line);border-left:4px solid var(--mh-orange);
   border-radius:7px;padding:9px 12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
   font-size:12px;margin:9px 0;overflow-x:auto;
 }
@@ -210,23 +258,48 @@ button{font-family:inherit}
 /* ---------- 筛选栏 ---------- */
 .mh-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;align-items:center}
 .mh-filters .mh-chip{
-  border:1px solid var(--mh-line);background:var(--mh-panel);color:var(--mh-ink);
+  border:1.5px solid var(--mh-line);background:var(--mh-panel);color:var(--mh-ink);
   border-radius:999px;padding:5px 13px;font-size:12px;cursor:pointer;
 }
 .mh-filters .mh-chip.on{background:var(--mh-primary);border-color:var(--mh-primary);color:#fff}
-.mh-filters .mh-sep{width:1px;height:20px;background:var(--mh-line);margin:0 4px}
+.mh-filters .mh-sep{width:1px;height:20px;border-left:1px dashed var(--mh-line);margin:0 4px}
 
 /* ---------- 空状态 ---------- */
 .mh-empty{text-align:center;padding:60px 20px;color:var(--mh-muted)}
-.mh-empty h3{color:var(--mh-ink);margin:0 0 8px}
+.mh-empty h3{color:var(--mh-ink);margin:0 0 8px;font-family:var(--mh-font-kai)}
 
 /* ---------- 页脚 ---------- */
-.mh-footer{text-align:center;color:var(--mh-muted);font-size:12px;padding:30px 20px 10px;border-top:1px solid var(--mh-line);margin-top:40px}
+.mh-footer{text-align:center;color:var(--mh-muted);font-size:12px;padding:30px 20px 10px;border-top:2px dashed var(--mh-line);margin-top:40px}
 
 /* ---------- 响应式 ---------- */
 @media(max-width:1080px){
   .mh-domains{grid-template-columns:repeat(2,minmax(0,1fr))}
   .mh-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+/* 平板竖屏及手机（≤900px）：模型工作台改为画布优先 + 控件折叠，
+   避免 768~900px 仍按桌面双栏把画布挤窄。首页两栏卡片保持到 760px 再单列。 */
+@media(max-width:900px){
+  /* 模型工作台：画布优先，控制面板折叠为抽屉 */
+  .mh-work{display:flex;flex-direction:column;gap:12px}
+  .mh-stage-col{order:1;width:100%}
+  .mh-side{order:2;width:100%;position:static;padding:12px 14px;grid-row:auto}
+  .mh-notes{order:3;width:100%;grid-column:auto;grid-row:auto}
+  /* 折叠态：只保留开关条，隐藏控件体 */
+  .mh-fold{display:flex}
+  .mh-side .mh-side-body{display:block;margin-top:12px}
+  .mh-side.collapsed .mh-side-body{display:none}
+  .mh-side.collapsed{padding:11px 14px}
+  /* 画布占比：尽量高、减少留白 */
+  .mh-stage{padding:9px}
+  .mh-stage-head{gap:6px;padding:2px 2px 7px}
+  .mh-legend{gap:9px;font-size:10.5px}
+  .mh-canvas{width:100%}
+  .mh-lock-msg{font-size:11px;padding:8px 13px;max-width:88%}
+  /* 按钮压缩：减小内边距与字号，减少纵向占位 */
+  .mh-mini{padding:4px 8px;font-size:11.5px;border-radius:7px}
+  .mh-btnrow{gap:5px;margin:8px 0}
+  .mh-zoom button,.mh-lock{padding:3px 7px;font-size:11.5px;min-width:26px}
+  .mh-notes{padding:15px 16px}
 }
 @media(max-width:760px){
   .mh-top-in{padding:9px 14px;gap:9px}
@@ -234,13 +307,11 @@ button{font-family:inherit}
   .mh-search-wrap{max-width:none;order:3;flex-basis:100%;margin-left:0}
   .mh-main{padding:16px 13px 50px}
   .mh-hero{padding:22px 20px}
-  .mh-hero h1{font-size:22px}
+  .mh-hero h1{font-size:23px}
   .mh-hero-stats{gap:18px}
+  .mh-hero:after{display:none}
   .mh-domains{grid-template-columns:1fr}
   .mh-cards{grid-template-columns:1fr}
-  .mh-work{grid-template-columns:1fr}
-  .mh-side{position:static}
-  .mh-notes{padding:15px 16px}
 }
 @media(min-width:2000px){
   .mh-main,.mh-top-in{max-width:1500px}
@@ -261,8 +332,10 @@ button{font-family:inherit}
 (function(global){
   'use strict';
   var NS='http://www.w3.org/2000/svg';
-  var COLORS={blue:'#2563eb',orange:'#ea580c',purple:'#7c3aed',green:'#059669',
-    red:'#dc2626',teal:'#0d9488',slate:'#475569',gray:'#94a3b8'};
+  /* 风格 A「几何手账」图形色板：低饱和暖调，与 CSS 变量同源，仍保证多图形可辨。
+     红/橙/绿保留色相，故模型文案中「红色点/橙色虚线/绿色构造点」依旧准确。 */
+  var COLORS={blue:'#3c6e8f',orange:'#c2703a',purple:'#9d5b7a',green:'#4f7a5b',
+    red:'#b8402f',teal:'#2f7d74',slate:'#6b5c49',gray:'#a89a85'};
 
   /* ---------- 向量工具（暴露给模型） ---------- */
   function add(a,b){return {x:a.x+b.x,y:a.y+b.y};}
@@ -288,6 +361,7 @@ button{font-family:inherit}
     this.pan=null;
     this.drag=null;
     this.playing=false;
+    this.locked=true; // 画布默认锁定：新建/加载即锁定，须手动解锁后才能编辑（每个 Board 实例独立）
     this.t=0;
     this.speed=1;
     this.reduced=global.matchMedia&&global.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -306,6 +380,7 @@ button{font-family:inherit}
     if(model.init) model.init(this,this.state);
     this.applyView();
     this.draw();
+    this.svg.classList.toggle('mh-canvas-locked',this.locked);
   }
   Board.prototype._buildLayers=function(){
     var grid=document.createElementNS(NS,'g');
@@ -423,6 +498,7 @@ button{font-family:inherit}
     if(lbl)lbl.textContent=Math.round(this.baseView.w/v.w*100)+'%';
   };
   Board.prototype.zoomAt=function(factor,anchor){
+    if(this.locked)return; // 锁定后禁止缩放
     var v=this.view,p=anchor||{x:v.x+v.w/2,y:v.y+v.h/2};
     var nw=Math.max(160,Math.min(this.W*3,v.w/factor));
     var nh=nw*(v.h/v.w);
@@ -431,15 +507,27 @@ button{font-family:inherit}
     v.w=nw;v.h=nh;this.applyView();
   };
   Board.prototype.resetView=function(){
+    if(this.locked)return; // 锁定后禁止复位视图（缩放）
     var b=this.baseView;this.view={x:b.x,y:b.y,w:b.w,h:b.h};this.applyView();
   };
+  /* 画布锁定开关：锁定态禁止一切画布编辑（拖点/平移/缩放）；解锁后全部恢复。返回当前锁定态 */
+  Board.prototype.setLocked=function(v){
+    this.locked=!!v;
+    this.drag=null;this.pan=null;
+    svgCursor(this.svg,''); // 清除内联光标，交给 CSS / pointermove 动态接管
+    this.svg.classList.toggle('mh-canvas-locked',this.locked);
+    return this.locked;
+  };
+  function svgCursor(svg,c){if(svg)svg.style.cursor=c;}
   Board.prototype._bindView=function(){
     var self=this,svg=this.svg;
     svg.addEventListener('wheel',function(e){
+      if(self.locked)return; // 锁定后滚轮不缩放
       e.preventDefault();
       self.zoomAt(e.deltaY<0?1.16:1/1.16,self.toView(e));
     },{passive:false});
     svg.addEventListener('pointerdown',function(e){
+      if(self.locked)return; // 锁定态：禁止一切画布编辑（拖点、平移、缩放）
       var w=self.toWorld(e);
       var best=null,bd=1e9;
       // _handles 由最近一次 draw() 收集，随状态更新保持最新
@@ -447,10 +535,12 @@ button{font-family:inherit}
         var d=dist(w,h.p);if(d<bd){bd=d;best=h;}
       });
       if(best&&bd<(best.r||16)){
+        // 节点/点位：拖动命中点
         self.drag=best.name;
         svg.setPointerCapture(e.pointerId);svg.style.cursor='grabbing';
         if(self.model.onDragStart)self.model.onDragStart(self,best.name,w);
       }else{
+        // 画布空白区平移
         var p=self.toView(e);
         self.pan={base:{x:self.view.x,y:self.view.y},anchor:p};
         svg.setPointerCapture(e.pointerId);svg.style.cursor='grabbing';
@@ -467,6 +557,7 @@ button{font-family:inherit}
         var w=self.toWorld(e);
         if(self.model.onDrag)self.model.onDrag(self,self.drag,w);
         else if(self.state[self.drag])self.state[self.drag]=w;
+        self.draw(); // 拖动后重绘：否则 state 变了但画面/读数不更新
       }
     });
     function end(e){
@@ -684,8 +775,9 @@ button{font-family:inherit}
         b.text({x:rt(w/2,h/2).x,y:rt(w/2,h/2).y},'面积 = a²−b²',C.green,14,'middle',800);
         b.text({x:rt(w/2,0).x,y:rt(w/2,0).y+22},'长 a+b='+(aa+bb2).toFixed(1),'var(--mh-muted)',12,'middle');
         b.text({x:rt(0,h/2).x-8,y:rt(0,h/2).y},'宽 a−b='+(aa-bb2).toFixed(1),'var(--mh-muted)',12,'end');
-        b.text({x:pt(A/2,A/2).x,y:pt(A/2,A/2).y},'a²',C.blue,14,'middle',700);
-        b.text({x:pt(Bb/2,Bb/2).x,y:pt(Bb/2,Bb/2).y},'b²',C.orange,14,'middle',700);
+        // 标签跟随实际大小：aa=max(a,b) 为大正方形边长，bb2=min(a,b)
+        b.text({x:pt(A/2,A/2).x,y:pt(A/2,A/2).y},'('+(aa===s.a?'a':'b')+')²',C.blue,14,'middle',700);
+        b.text({x:pt(Bb/2,Bb/2).x,y:pt(Bb/2,Bb/2).y},'('+(bb2===s.b?'b':'a')+')²',C.orange,14,'middle',700);
         var l=aa*aa-bb2*bb2,r=(aa+bb2)*(aa-bb2);
         b.readout('a²−b² = '+l.toFixed(2)+'　=　(a+b)(a−b) = '+r.toFixed(2)+'  ✓');
       }
@@ -732,8 +824,8 @@ button{font-family:inherit}
       var tx=2,ty=s.k*tx+s.b;
       b.line(P(0,s.b),P(tx,s.b),'#10b981',2,'5 4');
       b.line(P(tx,s.b),P(tx,ty),'#10b981',2,'5 4');
-      b.text({x:P(tx/2,s.b).x,y:P(tx/2,s.b).y+18},'Δx='+tx,'#059669',11,'middle');
-      b.text({x:P(tx,(s.b+ty)/2).x+8,y:P(tx,(s.b+ty)/2).y},'Δy='+(s.k*tx).toFixed(1),'#059669',11,'start');
+      b.text({x:P(tx/2,s.b).x,y:P(tx/2,s.b).y+18},'Δx='+tx,'#4f7a5b',11,'middle');
+      b.text({x:P(tx,(s.b+ty)/2).x+8,y:P(tx,(s.b+ty)/2).y},'Δy='+(s.k*tx).toFixed(1),'#4f7a5b',11,'start');
       b.readout('y = '+s.k.toFixed(1)+'x '+(s.b>=0?'+ ':'− ')+Math.abs(s.b).toFixed(1)+'　'+(s.k>0?'↗ 递增':s.k<0?'↘ 递减':'→ 水平'));
     }
   };
@@ -817,6 +909,17 @@ button{font-family:inherit}
       function f(x){return s.a*x*x+s.b*x+s.c;}
       var pts=[];for(var x=-6;x<=6;x+=0.05){var y=f(x);if(Math.abs(y)<=7)pts.push(P(x,y));}
       if(pts.length>1)b.polyline(pts,C.blue,2.8);
+      var cp=P(0,s.c);b.circle(cp,5,'#0ea5e9','#fff',2);
+      b.text({x:cp.x+8,y:cp.y+14},'(0,'+s.c.toFixed(1)+')','#0ea5e9',11,'start');
+      var eq='y = '+s.a.toFixed(2)+'x² '+(s.b>=0?'+':'-')+Math.abs(s.b).toFixed(1)+'x '+(s.c>=0?'+':'-')+Math.abs(s.c).toFixed(1);
+      // a≈0 时退化为一次函数：无对称轴/顶点，Δ 判据失效，避免 Infinity / 假「两个交点」
+      if(Math.abs(s.a)<1e-6){
+        var xint=Math.abs(s.b)<1e-9?null:-s.c/s.b;
+        b.text(P(0,-255),'a = 0：退化为一次函数 y = '+s.b.toFixed(1)+'x + '+s.c.toFixed(1),C.purple,13,'middle',700);
+        b.readout(eq+'　a=0 非二次函数：无对称轴/顶点　'+
+          (xint===null?(Math.abs(s.c)<1e-9?'恒为 0（无数根）':'无零点'):'与 x 轴交于 x='+xint.toFixed(2)+'（一个交点）'));
+        return;
+      }
       var xv=-s.b/(2*s.a),yv=f(xv);
       if(Math.abs(xv)<=7&&Math.abs(yv)<=7){
         // 对称轴
@@ -824,12 +927,9 @@ button{font-family:inherit}
         var vp=P(xv,yv);b.circle(vp,7,C.orange,'#fff',2.5);
         b.text({x:vp.x+10,y:vp.y-8},'顶点('+xv.toFixed(2)+','+yv.toFixed(2)+')',C.orange,12,'start',700);
       }
-      var cp=P(0,s.c);b.circle(cp,5,'#0ea5e9','#fff',2);
-      b.text({x:cp.x+8,y:cp.y+14},'(0,'+s.c.toFixed(1)+')','#0ea5e9',11,'start');
       var d=s.b*s.b-4*s.a*s.c;
       var rootTxt=d>0?'两个交点':d<0?'无交点':'一个交点(相切)';
-      b.readout('y = '+s.a.toFixed(2)+'x² '+(s.b>=0?'+':'-')+Math.abs(s.b).toFixed(1)+'x '+(s.c>=0?'+':'-')+Math.abs(s.c).toFixed(1)+
-        '　对称轴 x='+xv.toFixed(2)+'　Δ='+d.toFixed(2)+'（'+rootTxt+'）');
+      b.readout(eq+'　对称轴 x='+xv.toFixed(2)+'　Δ='+d.toFixed(2)+'（'+rootTxt+'）');
     }
   };
   R(quadFn);
@@ -870,7 +970,7 @@ button{font-family:inherit}
       b.text({x:v1.x+10,y:v1.y-8},'('+s.h.toFixed(1)+','+s.k.toFixed(1)+')',C.orange,12,'start',700);
       // 位移虚线
       b.line(v0,v1,C.green,1.8,'4 4');
-      b.text({x:(v0.x+v1.x)/2,y:(v0.y+v1.y)/2-10},'位移','#059669',11,'middle');
+      b.text({x:(v0.x+v1.x)/2,y:(v0.y+v1.y)/2-10},'位移','#4f7a5b',11,'middle');
       var htxt=s.h>0?'右移 '+s.h.toFixed(1):s.h<0?'左移 '+Math.abs(s.h).toFixed(1):'不左右移';
       var ktxt=s.k>0?'上移 '+s.k.toFixed(1):s.k<0?'下移 '+Math.abs(s.k).toFixed(1):'不上下移';
       b.readout('y = (x−'+s.h.toFixed(1)+')² + '+s.k.toFixed(1)+'　'+htxt+'、'+ktxt);
@@ -927,6 +1027,7 @@ button{font-family:inherit}
   var D2R=Math.PI/180,R2D=180/Math.PI;
   function O(){return{x:450,y:300};}
   function P(x,y){return{x:450+x,y:300+y};}
+  function L(w){return{x:w.x-450,y:w.y-300};} // 世界→局部（相对画布中心）
   function angleAt(vertex,p,q){ // ∠pvq 的角度（度）
     var a=Math.atan2(p.y-vertex.y,p.x-vertex.x),b=Math.atan2(q.y-vertex.y,q.x-vertex.x);
     var d=Math.abs(a-b)*R2D;while(d>180)d=360-d;return d;
@@ -965,7 +1066,7 @@ button{font-family:inherit}
       var angA=angleAt(A,B,Cc),angP=angleAt(I,B,Cc);
       b.readout('∠A='+angA.toFixed(1)+'°　∠BPC='+angP.toFixed(1)+'°　90°+½∠A='+(90+angA/2).toFixed(1)+'°　✓');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else if(n==='B')b.state.B=q;else b.state.C=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else if(n==='B')b.state.B=w;else b.state.C=w;}
   };
   R(biInner);
 
@@ -1000,7 +1101,7 @@ button{font-family:inherit}
       var angA=angleAt(A,B,Cc),angQ=angleAt(Q,B,Cc);
       b.readout('∠A='+angA.toFixed(1)+'°　∠BQC='+angQ.toFixed(1)+'°　90°−½∠A='+(90-angA/2).toFixed(1)+'°　✓');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else if(n==='B')b.state.B=q;else b.state.C=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else if(n==='B')b.state.B=w;else b.state.C=w;}
   };
   R(biOuter);
 
@@ -1034,7 +1135,7 @@ button{font-family:inherit}
       var angA=angleAt(A,B,Cc),angD=angleAt(D,B,Cc);
       b.readout('∠A='+angA.toFixed(1)+'°　∠D='+angD.toFixed(1)+'°　½∠A='+(angA/2).toFixed(1)+'°　✓');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else if(n==='B')b.state.B=q;else b.state.C=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else if(n==='B')b.state.B=w;else b.state.C=w;}
   };
   R(biMixed);
 
@@ -1066,7 +1167,7 @@ button{font-family:inherit}
       var angC=angleAt(C1,Dd,O0),angD=angleAt(Dd,C1,O0);
       b.readout('∠A+∠B='+(angA+angB).toFixed(1)+'°　∠C+∠D='+(angC+angD).toFixed(1)+'°　（8字两侧内角和相等）');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else b.state.B=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else b.state.B=w;}
   };
   R(eightAngle);
 
@@ -1097,7 +1198,7 @@ button{font-family:inherit}
       var notchAngle=angleAt(Dd,B,Cc);
       b.readout('∠A+∠B+∠C='+(angA+angB+angC).toFixed(1)+'°　凹角∠BDC='+notchAngle.toFixed(1)+'°　（相等 → 飞镖模型）');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else if(n==='B')b.state.B=q;else if(n==='C')b.state.C=q;else b.state.D=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else if(n==='B')b.state.B=w;else if(n==='C')b.state.C=w;else b.state.D=w;}
   };
   R(dart);
 
@@ -1201,7 +1302,7 @@ button{font-family:inherit}
       var angDAE=angleAt(A,D,E);
       b.readout('∠B='+angB.toFixed(1)+'°　∠C='+angC.toFixed(1)+'°　∠DAE='+angDAE.toFixed(1)+'°　½|∠C−∠B|='+(Math.abs(angC-angB)/2).toFixed(1)+'°');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else if(n==='B')b.state.B=q;else b.state.C=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else if(n==='B')b.state.B=w;else b.state.C=w;}
   };
   R(altBisector);
 
@@ -1258,9 +1359,10 @@ button{font-family:inherit}
       segLabel(b,s.A,C0,'AC='+dist(s.A,C0).toFixed(1),C.green);
       segLabel(b,B,D0,'BD='+dist(B,D0).toFixed(1),C.green);
       b.handle(s.A,'A',18);b.handle(C0,'C',18);
-      b.readout('AC = '+dist(s.A,C0).toFixed(2)+'　BD = '+dist(B,D0).toFixed(2)+'　→ AC − BD = '+(dist(s.A,C0)-dist(B,D0)).toFixed(4)+'（恒为 0）');
+      var dAC=dist(s.A,C0)-dist(B,D0);if(Math.abs(dAC)<5e-5)dAC=0; // 消除浮点负零
+      b.readout('AC = '+dist(s.A,C0).toFixed(2)+'　BD = '+dist(B,D0).toFixed(2)+'　→ AC − BD = '+dAC.toFixed(4)+'（恒为 0）');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else if(n==='C'){b.state.C=q;var k=dist(q,O())/dist(P(120,40),O());b.state.lenC=Math.max(70,Math.min(200,130*k));}H.refreshControls(b.state);}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else if(n==='C'){b.state.C=w;var k=dist(w,O())/dist(P(120,40),O());b.state.lenC=Math.max(70,Math.min(200,130*k));}H.refreshControls(b.state);}
   };
   R(handEquilateral);
 
@@ -1293,7 +1395,7 @@ button{font-family:inherit}
       b.handle(s.A,'A',18);b.handle(s.C,'C',18);
       b.readout('AC = '+dist(s.A,s.C).toFixed(2)+'　BD = '+dist(B,D0).toFixed(2)+'　夹角 = 90°（AC ⟂ BD）');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else b.state.C=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else b.state.C=w;}
   };
   R(handRight);
 
@@ -1334,48 +1436,82 @@ button{font-family:inherit}
       b.handle(s.A,'A',18);b.handle(s.B,'B',18);
       b.readout(s.show?('OA=OA′='+dist(O0,s.A).toFixed(1)+'　OB=OB′='+dist(O0,s.B).toFixed(1)+'　旋转 '+s.ang+'° 全等'):'先识别"共端点等线段+定角"，再点击作辅助线');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else b.state.B=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else b.state.B=w;}
   };
   R(handConstruct);
 
-  /* ---------- 4. 反手拉手 ---------- */
+  /* ---------- 4. 反手拉手（旋转相似型） ---------- */
   var handReverse={
     id:'cong-hand-reverse',domain:'geometry',topic:'congruence',level:3,
-    title:'反手拉手模型',brief:'两个等腰三角形共顶点但"开口相反"，一组线段反向旋转，仍能用 SAS 证全等。',
-    keys:'反手拉手 反向 等腰三角形 全等 SAS',
-    idea:'手拉手可"同向"或"反向"。同向时两等腰三角形绕 O 同转 α，连 A-C、B-D，得 AC=BD；反向时一个 +α 一个 −α，改连 A-D、B-C，得 AD=BC。关键是用有向角判断哪一对手拉线全等。',
-    proof:['同向：OA=OB、OC=OD，∠AOB=∠COD=α，∠AOC=∠BOD，SAS 得 △AOC≌△BOD，故 AC=BD。','反向：第二个三角形 ∠COD=−α，此时 ∠AOD=∠BOC（有向角），SAS 得 △AOD≌△BOC，故 AD=BC。','易错点：反向时不能再连 A-C、B-D，要换成 A-D、B-C。','统一技巧：把角都看作有向角，找出"共顶点 + 两组等边 + 相等夹角"的那对三角形。'],
-    formula:'同向：AC=BD　　反向：AD=BC',
-    tips:['对比"同向"与"反向"两种模式','拖动 A、C 观察对应关系变化','注意反向时角的加减方向相反'],
-    legend:[{c:C.blue,t:'等腰△OAB(+α)'},{c:C.orange,t:'等腰△OCD(−α)'},{c:C.green,t:'对应线段'}],
-    hint:'反向旋转，注意有向角',interaction:'切换同向/反向，拖动点观察对应关系与全等结论。',
+    title:'反手拉手模型（旋转相似）',
+    brief:'两个全等三角形共顶点、可绕该点旋转重合；连接对应顶点得到两个等腰三角形，它们的顶角都等于旋转角，因此相似。',
+    keys:'反手拉手 旋转 全等 等腰三角形 顶角相等 相似 AA',
+    idea:'△OAB 绕 O 旋转 θ 得到与它全等的 △OCD（C、D 分别是 A、B 的像）。连接对应点 A-C、B-D：因旋转保距，OA=OC、OB=OD，故 △OAC、△OBD 都是等腰三角形；它们的顶角 ∠AOC=∠BOD=θ 相等，所以两三角形相似。',
+    proof:[
+      '旋转保持距离与角度：△OAB ≌ △OCD，且 C 是 A 的像、D 是 B 的像，故 OA=OC、OB=OD。',
+      '于是 △OAC（腰 OA=OC）与 △OBD（腰 OB=OD）都是等腰三角形。',
+      'A 绕 O 旋转 θ 到 C，故顶角 ∠AOC=θ；B 绕 O 旋转 θ 到 D，故顶角 ∠BOD=θ，两顶角相等。',
+      '等腰三角形顶角相等 ⇒ 两底角也各为 (180°−θ)/2，由 AA 判定 △OAC∽△OBD。',
+      '相似比 OA/OB = OC/OD = AC/BD，拖动点或改变 θ 均恒成立。'
+    ],
+    formula:'∠AOC = ∠BOD = θ　⇒　△OAC ∽ △OBD　　AC/BD = OA/OB',
+    tips:[
+      '拖动 A、B 改变 △OAB 的形状与朝向',
+      '调节旋转角 θ，观察两个等腰三角形的顶角始终相等',
+      '用「显示/隐藏等腰」聚焦由手拉线构成的两个等腰三角形',
+      '读数中的 AC/BD 与 OA/OB 始终相等，验证相似'
+    ],
+    legend:[{c:C.blue,t:'△OAB'},{c:C.orange,t:'△OCD（旋转全等）'},{c:C.purple,t:'等腰△OAC'},{c:C.teal,t:'等腰△OBD'}],
+    hint:'旋转全等 → 等腰 → 顶角相等 → 相似',
+    interaction:'拖动 A、B，调节旋转角 θ；观察两个全等三角形绕 O 旋转重合，手拉线构成的两个等腰三角形顶角恒等、彼此相似。',
     yUp:true,
     controls:[
-      {type:'buttons',key:'mode',items:[{label:'反手(推荐)',onclick:function(b,s){s.mode=-1;}},{label:'正手对比',onclick:function(b,s){s.mode=1;}}]},
-      {type:'range',key:'alpha',label:'顶角 °',min:30,max:110,step:1,digits:0}
+      {type:'range',key:'theta',label:'旋转角 θ °',min:40,max:160,step:1,digits:0},
+      {type:'buttons',key:'iso',items:[
+        {label:'显示等腰',onclick:function(b,s){s.showIso=true;}},
+        {label:'隐藏等腰',onclick:function(b,s){s.showIso=false;}}
+      ]}
     ],
-    init:function(b,s){s.mode=-1;s.alpha=70;s.A=P(-150,80);s.C=P(140,60);},
+    init:function(b,s){s.theta=120;s.showIso=true;s.A=P(-170,90);s.B=P(-170,-90);},
     draw:function(b,s){
-      var O0=O(),a=s.alpha*D2R;
-      var B=rot(s.A,O0,a),D0=rot(s.C,O0,s.mode*a);
-      b.poly([O0,s.A,B],C.blue,.10,C.blue,2.4);
-      b.poly([O0,s.C,D0],C.orange,.10,C.orange,2.4);
-      var L1p,L1q,L2p,L2q,lbl1,lbl2,d1,d2;
-      if(s.mode<0){ L1p=s.A;L1q=D0;L2p=B;L2q=s.C;lbl1='AD';lbl2='BC'; }
-      else{ L1p=s.A;L1q=s.C;L2p=B;L2q=D0;lbl1='AC';lbl2='BD'; }
-      d1=dist(L1p,L1q);d2=dist(L2p,L2q);
-      b.line(L1p,L1q,C.green,3);b.line(L2p,L2q,C.green,3);
-      tick(b,O0,s.A,C.blue);tick(b,O0,B,C.blue);tick(b,O0,s.C,C.orange);tick(b,O0,D0,C.orange);
-      b.circle(O0,5,C.slate,C.slate,2);b.text({x:O0.x-14,y:O0.y-16},'O',C.slate,13,'middle',700);
-      [[s.A,'A',C.blue],[B,'B',C.blue],[s.C,'C',C.orange],[D0,'D',C.orange]].forEach(function(t){
-        b.circle(t[0],5,t[2],t[2],2);b.text({x:t[0].x,y:t[0].y-14},t[1],t[2],13,'middle',700);});
-      segLabel(b,L1p,L1q,lbl1+'='+d1.toFixed(1),C.green);
-      segLabel(b,L2p,L2q,lbl2+'='+d2.toFixed(1),C.green);
-      b.handle(s.A,'A',18);b.handle(s.C,'C',18);
-      b.text(P(0,-235),s.mode<0?'反向：连 A-D 与 B-C':'同向：连 A-C 与 B-D',C.purple,13,'middle',700);
-      b.readout((s.mode<0?'反手 AD=BC':'正手 AC=BD')+'：'+lbl1+'='+d1.toFixed(2)+'　'+lbl2+'='+d2.toFixed(2)+'　差='+(d1-d2).toFixed(3));
+      var O0=O(),th=s.theta*D2R;
+      var A=s.A,B=s.B,C0=rot(A,O0,th),D0=rot(B,O0,th);
+      // 1) 两个全等三角形（绕 O 旋转重合）
+      b.poly([O0,A,B],C.blue,.08,C.blue,2.4);
+      b.poly([O0,C0,D0],C.orange,.08,C.orange,2.4);
+      // 2) 等腰三角形高亮（手拉线 + 两条腰）
+      if(s.showIso){
+        b.poly([O0,A,C0],C.purple,.14,C.purple,2.2);
+        b.poly([O0,B,D0],C.teal,.14,C.teal,2.2);
+      }
+      // 3) 手拉线
+      b.line(A,C0,C.purple,3);b.line(B,D0,C.teal,3);
+      // 4) 旋转弧（表示可绕 O 旋转重合）与 θ 标注
+      var aA=Math.atan2(A.y-O0.y,A.x-O0.x);
+      b.arc(O0,50,aA,aA+th,C.slate,1.8);
+      var lab={x:O0.x+105*Math.cos(aA+th/2),y:O0.y+105*Math.sin(aA+th/2)};
+      b.circle(lab,15,null,'#ffffff',0,0,0.75);
+      b.text(lab,'θ='+s.theta+'°',C.slate,12,'middle',700);
+      // 5) 等长刻痕：OA=OC（蓝）、OB=OD（橙）
+      tick(b,O0,A,C.blue);tick(b,O0,C0,C.blue);
+      tick(b,O0,B,C.orange);tick(b,O0,D0,C.orange);
+      // 6) 顶点与标签
+      b.circle(O0,5,C.slate,C.slate,2);
+      b.text({x:O0.x-14,y:O0.y-16},'O',C.slate,13,'middle',700);
+      [[A,'A',C.blue],[B,'B',C.blue],[C0,'C',C.orange],[D0,'D',C.orange]].forEach(function(t){
+        b.circle(t[0],5,t[2],t[2],2);
+        b.text({x:t[0].x,y:t[0].y-14},t[1],t[2],13,'middle',700);
+      });
+      segLabel(b,A,C0,'AC='+dist(A,C0).toFixed(1),C.purple);
+      segLabel(b,B,D0,'BD='+dist(B,D0).toFixed(1),C.teal);
+      b.handle(A,'A',18);b.handle(B,'B',18);
+      // 7) 读数：顶角相等 + 相似比验证
+      var ratio1=dist(O0,A)/dist(O0,B),ratio2=dist(A,C0)/dist(B,D0);
+      var ok=Math.abs(ratio1-ratio2)<5e-4?' ✓':'（拖动中…）';
+      b.text(P(0,-250),'∠AOC = ∠BOD = '+s.theta+'°　⇒　等腰△OAC ∽ 等腰△OBD',C.purple,13,'middle',700);
+      b.readout('∠AOC = ∠BOD = '+s.theta.toFixed(1)+'°（顶角相等）　△OAC∽△OBD　OA/OB='+ratio1.toFixed(3)+'　AC/BD='+ratio2.toFixed(3)+ok);
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else b.state.C=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else b.state.B=w;}
   };
   R(handReverse);
 
@@ -1665,7 +1801,7 @@ button{font-family:inherit}
       b.handle(A,'A',18);b.handle(B,'B',18);b.handle(C1,'C',18);
       b.readout('AC='+dist(A,C1).toFixed(1)+'　BE='+dist(B,E).toFixed(1)+'　AD='+dist(A,D).toFixed(1)+'　AE='+dist(A,E).toFixed(1)+'(=2AD)');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else if(n==='B')b.state.B=q;else b.state.C=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else if(n==='B')b.state.B=w;else b.state.C=w;}
   };
   R(doubleMedian);
 
@@ -1867,6 +2003,250 @@ button{font-family:inherit}
   };
   R(crossSquare);
 
+})();
+
+/* ============ 核心知识点补充：圆切线、韦达定理、三角形中位线 ============ */
+(function(){
+  'use strict';
+  var H=window.MathHub,R=H.register,C=H.COLORS;
+  function O(){return{x:450,y:300};}
+  function P(x,y){return{x:450+x,y:300+y};}
+  function add(a,b){return{x:a.x+b.x,y:a.y+b.y};}
+  function sub(a,b){return{x:a.x-b.x,y:a.y-b.y};}
+  function mid(a,b){return{x:(a.x+b.x)/2,y:(a.y+b.y)/2};}
+  function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+  function dot(a,b){return a.x*b.x+a.y*b.y;}
+  function tag(b,p,txt,col,size){
+    b.circle(p,5,col,'#fff',2);
+    b.text({x:p.x,y:p.y-13},txt,col,size||13,'middle',700);
+  }
+
+  /* ---------- 1. 圆的切线 · 判定与性质 ---------- */
+  var tangent={
+    id:'circle-tangent',domain:'geometry',topic:'circle',level:2,
+    title:'圆的切线 · 判定与性质',
+    brief:'与圆只有一个公共点的直线叫切线；切点与圆心的半径垂直于切线。圆外一点到切点的切线长满足 PT² = PO² − r²（切线长定理的基础）。',
+    scenario:['已知圆与圆外一点，求切线长、切线与连心线的夹角。','求圆到直线的距离并与半径比较，判定直线与圆相切/相交/相离。','在圆内接图形中利用「半径垂直切线」构造直角三角形，结合勾股求解。','切线长定理：从圆外一点引两条切线，切线长相等（PA=PB）。'],
+    figure:['蓝色圆表示 ⊙O，半径 r 由滑块控制；圆外点 P 可沿水平方向拖动。','从 P 向圆作切线，橙色线段为切线段 PT，切点 T 处画半径 OT 与直角记号，突出 OT⊥PT。','虚线连 OP，读数条显示 PT² 与 PO²−r² 是否相等（勾股恒等式）。'],
+    idea:'设圆半径 r，圆外点 P 到圆心距离 d=PO。过 P 作切线切圆于 T，则 OT⊥PT，△OTP 为直角三角形，故 PT²=OP²−OT²=d²−r²。判定定理：过半径外端且垂直于该半径的直线是圆的切线。',
+    proof:[
+      '性质定理：圆的切线垂直于过切点的半径。反证：若半径 OT 不垂直切线 l，则 O 到 l 的垂足 H≠T，OH<OT=r，说明 l 与圆有两个交点，与「只有一个公共点」矛盾。',
+      '由 OT⊥PT，△OTP 是以 T 为直角的直角三角形，由勾股定理得 PT²=OP²−OT²=d²−r²。',
+      '判定定理：经过半径外端并且垂直于这条半径的直线是圆的切线；推论——圆心到直线距离等于半径 ⟺ 直线与圆相切。',
+      '切线长定理：从圆外一点 P 引两条切线 PA、PB，则 PA=PB（由两次勾股，均为 √(d²−r²)），且 OP 平分 ∠APB。'
+    ],
+    formula:'OT ⊥ PT　　PT² = OP² − r²　　PT = √(OP² − r²)',
+    example:[
+      '例1：⊙O 半径 r=3，点 P 到圆心 OP=5，求切线长 PT。PT=√(5²−3²)=√16=4。',
+      '例2：从圆外一点 P 引两条切线，切点为 A、B，若 PA=6，则 PB=6，且 OP 平分 ∠APB。',
+      '例3：直线 l 到圆心距离为 4，圆半径为 4，则 l 与圆相切；若距离为 3 则相交，为 5 则相离。'
+    ],
+    mistakes:[
+      '把「半径垂直于切线」写成「垂直于过切点的弦」——必须是过切点的半径。',
+      '误认为切线长 PT 等于 OP−r；实际是 √(OP²−r²)，只有勾股关系。',
+      '判定切线时只验证「过圆上一点」而漏掉「垂直于该点半径」，条件不足。'
+    ],
+    tips:['拖动 P 改变圆外点位置，观察切线长变化','调节半径 r，验证 PT²=OP²−r² 恒成立','直角记号处体现「半径垂直切线」'],
+    legend:[{c:C.blue,t:'⊙O'},{c:C.orange,t:'切线 PT'},{c:C.purple,t:'半径 OT / OP'}],
+    hint:'半径垂直切线，切线长用勾股',
+    interaction:'拖动圆外点 P 与半径滑块，观察切线长与恒等式。',
+    yUp:true,
+    controls:[
+      {type:'range',key:'r',label:'半径 r',min:70,max:150,step:1,digits:0},
+      {type:'range',key:'px',label:'P 到圆心距离 OP',min:190,max:340,step:1,digits:0}
+    ],
+    init:function(b,s){s.r=100;s.px=260;},
+    draw:function(b,s){
+      var O0=O(),r=s.r,d=s.px;
+      // 半透明圆面（poly 支持 fill-opacity，circle 第5参是描边透明度）
+      var ring=[];for(var k=0;k<48;k++){var t=k/48*Math.PI*2;ring.push({x:O0.x+r*Math.cos(t),y:O0.y+r*Math.sin(t)});}
+      b.poly(ring,C.blue,.10,C.blue,2.6);
+      var Pp={x:O0.x+d,y:O0.y};
+      // 切点 T：OT⊥PT，OT=r, OP=d -> 投影长度 r^2/d，高 = sqrt(r^2 - (r^2/d)^2)
+      var proj=r*r/d;
+      var h=Math.sqrt(Math.max(0,r*r-proj*proj));
+      var ux=(Pp.x-O0.x)/d,uy=(Pp.y-O0.y)/d; // = (1,0)
+      var base={x:O0.x+proj*ux,y:O0.y+proj*uy};
+      var T={x:base.x+h*(-uy),y:base.y+h*(ux)};
+      var T2={x:base.x-h*(-uy),y:base.y-h*(ux)};
+      b.line(Pp,T,C.orange,3); b.line(Pp,T2,C.orange,2,'6 4',.6);
+      b.line(O0,T,C.purple,2); b.line(O0,T2,C.purple,1.6,'4 4',.6);
+      b.line(O0,Pp,C.slate,1.6,'4 4');
+      // 直角记号 @T：沿 TO 与 TP 两方向
+      var u1=sub(O0,T),u2=sub(Pp,T);
+      b.rightAngle(T,u1,u2,11,C.purple);
+      b.circle(O0,5,C.slate,'#fff',2);
+      b.text({x:O0.x-13,y:O0.y-13},'O',C.slate,13,'middle',700);
+      tag(b,Pp,'P',C.slate);tag(b,T,'T',C.orange);
+      b.handle(Pp,'P',18);
+      var pt=dist(Pp,T),lhs=pt*pt,rhs=d*d-r*r;
+      b.readout('OP='+d.toFixed(0)+' r='+r.toFixed(0)+'　PT='+pt.toFixed(2)+'　PT²='+lhs.toFixed(1)+'　OP²−r²='+rhs.toFixed(1)+'　OT⊥PT ✓');
+    },
+    onDrag:function(b,n,w){
+      var s=b.state,O0=O();
+      if(n==='P'){s.px=Math.round(Math.max(s.r+20,Math.min(340,w.x-O0.x)));H.refreshControls(s);}
+    }
+  };
+  R(tangent);
+
+  /* ---------- 2. 韦达定理 · 根与系数关系 ---------- */
+  var vieta={
+    id:'vieta',domain:'algebra',topic:'equation',level:2,
+    title:'韦达定理 · 根与系数关系',
+    brief:'一元二次方程 ax²+bx+c=0（a≠0）的两根 x₁、x₂ 与系数满足 x₁+x₂=−b/a，x₁x₂=c/a；它把「根」与「系数」直接联系起来。',
+    scenario:['已知一根求另一根：由 x₁+x₂=−b/a 快速求出另一根，避免重复解二次方程。','求两根的对称式：如 x₁²+x₂²、1/x₁+1/x₂、|x₁−x₂| 等，先化成和与积再代入。','构造方程：已知两根，逆用韦达定理写出以它们为根的一元二次方程。','结合判别式 Δ 判断根的分布（同号、异号、正负）与参数取值。'],
+    figure:['橙色抛物线 y=ax²+bx+c，与 x 轴交于 A(x₁,0)、B(x₂,0) 两点（Δ>0 时）。','在 x 轴上标出两根 x₁、x₂ 的位置，读数条同时给出「两根之和」与「−b/a」、「两根之积」与「c/a」两组数值。','拖动 a、b、c 滑块，观察抛物线开口与交点变化，但两组等式始终相等。'],
+    idea:'设 ax²+bx+c=a(x−x₁)(x−x₂)，展开得 ax²+bx+c=ax²−a(x₁+x₂)x+a·x₁x₂。比较系数：b=−a(x₁+x₂)，c=a·x₁x₂，故 x₁+x₂=−b/a，x₁x₂=c/a。',
+    proof:[
+      '由因式分解定理，若 x₁、x₂ 是 ax²+bx+c=0 的两根，则 ax²+bx+c=a(x−x₁)(x−x₂)。',
+      '展开右边：a(x²−(x₁+x₂)x+x₁x₂)=ax²−a(x₁+x₂)x+a·x₁x₂。',
+      '与 ax²+bx+c 逐项比较系数：b=−a(x₁+x₂) ⟹ x₁+x₂=−b/a；c=a·x₁x₂ ⟹ x₁x₂=c/a。',
+      '前提：a≠0；当 Δ=b²−4ac≥0 时两根为实数（Δ=0 时两根相等）。韦达定理对复根同样成立。'
+    ],
+    formula:'x₁ + x₂ = − b/a　　x₁ · x₂ = c/a',
+    example:[
+      '例1：方程 x²−5x+6=0 的两根满足 x₁+x₂=5，x₁x₂=6（实际根为 2、3）。',
+      '例2：已知 x₁+x₂=4，x₁x₂=−5，则以它们为根的方程（首项系数 1）为 x²−4x−5=0。',
+      '例3：若方程 x²+(k−1)x+k=0 两根之和为 3，则 −(k−1)=1·3 ⟹ k=−2。',
+      '例4：求 x₁²+x₂²：因 x₁²+x₂²=(x₁+x₂)²−2x₁x₂，代入和与积即可。'
+    ],
+    mistakes:[
+      '忽略 a≠0 与 Δ≥0 的前提；无实根时不能谈「实数两根」。',
+      '符号错误：x₁+x₂=−b/a 有负号，x₁x₂=c/a 没有，且不要漏掉除以 a。',
+      '把韦达定理用于 ax²+bx+c=0 但忘记先化为一般形式（如 (x+1)(x−2)=3 需先展开）。'
+    ],
+    tips:['拖动 a、b、c 观察抛物线与两根变化','读数中两根之和始终等于 −b/a','两根之积始终等于 c/a， Δ≥0 保证实根'],
+    legend:[{c:C.orange,t:'抛物线 y=ax²+bx+c'},{c:C.blue,t:'两根与 x 轴交点'}],
+    hint:'和与积：x₁+x₂=−b/a，x₁x₂=c/a',
+    interaction:'拖动 a、b、c 滑块，观察两根位置，核对两根之和与积。',
+    controls:[
+      {type:'range',key:'a',label:'a',min:-2.5,max:2.5,step:0.1,digits:1},
+      {type:'range',key:'b',label:'b',min:-6,max:6,step:0.2,digits:1},
+      {type:'range',key:'c',label:'c',min:-6,max:6,step:0.2,digits:1}
+    ],
+    init:function(b,s){s.a=1;s.b=-1;s.c=-6;},
+    draw:function(b,s){
+      function sc(x,y){return{x:450+x*54,y:300-y*40};}
+      // a=0 不是二次方程，韦达定理不适用；明确提示而非用 a||0.001 伪装成巨型数值
+      if(Math.abs(s.a)<1e-6){
+        b.line(sc(-6,0),sc(6,0),'#a9a3a0',1.6);b.line(sc(0,-6),sc(0,7),'#a9a3a0',1.6);
+        var ylin=Math.abs(s.b)<1e-9?null:-s.c/s.b;
+        b.text(P(0,-255),'a = 0：不是二次方程，韦达定理（两根和/积）不适用',C.purple,13,'middle',700);
+        b.readout('a=0：方程为 '+s.b.toFixed(1)+'x + '+s.c.toFixed(1)+' = 0（一次方程）　'+
+          (ylin===null?(Math.abs(s.c)<1e-9?'恒等式，任意 x 均为解':'无解'):'唯一解 x='+ylin.toFixed(3))+
+          '　无「两根之和/积」可言');
+        return;
+      }
+      var a=s.a;
+      b.line(sc(-6,0),sc(6,0),'#a9a3a0',1.6);b.line(sc(0,-6),sc(0,7),'#a9a3a0',1.6);
+      // 抛物线
+      var pts=[];
+      for(var x=-5.5;x<=5.5;x+=0.06){var y=a*x*x+s.b*x+s.c;if(y>=-7&&y<=7)pts.push(sc(x,y));}
+      if(pts.length>1)b.polyline(pts,C.orange,2.8);
+      var D=s.b*s.b-4*a*s.c;
+      var sum=-s.b/a,prod=s.c/a;
+      var x1=null,x2=null;
+      if(D>=0){
+        var sq=Math.sqrt(D);
+        x1=(-s.b-sq)/(2*a);x2=(-s.b+sq)/(2*a);
+        [x1,x2].forEach(function(x,i){
+          if(Math.abs(x)<=6){
+            var A=sc(x,0);
+            b.circle(A,5.5,C.blue,'#fff',2);
+            b.text({x:A.x,y:A.y+20},'x'+(i+1)+'='+x.toFixed(2),C.blue,12,'middle',700);
+          }
+        });
+      }
+      var has=D>=-0.0001;
+      b.text(P(0,-255),'Δ = '+D.toFixed(2)+(has?' ≥ 0（有实根）':' < 0（无实根）'),C.purple,13,'middle',700);
+      if(has&&x1!==null&&x2!==null){
+        // 用求根公式得到的两根去「实测」和与积，再与系数公式对照，才是真正的验证
+        var realSum=x1+x2,realProd=x1*x2;
+        var okS=Math.abs(realSum-sum)<1e-6,okP=Math.abs(realProd-prod)<1e-6;
+        b.readout('由求根公式：x₁='+x1.toFixed(3)+'　x₂='+x2.toFixed(3)+
+          '　实测和='+realSum.toFixed(3)+' vs −b/a='+sum.toFixed(3)+(okS?' ✓':' ✗')+
+          '　实测积='+realProd.toFixed(3)+' vs c/a='+prod.toFixed(3)+(okP?' ✓':' ✗'));
+      }else{
+        b.readout('Δ<0，无实根：系数关系 x₁+x₂=−b/a='+sum.toFixed(3)+'，x₁·x₂=c/a='+prod.toFixed(3)+' 仅作演示（此处无实根可验证）');
+      }
+    }
+  };
+  R(vieta);
+
+  /* ---------- 3. 三角形中位线 ---------- */
+  var midline={
+    id:'triangle-midline',domain:'geometry',topic:'triangle',level:1,
+    title:'三角形中位线定理',
+    brief:'连接三角形两边中点的线段叫中位线；它平行于第三边且等于第三边的一半。这是证明平行与线段倍数关系的重要工具。',
+    scenario:['证明某线段平行于三角形一边：找到两边的中点并连成中位线，即得平行。','求线段长度：已知第三边求中位线（一半），或已知中位线求第三边（两倍）。','构造辅助线：在梯形或复杂图形中取中点连中位线，把分散条件集中。','与相似结合：中位线把三角形分成一个相似小三角形（相似比 1:2，面积比 1:4）。'],
+    figure:['蓝色三角形 ABC，D、E 分别是 AB、AC 的中点（用相同刻痕表示中点）。','橙色线段 DE 为中位线，绿色虚线为第三边 BC，二者平行（画平行箭头标记）。','拖动顶点 A、B、C，读数条显示 DE 与 BC/2 相等、且方向向量叉积为 0（平行）。'],
+    idea:'D、E 分别是 AB、AC 中点，则 AD/AB=AE/AC=1/2，又 ∠A 公共，故 △ADE∽△ABC（SAS），相似比 1:2，从而 DE∥BC 且 DE=BC/2。',
+    proof:[
+      '因为 D、E 为中点，AD=½AB，AE=½AC，故 AD/AB=AE/AC=1/2。',
+      '又 ∠DAE=∠BAC（公共角），由两边成比例且夹角相等得 △ADE∽△ABC（SAS）。',
+      '相似比为 1:2，所以 DE/BC=1/2，即 DE=½BC。',
+      '由相似对应角相等 ∠ADE=∠ABC，同位角相等故 DE∥BC。'
+    ],
+    formula:'DE ∥ BC　且　DE = ½ BC（D、E 为 AB、AC 中点）',
+    example:[
+      '例1：△ABC 中 BC=10，D、E 为两边中点，则 DE=5 且 DE∥BC。',
+      '例2：若中位线 DE=4，则第三边 BC=8。',
+      '例3：△ADE 与 △ABC 相似比为 1:2，面积比为 1:4（面积比是相似比的平方）。'
+    ],
+    mistakes:[
+      '把「连接两边中点的线段」与「过中点作平行线」混为一谈——中位线必须两端都是中点。',
+      '误认为中位线等于第三边的一半且「垂直」——是平行，不是垂直。',
+      '把面积比也写成 1:2；相似比 1:2 对应面积比 1:4。'
+    ],
+    tips:['拖动 A、B、C 改变三角形形状','观察刻痕标出 D、E 为中点','读数中 DE 恒等于 BC/2，且方向平行'],
+    legend:[{c:C.blue,t:'△ABC'},{c:C.orange,t:'中位线 DE'},{c:C.green,t:'第三边 BC'}],
+    hint:'中位线平行且等于第三边的一半',
+    interaction:'拖动三角形顶点，观察中位线与第三边的平行与倍数关系恒成立。',
+    yUp:true,
+    controls:[
+      {type:'buttons',key:'which',label:'中位线',items:[
+        {label:'DE（对 BC）',onclick:function(b,s){s.which='DE';}},
+        {label:'DF（对 AC）',onclick:function(b,s){s.which='DF';}},
+        {label:'EF（对 AB）',onclick:function(b,s){s.which='EF';}}
+      ]}
+    ],
+    init:function(b,s){s.which='DE';s.A=P(0,150);s.B=P(-170,-90);s.Cp=P(180,-70);},
+    draw:function(b,s){
+      var A=s.A,B=s.B,Cp=s.Cp;
+      var D=mid(A,B),E=mid(A,Cp),F=mid(B,Cp);
+      var pairs={
+        DE:[D,E,B,Cp,'DE','BC'],
+        DF:[D,F,A,Cp,'DF','AC'],
+        EF:[E,F,A,B,'EF','AB']
+      };
+      var q=pairs[s.which]||pairs.DE;
+      var P1=q[0],P2=q[1],Q1=q[2],Q2=q[3],ln=q[4],base=q[5];
+      b.poly([A,B,Cp],C.blue,.08,C.blue,2.4);
+      b.line(B,Cp,C.green,2.2);b.line(A,Cp,C.green,1.6,'5 4',.6);b.line(A,B,C.green,1.6,'5 4',.6);
+      b.line(P1,P2,C.orange,3.2);
+      // 中点刻痕
+      function tick2(p1,p2,m){
+        var d=sub(p2,p1),len=Math.hypot(d.x,d.y)||1,ux=d.x/len,uy=d.y/len;
+        var nx=-uy,ny=ux;
+        b.line({x:m.x-6*nx,y:m.y-6*ny},{x:m.x+6*nx,y:m.y+6*ny},C.slate,2);
+      }
+      tick2(A,B,D);tick2(A,Cp,E);tick2(B,Cp,F);
+      tag(b,A,'A',C.blue);tag(b,B,'B',C.blue);tag(b,Cp,'C',C.blue);
+      b.circle(D,4.5,C.orange,'#fff',2);b.circle(E,4.5,C.orange,'#fff',2);b.circle(F,4.5,C.orange,'#fff',2);
+      b.text({x:P1.x,y:P1.y-14},ln,C.orange,13,'middle',700);
+      b.text({x:P2.x,y:P2.y-14},ln,C.orange,13,'middle',700);
+      b.handle(A,'A',16);b.handle(B,'B',16);b.handle(Cp,'C',16);
+      var lm=dist(P1,P2),baseLen=dist(Q1,Q2);
+      var v1=sub(P2,P1),v2=sub(Q2,Q1);
+      var cross=v1.x*v2.y-v1.y*v2.x;
+      b.readout('D/E/F 为三边中点　'+ln+'='+lm.toFixed(2)+'　'+base+'/2='+(baseLen/2).toFixed(2)+'　平行判定(叉积)='+cross.toFixed(2));
+    },
+    onDrag:function(b,n,w){
+      var s=b.state;
+      if(n==='A')s.A=w;else if(n==='B')s.B=w;else if(n==='C')s.Cp=w;
+    }
+  };
+  R(midline);
 })();
 
 /* ============ 几何最值专题：7 个经典模型（从原课件迁移适配） ============ */
@@ -2076,7 +2456,7 @@ button{font-family:inherit}
       });}
       if(L.type==='circle'){
         b.circle(L.O,L.r,C.purple,'#faf5ff',2.6,'8 6',.6);
-        b.line(L.D,L.E,'#a78bfa',2,'6 5');
+        b.line(L.D,L.E,'#9d5b7a',2,'6 5');
         b.circle(L.O,4,C.purple,'#fff',2);
         b.circle(L.D,6,C.blue,'#fff',2.4);
         b.circle(L.E,6,C.orange,'#fff',2.4);
@@ -2433,10 +2813,10 @@ button{font-family:inherit}
     idea:'作 sinα=k 的射线，过 P 作 PH⊥射线，则 PH=k·PA。于是 k·PA+PB = PH+PB ≥ 点 B 到射线的垂线段长，B、P、H 共线且 BH⊥射线时取到。',
     proof:['作 ∠(l,射线)=α 使 sinα=k，从 A 向 l 异侧作这条射线。','过 P 作 PH⊥射线于 H，则在 Rt△APH 中 PH = PA·sinα = k·PA。','于是 k·PA+PB = PH+PB ≥ B 到射线的垂线段，当 B、P、H 共线且 BH⊥射线时取到。'],
     formula:'min(k·PA+PB) = 3cosα + 4sinα　（α = arcsin k，A、B 距离按模型给定）',
-    tips:['拖动 P 沿 l 运动，观察读数','改 k 会重新构造射线，注意 PH（紫）始终垂直射线','橙线 BH 只在最优点垂直射线，移动中不垂直是正常的'],
-    legend:[{c:C.blue,t:'PA'},{c:C.orange,t:'PB'},{c:C.purple,t:'构造射线与垂线 PH'}],
-    hint:'系数 k → sinα → 垂线段 → 拉直最短',
-    interaction:'拖动 P 沿 l 运动；改 k 会重新构造射线。注意 PH（紫）始终垂直射线，BH（橙）只在最优点垂直。',
+    tips:['拖动 P 沿 l 运动，观察折线 H-P-B 的长度变化',"改 k 会重新构造射线，紫色 PH 始终垂直射线且恒等于 k·PA",'最优点处红线 BH 垂直到射线——折线拉直，此时 k·PA+PB 最小','注意 PA 画成灰色虚线：它已被等长的 PH 替代'],
+    legend:[{c:'#0f766e',t:'构造射线 sinα=k'},{c:C.purple,t:'垂线 PH=k·PA'},{c:C.orange,t:'PB'},{c:C.red,t:'最优垂线 BH'}],
+    hint:'系数 k → sinα → 垂线 PH → 拉直为 BH 最短',
+    interaction:'拖动 P 沿 l 运动；紫色 PH 恒=k·PA 且垂直射线。拖到最优点时，B、P、H 共线，红色 BH 垂直于射线，折线被拉直，读数达到最小。',
     controls:[
       {type:'range',key:'k',label:'k = sinα',min:0.1,max:0.95,step:0.01,digits:2},
       {type:'check',key:'show',label:'显示构造射线与垂线 PH'},
@@ -2454,27 +2834,44 @@ button{font-family:inherit}
     draw:function(b,s){
       var g=b.scene,m=b.model,hw=m.hw,u=m.u(s),A={x:0,y:0},B={x:4,y:3};
       var P={x:s.p,y:0},Hh=m.hPoint(s),re=m.rayEnd(s);
+      var isBest=Math.abs(s.p-m.opt(s))<.035;
+      // 基准直线 l
       b.line(hw({x:-1,y:0}),hw({x:6,y:0}),'#94a3b8',2);
       b.text({x:hw({x:6,y:0}).x+8,y:hw({x:6,y:0}).y-12},'l','#64748b',13,'start',700);
       if(s.show){
+        // 构造射线：sinα = k
         b.line(hw(A),hw(re),'#0f766e',2.2,'8 5');
-        b.line(hw(P),hw(Hh),C.purple,2.6,'6 4');
-        var e=.22,Hp=add(Hh,mul(u,e)),Pn=unit(sub(P,Hh)),Pq=add(Hh,mul(Pn,e));
+        b.text({x:hw(re).x+8,y:hw(re).y-6},'射线（sinα=k）','#0f766e',12,'start',700);
+        // 关键转化：PH ⊥ 射线，PH = PA·sinα = k·PA（紫色实线）
+        b.line(hw(P),hw(Hh),C.purple,3);
+        var e=.2,Hp=add(Hh,mul(u,e)),Pn=unit(sub(P,Hh)),Pq=add(Hh,mul(Pn,e));
         b.line(hw(Hp),hw(add(Hp,mul(Pn,e))),C.purple,2);
         b.line(hw(add(Hp,mul(Pn,e))),hw(Pq),C.purple,2);
-        b.line(hw(Hh),hw(B),C.orange,1.8,'5 4');
+        // 折线 H-P-B = PH+PB = k·PA+PB
+        b.line(hw(P),hw(B),C.orange,2.6);
+        if(isBest){
+          // 最优点：B、P、H 三点共线，BH ⊥ 射线——这才是胡不归的“作垂线拉直”解法
+          b.line(hw(B),hw(Hh),C.red,4);
+          b.text({x:(hw(Hh).x+hw(B).x)/2+10,y:(hw(Hh).y+hw(B).y)/2},'BH⊥射线·最短',C.red,12,'start',700);
+        }else{
+          b.line(hw(Hh),hw(B),'#94a3b8',1.6,'4 4');
+          b.text({x:(hw(Hh).x+hw(B).x)/2,y:(hw(Hh).y+hw(B).y)/2-8},'拖到最优点 → 拉直成垂线 BH','#94a3b8',11,'middle',600);
+        }
         b.circle(hw(Hh),5,C.purple,'#fff',2.3);
-        b.text({x:hw(re).x+8,y:hw(re).y-6},'射线','#0f766e',12,'start',700);
         b.text({x:hw(Hh).x+9,y:hw(Hh).y-8},'H',C.purple,13,'start',800);
+        var mpa={x:(hw(P).x+hw(Hh).x)/2,y:(hw(P).y+hw(Hh).y)/2};
+        b.text({x:mpa.x+8,y:mpa.y},'PH=k·PA',C.purple,11,'start',600);
       }
-      b.line(hw(A),hw(P),C.blue,2.6);b.line(hw(B),hw(P),C.orange,2.6);
+      // PA 弱化为虚线：k·PA 已由 PH 替代
+      b.line(hw(A),hw(P),'#94a3b8',1.8,'5 4');
       [[A,'A',C.blue],[B,'B',C.orange],[P,'P',C.purple]].forEach(function(t,i){
         b.circle(hw(t[0]),i===2?8:6,t[2],'#fff',2.5);
         b.text({x:hw(t[0]).x+11,y:hw(t[0]).y+(i===2?-10:12)},t[1],t[2],14,'start',800);
       });
       b.handle(hw(P),'P',16);
       var val=s.k*Math.abs(s.p)+dist(B,P);
-      b.readout(s.k.toFixed(2)+'·PA+PB = '+val.toFixed(3)+' · 最小 '+m.min(s).toFixed(3)+(Math.abs(val-m.min(s))<.03?'  ✓':''));
+      b.readout('k·PA+PB = PH+PB = '+val.toFixed(3)+'　最小值 '+m.min(s).toFixed(3)+
+        (isBest?'  ✓ 最优：BH⊥射线（折线已拉直）':'  ← 拖到最优点，从 B 向射线作垂线 BH'));
     },
     onDrag:function(b,n,w){
       var s=b.state;if(n==='P')s.p=Math.max(0,Math.min(6,(w.x-450)/70));
@@ -2566,31 +2963,34 @@ button{font-family:inherit}
     ],
     init:function(b,s){s.a=3;s.b=4;},
     draw:function(b,s){
-      var g=b.scene,a=s.a*70,bb=s.b*70,c=Math.hypot(s.a,s.b)*70;
-      var cx=450,cy=300,ox=cx-c/2,oy=cy+c/2;
-      // 大正方形（旋转的，顶点是四个斜边端点）。构造：向外偏移
-      // 用标准弦图：大正方形边长 c，四个角放直角三角形
-      // 取大正方形轴对齐，边长 c，四角三角形
-      var L=c,left=cx-L/2,top=cy-L/2;
-      b.poly([{x:left,y:top},{x:left+L,y:top},{x:left+L,y:top+L},{x:left,y:top+L}],'#faf5ff',.5,C.purple,2.5);
-      // 四个直角三角形围出中央 (b-a) 正方形
-      var d=bb-a; // 可能为负
-      // 顶点序列
-      var P0={x:left+a,y:top},P1={x:left+L,y:top+a},P2={x:left+L-a,y:top+L},P3={x:left,y:top+L-a};
-      var Q0={x:left+a,y:top+a},Q1={x:left+L-a,y:top+a},Q2={x:left+L-a,y:top+L-a},Q3={x:left+a,y:top+L-a};
-      var tris=[
-        [{x:left,y:top},P0,Q0],[{x:left+L,y:top},P1,Q1],
-        [{x:left+L,y:top+L},P2,Q2],[{x:left,y:top+L},P3,Q3]
-      ];
-      tris.forEach(function(t){b.poly(t,C.blue,.28,C.blue,1.6);});
-      // 中央正方形（可能自交时用 abs）
-      var inner=[{x:left+a,y:top+a},{x:left+L-a,y:top+a},{x:left+L-a,y:top+L-a},{x:left+a,y:top+L-a}];
-      b.poly(inner,C.orange,.4,C.orange,2);
+      // 标准赵爽弦图：大正方形边长 c（斜边），内放四个直角边为 a、b 的全等三角形，
+      // 它们在中央围出边长 |b−a| 的小正方形。面积关系：c² = 4·(ab/2) + (b−a)² = a²+b²。
+      var a=s.a*70,bb=s.b*70,c=Math.hypot(s.a,s.b)*70;
+      var cx=450,cy=300,left=cx-c/2,top=cy-c/2;
+      var TL={x:left,y:top},TR={x:left+c,y:top},BR={x:left+c,y:top+c},BL={x:left,y:top+c};
+      b.poly([TL,TR,BR,BL],'#faf5ff',.5,C.purple,2.5);
+      // 各三角形直角顶点：斜边端点投影比例 b²/c、高 ab/c（保证两直角边为 a、b）
+      var a2=a*a,b2=bb*bb,ab=a*bb;
+      var Pt={x:left+b2/c,y:top+ab/c};
+      var Pr={x:left+c-ab/c,y:top+b2/c};
+      var Pb={x:left+c-b2/c,y:top+c-ab/c};
+      var Pl={x:left+ab/c,y:top+c-b2/c};
+      b.poly([TL,TR,Pt],C.blue,.28,C.blue,1.8);
+      b.poly([TR,BR,Pr],C.blue,.28,C.blue,1.8);
+      b.poly([BR,BL,Pb],C.blue,.28,C.blue,1.8);
+      b.poly([BL,TL,Pl],C.blue,.28,C.blue,1.8);
+      // 中央小正方形边长 = |b−a|
+      b.poly([Pt,Pr,Pb,Pl],C.orange,.42,C.orange,2);
       b.text({x:cx,y:cy+5},'(b−a)²','#c2410c',13,'middle',800);
-      b.text({x:left+a/2,y:top+a/2-4},'a','var(--mh-ink)',12,'middle',700);
-      var lhs=s.a*s.a+s.b*s.b,rhs=s.b*s.b; // c^2 computed below
+      // 给上边三角形的两条直角边标注 a、b，斜边 c
+      b.text({x:(TL.x+Pt.x)/2-4,y:(TL.y+Pt.y)/2},'b',C.blue,12,'middle',700);
+      b.text({x:(TR.x+Pt.x)/2+4,y:(TR.y+Pt.y)/2},'a',C.blue,12,'middle',700);
+      b.text({x:cx,y:top-10},'斜边 c',C.purple,12,'middle',700);
+      // 读数与图形一致：大正方形面积 = 四个三角形 + 中央小正方形
       var c2=s.a*s.a+s.b*s.b;
-      b.readout('a² + b² = '+(s.a*s.a+s.b*s.b).toFixed(2)+' = c² = '+c2.toFixed(2)+'　c = '+Math.sqrt(c2).toFixed(2));
+      b.readout('大正方形 c² = '+c2.toFixed(2)+' = 4×(½ab) + (b−a)² = '+
+        (2*s.a*s.b).toFixed(2)+' + '+Math.pow(s.b-s.a,2).toFixed(2)+
+        '　⇒　a² + b² = c² = '+c2.toFixed(2)+'　c = '+Math.sqrt(c2).toFixed(2));
     }
   };
   R(pythagoras);
@@ -2618,8 +3018,11 @@ button{font-family:inherit}
     ],
     init:function(b,s){s.method='SSS';},
     draw:function(b,s){
-      var g=b.scene,T1=[{x:180,y:420},{x:120,y:220},{x:360,y:220}]; // A B C
-      var T2=[{x:560,y:420},{x:500,y:220},{x:740,y:220}];
+      var g=b.scene;
+      // HL 分支要求 B 处为直角：令 A 与 B 同 x（BA 竖直）、BC 水平
+      var hl=(s.method==='HL');
+      var T1=hl?[{x:120,y:420},{x:120,y:220},{x:360,y:220}]:[{x:180,y:420},{x:120,y:220},{x:360,y:220}]; // A B C
+      var T2=hl?[{x:500,y:420},{x:500,y:220},{x:740,y:220}]:[{x:560,y:420},{x:500,y:220},{x:740,y:220}];
       function sc(p){return p;}
       var method=s.method;
       b.poly(T1,C.blue,.12,C.blue,2.6);b.poly(T2,C.orange,.12,C.orange,2.6);
@@ -2628,17 +3031,23 @@ button{font-family:inherit}
       ['A′','B′','C′'].forEach(function(n,i){b.circle(T2[i],5,C.orange,'#fff',2);
         b.text({x:T2[i].x+10,y:T2[i].y-8},n,C.orange,12,'start',700);});
       // 标记已知相等元素
-      function tick(p,q,color){var m=mid(p,q),d=unit(sub(q,p)),perp={x:-d.y,y:d.x};
-        b.line(add(m,mul(perp,-6)),add(m,mul(perp,6)),color||C.green,2.4);}
+      function tick(p,q,color,n){var m=mid(p,q),d=unit(sub(q,p)),perp={x:-d.y,y:d.x};
+        n=n||1;var gap=5,span=(n-1)*gap/2;
+        for(var i=0;i<n;i++){var off=(i*gap-span);var c=add(m,mul(perp,off));
+          b.line(add(c,mul(perp,-4.5)),add(c,mul(perp,4.5)),color||C.green,2.2);}}
       function angleMark(v,p,q,color){
         var a1=Math.atan2(p.y-v.y,p.x-v.x),a2=Math.atan2(q.y-v.y,q.x-v.x);
         b.arc(v,22,a1,a2,color||C.green,2);
       }
       var info='';
       if(method==='SSS'){
-        [[T1[0],T1[1]],[T1[1],T1[2]],[T1[0],T1[2]]].forEach(function(e){tick(e[0],e[1]);tick(T2[0],T2[1]);});
-        // 两组各标三边（简化：只标一组代表）
-        info='SSS：三组对应边分别相等（三边打相同记号）';
+        // 三组对应边各打不同道数的刻痕（1/2/3 道），两个三角形对应边记号一致
+        var pairs=[[0,1],[1,2],[0,2]];
+        pairs.forEach(function(pr,i){
+          tick(T1[pr[0]],T1[pr[1]],C.green,i+1);
+          tick(T2[pr[0]],T2[pr[1]],C.green,i+1);
+        });
+        info='SSS：三组对应边分别相等（对应边刻痕 1/2/3 道一致）';
       }else if(method==='SAS'){
         tick(T1[0],T1[1]);tick(T2[0],T2[1]);
         tick(T1[0],T1[2]);tick(T2[0],T2[2]);
@@ -2706,11 +3115,18 @@ button{font-family:inherit}
         b.circle(t[0],6,t[2],'#fff',2.4);b.text({x:t[0].x+9,y:t[0].y-8},t[1],t[2],13,'start',800);});
       b.handle(C,'C',16);
       b.circle(O,5,'#334155','#fff',2);b.text({x:O.x+9,y:O.y+6},'O','#334155',12,'start',700);
-      // 计算角
+      // 计算角：圆周角等于它所对弧圆心角的一半。若 C 落在劣弧 AB 上，
+      // 则 ∠ACB 对的是优弧，应取 (360−central)/2，而不是 central/2。
       var central=Math.abs(angDiff(s.aA*Math.PI/180,s.aB*Math.PI/180))*180/Math.PI;
-      if(central>180)central=360-central;
-      var circum=central/2;
-      b.readout('圆心角 ∠AOB = '+central.toFixed(1)+'°　圆周角 ∠ACB = '+circum.toFixed(1)+'°　（½ 关系'+(Math.abs(central-180)<1?'：直径对直角 ✓':'')+'）');
+      if(central>180)central=360-central; // 劣弧 AB 的圆心角
+      function norm(x){x=x%360;if(x<0)x+=360;return x;}
+      // 判断 C 是否位于 A→B 的劣弧上
+      var a=norm(s.aA),bb=norm(s.aB),cc=norm(s.aC);
+      var span=(bb-a+360)%360; // A 逆时针到 B 的角度
+      var cOnMinor = span<=180 ? (cc>a && cc<bb) : (cc<bb || cc>a);
+      var circum=cOnMinor?(360-central)/2:central/2;
+      b.readout('圆心角(劣弧) ∠AOB = '+central.toFixed(1)+'°　圆周角 ∠ACB = '+circum.toFixed(1)+'°'+
+        (cOnMinor?'（C 在劣弧上，对优弧，(360−'+central.toFixed(0)+'°)/2）':'（½ 关系'+(Math.abs(central-180)<1?'：直径对直角 ✓':'')+'）'));
     },
     onDrag:function(b,n,w){
       var s=b.state;if(n==='C'){s.aC=Math.atan2(-(w.y-300),w.x-450)*180/Math.PI;if(s.aC<0)s.aC+=360;}
@@ -2739,8 +3155,9 @@ button{font-family:inherit}
       var g=b.scene,O={x:450,y:300},r=170;
       // 弦方向（垂直于直径方向）
       var rad=s.ang*Math.PI/180;
-      var n={x:Math.cos(rad),y:Math.sin(rad)}; // 垂径方向
-      var t={x:-n.y,y:n.x}; // 弦方向
+      var n={x:Math.cos(rad),y:Math.sin(rad)}; // 垂径数学方向
+      // 屏幕 y 向下翻转，垂径实际方向为 (n.x,-n.y)；弦须与其垂直 ⇒ t=(-n.y,-n.x)
+      var t={x:-n.y,y:-n.x}; // 弦方向（已按屏幕 y 翻转，保证 n·t=0）
       var M={x:O.x+n.x*s.d,y:O.y-n.y*s.d}; // 弦中点（注意y翻转）
       var half=Math.sqrt(Math.max(0,r*r-s.d*s.d));
       var C={x:M.x+t.x*half,y:M.y+t.y*half},D={x:M.x-t.x*half,y:M.y-t.y*half};
@@ -2936,10 +3353,15 @@ button{font-family:inherit}
         var ratio=dist(A,D)/dist(A,B);
         b.readout('DE∥BC ⇒ △ADE∽△ABC　相似比 AD/AB = '+ratio.toFixed(2)+'　DE/BC = '+ratio.toFixed(2));
       }else{
-        var A={x:300,y:180},B={x:420,y:180},Cc={x:380,y:460},D={x:500,y:460};
-        var O={x:410,y:310};
-        b.line(A,Cc,C.blue,2.6);b.line(B,D,C.blue,2.6);
-        b.line(A,B,C.orange,3);b.line(Cc,D,C.orange,3);
+        // X 型（8 字型）：上下两条平行线 AB∥CD，交叉线 AD 与 BC 交于 O
+        var A={x:300,y:180},B={x:420,y:180},Cc={x:360,y:460},D={x:500,y:460};
+        // 求 AD 与 BC 的真实交点（保证对顶角存在）
+        var ux=D.x-A.x,uy=D.y-A.y,vx=Cc.x-B.x,vy=Cc.y-B.y;
+        var den=ux*vy-uy*vx;
+        var tt=den!==0?((B.x-A.x)*vy-(B.y-A.y)*vx)/den:0.5;
+        var O={x:A.x+ux*tt,y:A.y+uy*tt};
+        b.line(A,D,C.blue,2.6);b.line(B,Cc,C.blue,2.6); // 交叉线（对顶角在 O）
+        b.line(A,B,C.orange,3);b.line(Cc,D,C.orange,3); // 平行线 AB∥CD
         [[A,'A'],[B,'B'],[Cc,'C'],[D,'D'],[O,'O']].forEach(function(p){
           b.circle(p[0],5,p[1]==='O'?'#334155':C.blue,'#fff',2.2);
           b.text({x:p[0].x-9,y:p[0].y-7},p[1],'#334155',12,'end',700);});
@@ -3330,13 +3752,161 @@ button{font-family:inherit}
       s.pts.forEach(function(p){
         b.circle({x:cx+p.x*r,y:cy-p.y*r},2.6,p.in?C.blue:C.orange,p.in?C.blue:C.orange,1);
       });
-      b.text({x:cx,y:cy},'π/4 ≈ 0.785','#7c3aed',15,'middle',800);
+      b.text({x:cx,y:cy},'π/4 ≈ 0.785','#9d5b7a',15,'middle',800);
       var ratio=s.n?s.inside/s.n:0,piEst=ratio*4;
       b.readout('投点 '+s.n+'　圆内 '+s.inside+'　频率 '+(s.n?ratio.toFixed(4):'—')+' → π/4　估计 π ≈ '+(s.n?piEst.toFixed(3):'—'));
     }
   };
   R(geometricProbability);
 
+})();
+
+/* ============ 四边形专题：平行四边形、特殊平行四边形 ============ */
+(function(){
+  'use strict';
+  var H=window.MathHub,R=H.register,C=H.COLORS;
+  var D2R=Math.PI/180;
+  function O(){return{x:450,y:300};}
+  function P(x,y){return{x:450+x,y:300+y};}
+  function add(a,b){return{x:a.x+b.x,y:a.y+b.y};}
+  function mid(a,b){return{x:(a.x+b.x)/2,y:(a.y+b.y)/2};}
+  function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+  function tag(b,p,txt,col){
+    b.circle(p,5,col,'#fff',2);
+    b.text({x:p.x,y:p.y-13},txt,col,13,'middle',700);
+  }
+
+  /* ---------- 1. 平行四边形的性质与判定 ---------- */
+  var parallelogram={
+    id:'quad-parallelogram',domain:'geometry',topic:'quad',level:1,
+    title:'平行四边形 · 性质与判定',
+    brief:'两组对边分别平行的四边形。对边相等、对角相等、对角线互相平分；也是判定一个四边形是否为平行四边形的核心依据。',
+    scenario:['求未知边长或角度：已知一边与邻边，利用「对边相等」求周长；已知一角，利用「对角相等、邻角互补」求其余角。','证明线段相等或角相等：把待证线段放进平行四边形，用对边/对角性质转化。','作为矩形、菱形、正方形的「母图形」，在其上叠加特殊条件。'],
+    figure:['用蓝底平行四边形 ABCD 表示主体，虚线画出两条对角线 AC、BD。','在两条对角线交点处画橙色小圆点，标出「中点重合」，直观呈现「对角线互相平分」。','拖动 B 改变水平边长，拖动 D 改变邻边长度与夹角；读数条实时显示 AB/CD 与 AD/BC。'],
+    idea:'平行四边形 ABCD 中，AB∥CD、AD∥BC；由此可证 △ABD≌△CDB，得 AB=CD、AD=BC，再得对角相等；对角线 AC、BD 交于点 O 且 AO=CO、BO=DO。',
+    proof:[
+      '性质：连接对角线 AC。因 AB∥CD、AD∥BC，得 ∠BAC=∠DCA、∠BCA=∠DAC，又 AC 公共，故 △ABC≌△CDA（ASA）。',
+      '由全等得 AB=CD、BC=AD；再由两组内错角相等相加，得 ∠A=∠C、∠B=∠D，且邻角互补（∠A+∠B=180°）。',
+      '再连另一条对角线 BD，同理可证对角线互相平分：设交点为 O，则 AO=CO、BO=DO。',
+      '判定（常用四条）：①两组对边分别平行；②两组对边分别相等；③一组对边平行且相等；④对角线互相平分。满足任一即可判定为平行四边形。'
+    ],
+    formula:'AB = CD，AD = BC，∠A=∠C、∠B=∠D，AO=CO、BO=DO',
+    example:[
+      '例1：▱ABCD 中，AB=5，BC=3，求周长。由对边相等得 CD=5、AD=3，周长 = 2(5+3) = 16。',
+      '例2：▱ABCD 中 ∠A=65°，求 ∠B、∠C。邻角互补得 ∠B=115°，对角相等得 ∠C=65°。',
+      '例3：▱ABCD 的对角线交于 O，若 AO=4，则 AC=8（对角线互相平分）。'
+    ],
+    mistakes:[
+      '把「一组对边平行、另一组对边相等」误当作判定条件——反例是等腰梯形，必须强调「一组对边平行且相等」或「两组分别」。',
+      '认为对角线「相等」也是一般平行四边形的性质——只有矩形、正方形才对角线相等。',
+      '误以为邻角相等；实际是邻角互补、对角相等。'
+    ],
+    tips:['拖动 B 改变 AB，拖动 D 改变 AD 与夹角','观察读数中 AB=CD、AD=BC 恒成立','对角线交点处的小圆点表示互相平分'],
+    legend:[{c:C.blue,t:'平行四边形 ABCD'},{c:C.orange,t:'对角线 / 中点'}],
+    hint:'对边相等、对角相等、对角线互相平分',
+    interaction:'拖动顶点 B、D 或用滑块改变边长与夹角，观察三组性质恒成立。',
+    yUp:true,
+    controls:[
+      {type:'range',key:'a',label:'AB 长',min:90,max:260,step:1,digits:0},
+      {type:'range',key:'b',label:'AD 长',min:90,max:190,step:1,digits:0},
+      {type:'range',key:'ang',label:'∠A 度数 °',min:25,max:155,step:1,digits:0}
+    ],
+    init:function(b,s){s.a=190;s.b=130;s.ang=62;},
+    draw:function(b,s){
+      var A=P(-170,-80);
+      var B=add(A,{x:s.a,y:0});
+      var D=add(A,{x:s.b*Math.cos(s.ang*D2R),y:s.b*Math.sin(s.ang*D2R)});
+      var Cp=add(B,{x:D.x-A.x,y:D.y-A.y});
+      b.poly([A,B,Cp,D],C.blue,.10,C.blue,2.6);
+      b.line(A,Cp,C.orange,1.7,'5 4'); b.line(B,D,C.orange,1.7,'5 4');
+      var O1=mid(A,Cp),O2=mid(B,D);
+      b.circle(O1,4.5,C.orange,'#fff',1.6);
+      [['A',A],['B',B],['C',Cp],['D',D]].forEach(function(t){tag(b,t[1],t[0],C.blue);});
+      b.handle(A,'A',14);b.handle(B,'B',14);b.handle(D,'D',14);
+      var ab=dist(A,B),cd=dist(Cp,D),ad=dist(A,D),bc=dist(B,Cp);
+      b.readout('AB='+ab.toFixed(2)+' CD='+cd.toFixed(2)+'　AD='+ad.toFixed(2)+' BC='+bc.toFixed(2)+'　对角线中点距='+dist(O1,O2).toFixed(3));
+    },
+    onDrag:function(b,n,w){
+      var s=b.state,A=P(-170,-80);
+      if(n==='B'){s.a=Math.round(Math.max(90,Math.min(260,w.x-A.x)));}
+      else if(n==='D'){
+        var dx=w.x-A.x,dy=w.y-A.y;
+        s.b=Math.round(Math.max(90,Math.min(190,Math.hypot(dx,dy))));
+        s.ang=Math.round(Math.max(25,Math.min(155,Math.atan2(dy,dx)/D2R)));
+      }
+      H.refreshControls(s);
+    }
+  };
+  R(parallelogram);
+
+  /* ---------- 2. 特殊平行四边形 ---------- */
+  var specialQuad={
+    id:'quad-special',domain:'geometry',topic:'quad',level:2,
+    title:'特殊平行四边形 · 矩形/菱形/正方形',
+    brief:'在平行四边形上叠加特殊条件：有一个直角得矩形，有一组邻边相等得菱形，两者兼具得正方形。三者的对角线性质逐层加强。',
+    scenario:['矩形：利用「对角线相等且互相平分」求对角线长或证明线段相等，如直角三角形斜边中线等于斜边一半的来源。','菱形：利用「对角线互相垂直平分、且平分一组对角」求边长、面积（½·d₁·d₂）与角。','正方形：兼具矩形与菱形全部性质，是含 90° 旋转对称的最强特殊平行四边形。'],
+    figure:['蓝色四边形随「类型」按钮切换为一般平行四边形 / 矩形 / 菱形 / 正方形。','橙色虚线画两条对角线，实时显示对角线长度与它们的夹角（点积是否为 0 表示是否垂直）。','读数条标出当前类型的核心特征：矩形「对角线相等」、菱形「对角线垂直」、正方形「相等且垂直」。'],
+    idea:'特殊化路径：平行四边形 +「一个直角」→ 矩形（对角线相等）；+「一组邻边相等」→ 菱形（对角线垂直且平分对角）；两者都满足 → 正方形。三者都继承平行四边形全部性质。',
+    proof:[
+      '矩形：平行四边形有一个角为 90°，则四角都是直角。由勾股或 SAS 可证两条对角线 AC=BD。',
+      '菱形：平行四边形有一组邻边相等，则四边相等。设对角线交于 O，△AOB 与 △AOD 中 AB=AD、OB=OD、AO 公共，故全等，得 AC⊥BD，且 AO 平分 ∠A。',
+      '正方形：同时满足矩形与菱形，故对角线相等、垂直、互相平分，每条对角线平分一组对角，夹角为 45°。',
+      '判定链：对角线相等的平行四边形是矩形；对角线垂直的平行四边形是菱形；对角线相等且垂直的平行四边形是正方形。'
+    ],
+    formula:'矩形：AC=BD　菱形：AC⊥BD　正方形：AC=BD 且 AC⊥BD',
+    example:[
+      '例1：矩形对角线长 10，则互相平分后每段长 5（矩形对角线相等且平分）。',
+      '例2：菱形两条对角线长 6 和 8，面积 = ½×6×8 = 24；边长 = √(3²+4²) = 5。',
+      '例3：正方形的对角线把顶角平分成 45°，对角线与边成 45°。'
+    ],
+    mistakes:[
+      '把「对角线相等」当成菱形性质、「对角线垂直」当成矩形性质——恰好相反。',
+      '认为菱形对角线「相等」或矩形对角线「垂直」——一般不成立，只有正方形两者兼具。',
+      '误用菱形面积公式 ½·d₁·d₂ 于一般平行四边形。'
+    ],
+    tips:['点击「类型」按钮切换矩形/菱形/正方形','观察对角线长度与垂直关系随之变化','在正方形下读数同时显示对角线相等且垂直'],
+    legend:[{c:C.blue,t:'四边形'},{c:C.orange,t:'对角线'}],
+    hint:'矩形对角线相等，菱形对角线垂直，正方形两者兼具',
+    interaction:'切换类型按钮，拖动顶点，观察对角线的相等/垂直关系变化。',
+    yUp:true,
+    controls:[
+      {type:'buttons',key:'mode',label:'类型',items:[
+        {label:'平行四边形',onclick:function(b,s){s.mode='para';}},
+        {label:'矩形',onclick:function(b,s){s.mode='rect';}},
+        {label:'菱形',onclick:function(b,s){s.mode='rhombus';}},
+        {label:'正方形',onclick:function(b,s){s.mode='square';}}
+      ]},
+      {type:'range',key:'a',label:'边长 a',min:110,max:210,step:1,digits:0},
+      {type:'range',key:'b',label:'邻边 b',min:110,max:210,step:1,digits:0},
+      {type:'range',key:'ang',label:'∠A °',min:30,max:150,step:1,digits:0}
+    ],
+    init:function(b,s){s.mode='square';s.a=170;s.b=170;s.ang=90;},
+    draw:function(b,s){
+      var mode=s.mode;
+      var aa=s.a;
+      var bb=(mode==='rhombus'||mode==='square')?s.a:s.b;
+      var ang=(mode==='rect'||mode==='square')?90:s.ang;
+      var A=P(-aa/2,-bb*Math.sin(ang*D2R)/2-30);
+      var B=add(A,{x:aa,y:0});
+      var D=add(A,{x:bb*Math.cos(ang*D2R),y:bb*Math.sin(ang*D2R)});
+      var Cp=add(B,{x:D.x-A.x,y:D.y-A.y});
+      b.poly([A,B,Cp,D],C.blue,.10,C.blue,2.8);
+      b.line(A,Cp,C.orange,1.9,'6 4'); b.line(B,D,C.orange,1.9,'6 4');
+      [['A',A],['B',B],['C',Cp],['D',D]].forEach(function(t){tag(b,t[1],t[0],C.blue);});
+      var ac=dist(A,Cp),bd=dist(B,D);
+      var v1={x:Cp.x-A.x,y:Cp.y-A.y},v2={x:D.x-B.x,y:D.y-B.y};
+      var dot=v1.x*v2.x+v1.y*v2.y;
+      var names={para:'平行四边形',rect:'矩形',rhombus:'菱形',square:'正方形'};
+      var feat={para:'一般平行四边形',rect:'对角线相等',rhombus:'对角线垂直',square:'对角线相等且垂直'}[mode];
+      var inactive=[];
+      if(mode==='rhombus'||mode==='square')inactive.push('邻边 b（=a）');
+      if(mode==='rect'||mode==='square')inactive.push('∠A（=90°）');
+      var note=inactive.length?('　[当前无效滑块：'+inactive.join('、')+']'):'';
+      b.text(P(0,-250),'【'+names[mode]+'】'+feat,C.purple,13,'middle',700);
+      b.readout('['+names[mode]+'] AC='+ac.toFixed(2)+' BD='+bd.toFixed(2)+' 对角线点积='+dot.toFixed(3)+'（'+feat+'）'+note);
+    }
+  };
+  R(specialQuad);
 })();
 
 /* ============ 图形与几何 · 相似模型主题（8 个） ============ */
@@ -3405,7 +3975,7 @@ button{font-family:inherit}
     idea:'点 A、C、B 共线，∠ACE=∠D=∠E=θ（三个等角）。由外角定理 ∠DCE=∠A+∠AEC，导得 ∠A=∠CEB，配合等角，得 △ACE∽△BED。',
     proof:['∠ACE=∠D=∠E=θ。','由外角定理：∠DCE=∠A+∠AEC，又 ∠DCE=θ+∠CEB（拆分），可导出 ∠A=∠CEB。','再由 ∠ACE=∠E=θ，两角对应相等。','故 △ACE∽△BED（AA），对应边成比例 AC/BE=CE/ED=AE/BD。'],
     formula:'△ACE ∽ △BED　→　AC/BE = CE/ED = AE/BD',
-    tips:['拖动 D、E 改变构型','调节等角 θ 的大小','观察对应边比值恒相等'],
+    tips:['拖动 E 改变等角 θ 与构型','调节等角 θ 的大小','观察对应边比值恒相等'],
     legend:[{c:C.blue,t:'△ACE'},{c:C.orange,t:'△BED'},{c:C.slate,t:'共线 A-C-B'}],
     hint:'外角定理导角 → AA 相似',interaction:'拖动点，观察同侧一线三等角下两三角形相似比恒定。',
     yUp:true,
@@ -3441,7 +4011,19 @@ button{font-family:inherit}
       var r1=AC/BE,r2=dist(C1,E)/EDlen,r3=dist(A,E)/dist(B2,Dd);
       b.readout('AC/BE='+r1.toFixed(3)+'　CE/ED='+r2.toFixed(3)+'　AE/BD='+r3.toFixed(3)+'　（三者相等 → 相似）');
     },
-    onDrag:function(b,n,w){if(n==='E')b.state_E=L(w);}
+    onDrag:function(b,n,w){
+      // E 在以 C1 为端点的射线上，由 ∠ACE=θ 决定：拖 E 反推 θ
+      if(n==='E'){
+        var C1=P(-20,0);
+        var vx=w.x-C1.x,vy=w.y-C1.y;
+        if(Math.hypot(vx,vy)>1){
+          var th=Math.atan2(vy,-vx)/D2R; // dirCE=(-cosθ,sinθ) ⇒ θ=atan2(vy,-vx)
+          th=Math.max(35,Math.min(75,th));
+          b.state.theta=Math.round(th);
+          H.refreshControls(b.state);
+        }
+      }
+    }
   };
   R(threeEqSame);
 
@@ -3457,7 +4039,6 @@ button{font-family:inherit}
     legend:[{c:C.blue,t:'△ADE'},{c:C.orange,t:'△BEC'},{c:C.slate,t:'共线 A-E-B'}],
     hint:'等角的补角相等 → AA',interaction:'拖动点，观察异侧型下两三角形相似比恒定。',
     yUp:true,
-    controls:[{type:'range',key:'theta',label:'等角 θ °',min:35,max:75,step:1,digits:0}],
     init:function(b,s){s.t=0.5;},
     controls:[{type:'range',key:'t',label:'E 点位置',min:0.3,max:0.7,step:0.01,digits:2}],
     draw:function(b,s){
@@ -3561,7 +4142,7 @@ button{font-family:inherit}
       var r1=dist(A,O0)/dist(C1,O0),r2=dist(B2,O0)/dist(Dd,O0),r3=dist(A,B2)/dist(Dd,C1);
       b.readout((s.par?'位似(相似)：':'非位似：')+'OA/OC='+r1.toFixed(3)+'　OB/OD='+r2.toFixed(3)+'　AB/CD='+r3.toFixed(3)+(s.par?'　(相等→△AOB∽△COD)':''));
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else b.state.B=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else b.state.B=w;}
   };
   R(xType);
 
@@ -3665,7 +4246,7 @@ button{font-family:inherit}
       var areaABP=area(A,B2,Pp),areaACP=area(A,C1,Pp),BD=dist(B2,D),DC=dist(D,C1);
       b.readout('BD/DC='+(BD/DC).toFixed(3)+'　S△ABP/S△ACP='+(areaABP/areaACP).toFixed(3)+'　（相等 → 燕尾定理）');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='P')b.state.P=q;else b.state.A=q;}
+    onDrag:function(b,n,w){if(n==='P')b.state.P=w;else b.state.A=w;}
   };
   R(swallowtail);
 
@@ -3678,11 +4259,12 @@ button{font-family:inherit}
   var models=M.models;
 
   /* ---------- 领域与主题元数据 ---------- */
+  /* 风格 A「几何手账」领域色板（与 styles.css / engine.js 同源） */
   var DOMAINS=[
-    {id:'algebra',name:'数与代数',color:'#2563eb',desc:'从数轴到函数，让抽象的代数关系看得见、拖得动。'},
-    {id:'geometry',name:'图形与几何',color:'#7c3aed',desc:'平移旋转、全等相似、圆与最值，图形在指尖变化中显露出规律。'},
-    {id:'stats',name:'统计与概率',color:'#ea580c',desc:'用大数模拟和动态图表，把随机与数据的直觉建立起来。'},
-    {id:'practice',name:'综合与实践',color:'#059669',desc:'经典几何模型与真实测量场景，连接课堂与生活中的数学。'}
+    {id:'algebra',name:'数与代数',color:'#3c6e8f',desc:'从数轴到函数，让抽象的代数关系看得见、拖得动。'},
+    {id:'geometry',name:'图形与几何',color:'#c2563c',desc:'平移旋转、全等相似、圆与最值，图形在指尖变化中显露出规律。'},
+    {id:'stats',name:'统计与概率',color:'#c2703a',desc:'用大数模拟和动态图表，把随机与数据的直觉建立起来。'},
+    {id:'practice',name:'综合与实践',color:'#4f7a5b',desc:'经典几何模型与真实测量场景，连接课堂与生活中的数学。'}
   ];
   var TOPICS={
     algebra:[
@@ -3892,36 +4474,45 @@ button{font-family:inherit}
     var playable=isPlayable(m);
     var html=crumb([['首页','#/'],[d.name,'#/d/'+d.id],[topicName(m.domain,m.topic),'#/d/'+d.id],[m.title,null]])+
       '<div class="mh-work">'+
-        '<aside class="mh-panel mh-side" id="mh-side">'+
-          '<h3>调节与操作</h3><p class="mh-side-sub">'+(m.hint||'拖动点、调节参数，观察规律')+'</p>'+
-          '<div id="mh-controls"></div>'+
-          '<div class="mh-side-divider"></div>'+
-          '<div class="mh-btnrow">'+
-            (playable?'<button class="mh-mini" id="mh-play">▶ 播放</button>':'')+
-            '<button class="mh-mini" id="mh-reset">↺ 重置</button>'+
-          '</div>'+
-          '<div class="mh-btnrow">'+
-            '<button class="mh-mini" id="mh-zin">＋ 放大</button>'+
-            '<button class="mh-mini" id="mh-zout">－ 缩小</button>'+
-            '<button class="mh-mini" id="mh-zfit">适配</button>'+
-          '</div>'+
-          '<div class="mh-side-divider"></div>'+
-          '<label class="mh-check"><input type="checkbox" id="mh-done"'+(done[m.id]?' checked':'')+'><span>标记为已学</span></label>'+
-        '</aside>'+
-        '<section>'+
+        '<section class="mh-stage-col">'+
           '<div class="mh-panel mh-stage">'+
             '<div class="mh-stage-head">'+
               '<div class="mh-legend">'+(m.legend||[]).map(function(l){
                 return '<span><i style="border-color:'+l.c+'"></i>'+l.t+'</span>';
               }).join('')+'</div>'+
-              '<div class="mh-zoom"><button id="mh-zo">－</button><span class="zlevel" data-mh-z="mh-svg">100%</span><button id="mh-zi">＋</button></div>'+
+              '<div class="mh-zoom">'+
+                '<button id="mh-lock" class="mh-lock" aria-pressed="true" title="画布已锁定，点击解锁后可编辑">🔒 已锁定</button>'+
+                '<button id="mh-zo">－</button><span class="zlevel" data-mh-z="mh-svg">100%</span><button id="mh-zi">＋</button>'+
+              '</div>'+
             '</div>'+
-            '<svg id="mh-svg" class="mh-canvas" viewBox="0 0 '+(m.W||900)+' '+(m.H||600)+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="'+esc(m.title)+'互动演示"></svg>'+
+            '<div class="mh-canvas-wrap">'+
+              '<svg id="mh-svg" class="mh-canvas" viewBox="0 0 '+(m.W||900)+' '+(m.H||600)+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="'+esc(m.title)+'互动演示"></svg>'+
+              '<div class="mh-lock-veil" id="mh-lock-veil" aria-hidden="false"><span class="mh-lock-msg">🔒 画布已锁定 · 点击右上角「解锁」后可编辑</span></div>'+
+            '</div>'+
             '<div class="mh-readout-wrap"><div id="mh-readout" aria-live="polite">准备就绪</div></div>'+
             '<div class="mh-hint">'+(m.interaction||'滚轮缩放，拖动图形空白处平移；拖动关键点观察变化。')+'</div>'+
           '</div>'+
-          '<div class="mh-panel mh-notes" id="mh-notes"></div>'+
         '</section>'+
+        '<aside class="mh-panel mh-side" id="mh-side">'+
+          '<button class="mh-fold" id="mh-fold" aria-expanded="false"><span class="mh-fold-t">调节与操作</span><span class="mh-fold-caret">▾</span></button>'+
+          '<div class="mh-side-body" id="mh-side-body">'+
+            '<h3 class="mh-side-h">调节与操作</h3><p class="mh-side-sub">'+(m.hint||'拖动点、调节参数，观察规律')+'</p>'+
+            '<div id="mh-controls"></div>'+
+            '<div class="mh-side-divider"></div>'+
+            '<div class="mh-btnrow">'+
+              (playable?'<button class="mh-mini" id="mh-play">▶ 播放</button>':'')+
+              '<button class="mh-mini" id="mh-reset">↺ 重置</button>'+
+            '</div>'+
+            '<div class="mh-btnrow">'+
+              '<button class="mh-mini" id="mh-zin">＋ 放大</button>'+
+              '<button class="mh-mini" id="mh-zout">－ 缩小</button>'+
+              '<button class="mh-mini" id="mh-zfit">适配</button>'+
+            '</div>'+
+            '<div class="mh-side-divider"></div>'+
+            '<label class="mh-check"><input type="checkbox" id="mh-done"'+(done[m.id]?' checked':'')+'><span>标记为已学</span></label>'+
+          '</div>'+
+        '</aside>'+
+        '<div class="mh-panel mh-notes" id="mh-notes"></div>'+
       '</div>';
     document.getElementById('mh-view').innerHTML=html;
     bindCrumb();
@@ -3945,6 +4536,28 @@ button{font-family:inherit}
     document.getElementById('mh-zfit').onclick=function(){currentBoard.resetView();};
     document.getElementById('mh-zin').onclick=function(){currentBoard.zoomAt(1.25);};
     document.getElementById('mh-zout').onclick=function(){currentBoard.zoomAt(0.8);};
+    // 画布锁定开关：默认锁定，须手动解锁；每个 Board 实例独立
+    var lockBtn=document.getElementById('mh-lock');
+    var lockVeil=document.getElementById('mh-lock-veil');
+    function syncLockUI(locked){
+      lockBtn.textContent=locked?'🔒 已锁定':'🔓 解锁';
+      lockBtn.setAttribute('aria-pressed',locked?'true':'false');
+      lockBtn.title=locked?'画布已锁定，点击解锁后可编辑（拖动点位、平移、缩放）':'点击锁定画布，锁定后不可编辑';
+      if(lockVeil){lockVeil.classList.toggle('hidden',!locked);lockVeil.setAttribute('aria-hidden',locked?'false':'true');}
+    }
+    lockBtn.onclick=function(){
+      syncLockUI(currentBoard.setLocked(!currentBoard.locked));
+    };
+    syncLockUI(currentBoard.locked); // 初始化：Board 默认锁定
+    // 控制面板折叠：移动端首屏优先画布，控件默认收起；桌面端默认展开
+    var foldBtn=document.getElementById('mh-fold');
+    var sideEl=document.getElementById('mh-side');
+    function setFold(collapsed){
+      sideEl.classList.toggle('collapsed',collapsed);
+      if(foldBtn)foldBtn.setAttribute('aria-expanded',collapsed?'false':'true');
+    }
+    if(foldBtn)foldBtn.onclick=function(){setFold(!sideEl.classList.contains('collapsed'));};
+    setFold(window.matchMedia&&window.matchMedia('(max-width:900px)').matches);
     document.getElementById('mh-done').onchange=function(e){
       done[m.id]=e.target.checked;store.set('done',done);
     };
@@ -3967,6 +4580,21 @@ button{font-family:inherit}
       (Array.isArray(m.tips)?m.tips:[m.tips]).forEach(function(t){h+='<li>'+t+'</li>';});
       h+='</ul>';
     }
+    // 扩展内容：适用场景 / 图示需求 / 典型例题 / 易错点（复用现有样式，保持风格一致）
+    function block(title,val,ordered){
+      if(!val)return '';
+      var s='<h3>'+title+'</h3>';
+      if(Array.isArray(val)){
+        s+=ordered?'<ol>':'<ul>';
+        val.forEach(function(t){s+='<li>'+t+'</li>';});
+        s+=ordered?'</ol>':'</ul>';
+      }else s+='<p>'+val+'</p>';
+      return s;
+    }
+    h+=block('🎯 适用场景',m.scenario);
+    h+=block('🖼 图示需求',m.figure);
+    h+=block('📝 典型例题',m.example,true);
+    h+=block('⚠️ 易错点',m.mistakes);
     h+='<div style="margin-top:18px">'+
       '<span class="mh-tag">'+LEVEL_NAME[m.level]+'</span>'+
       '<span class="mh-tag">'+(m.tags||[]).join(' · ')+'</span></div>';

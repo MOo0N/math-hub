@@ -49,9 +49,10 @@
       segLabel(b,s.A,C0,'AC='+dist(s.A,C0).toFixed(1),C.green);
       segLabel(b,B,D0,'BD='+dist(B,D0).toFixed(1),C.green);
       b.handle(s.A,'A',18);b.handle(C0,'C',18);
-      b.readout('AC = '+dist(s.A,C0).toFixed(2)+'　BD = '+dist(B,D0).toFixed(2)+'　→ AC − BD = '+(dist(s.A,C0)-dist(B,D0)).toFixed(4)+'（恒为 0）');
+      var dAC=dist(s.A,C0)-dist(B,D0);if(Math.abs(dAC)<5e-5)dAC=0; // 消除浮点负零
+      b.readout('AC = '+dist(s.A,C0).toFixed(2)+'　BD = '+dist(B,D0).toFixed(2)+'　→ AC − BD = '+dAC.toFixed(4)+'（恒为 0）');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else if(n==='C'){b.state.C=q;var k=dist(q,O())/dist(P(120,40),O());b.state.lenC=Math.max(70,Math.min(200,130*k));}H.refreshControls(b.state);}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else if(n==='C'){b.state.C=w;var k=dist(w,O())/dist(P(120,40),O());b.state.lenC=Math.max(70,Math.min(200,130*k));}H.refreshControls(b.state);}
   };
   R(handEquilateral);
 
@@ -84,7 +85,7 @@
       b.handle(s.A,'A',18);b.handle(s.C,'C',18);
       b.readout('AC = '+dist(s.A,s.C).toFixed(2)+'　BD = '+dist(B,D0).toFixed(2)+'　夹角 = 90°（AC ⟂ BD）');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else b.state.C=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else b.state.C=w;}
   };
   R(handRight);
 
@@ -125,48 +126,82 @@
       b.handle(s.A,'A',18);b.handle(s.B,'B',18);
       b.readout(s.show?('OA=OA′='+dist(O0,s.A).toFixed(1)+'　OB=OB′='+dist(O0,s.B).toFixed(1)+'　旋转 '+s.ang+'° 全等'):'先识别"共端点等线段+定角"，再点击作辅助线');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else b.state.B=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else b.state.B=w;}
   };
   R(handConstruct);
 
-  /* ---------- 4. 反手拉手 ---------- */
+  /* ---------- 4. 反手拉手（旋转相似型） ---------- */
   var handReverse={
     id:'cong-hand-reverse',domain:'geometry',topic:'congruence',level:3,
-    title:'反手拉手模型',brief:'两个等腰三角形共顶点但"开口相反"，一组线段反向旋转，仍能用 SAS 证全等。',
-    keys:'反手拉手 反向 等腰三角形 全等 SAS',
-    idea:'手拉手可"同向"或"反向"。同向时两等腰三角形绕 O 同转 α，连 A-C、B-D，得 AC=BD；反向时一个 +α 一个 −α，改连 A-D、B-C，得 AD=BC。关键是用有向角判断哪一对手拉线全等。',
-    proof:['同向：OA=OB、OC=OD，∠AOB=∠COD=α，∠AOC=∠BOD，SAS 得 △AOC≌△BOD，故 AC=BD。','反向：第二个三角形 ∠COD=−α，此时 ∠AOD=∠BOC（有向角），SAS 得 △AOD≌△BOC，故 AD=BC。','易错点：反向时不能再连 A-C、B-D，要换成 A-D、B-C。','统一技巧：把角都看作有向角，找出"共顶点 + 两组等边 + 相等夹角"的那对三角形。'],
-    formula:'同向：AC=BD　　反向：AD=BC',
-    tips:['对比"同向"与"反向"两种模式','拖动 A、C 观察对应关系变化','注意反向时角的加减方向相反'],
-    legend:[{c:C.blue,t:'等腰△OAB(+α)'},{c:C.orange,t:'等腰△OCD(−α)'},{c:C.green,t:'对应线段'}],
-    hint:'反向旋转，注意有向角',interaction:'切换同向/反向，拖动点观察对应关系与全等结论。',
+    title:'反手拉手模型（旋转相似）',
+    brief:'两个全等三角形共顶点、可绕该点旋转重合；连接对应顶点得到两个等腰三角形，它们的顶角都等于旋转角，因此相似。',
+    keys:'反手拉手 旋转 全等 等腰三角形 顶角相等 相似 AA',
+    idea:'△OAB 绕 O 旋转 θ 得到与它全等的 △OCD（C、D 分别是 A、B 的像）。连接对应点 A-C、B-D：因旋转保距，OA=OC、OB=OD，故 △OAC、△OBD 都是等腰三角形；它们的顶角 ∠AOC=∠BOD=θ 相等，所以两三角形相似。',
+    proof:[
+      '旋转保持距离与角度：△OAB ≌ △OCD，且 C 是 A 的像、D 是 B 的像，故 OA=OC、OB=OD。',
+      '于是 △OAC（腰 OA=OC）与 △OBD（腰 OB=OD）都是等腰三角形。',
+      'A 绕 O 旋转 θ 到 C，故顶角 ∠AOC=θ；B 绕 O 旋转 θ 到 D，故顶角 ∠BOD=θ，两顶角相等。',
+      '等腰三角形顶角相等 ⇒ 两底角也各为 (180°−θ)/2，由 AA 判定 △OAC∽△OBD。',
+      '相似比 OA/OB = OC/OD = AC/BD，拖动点或改变 θ 均恒成立。'
+    ],
+    formula:'∠AOC = ∠BOD = θ　⇒　△OAC ∽ △OBD　　AC/BD = OA/OB',
+    tips:[
+      '拖动 A、B 改变 △OAB 的形状与朝向',
+      '调节旋转角 θ，观察两个等腰三角形的顶角始终相等',
+      '用「显示/隐藏等腰」聚焦由手拉线构成的两个等腰三角形',
+      '读数中的 AC/BD 与 OA/OB 始终相等，验证相似'
+    ],
+    legend:[{c:C.blue,t:'△OAB'},{c:C.orange,t:'△OCD（旋转全等）'},{c:C.purple,t:'等腰△OAC'},{c:C.teal,t:'等腰△OBD'}],
+    hint:'旋转全等 → 等腰 → 顶角相等 → 相似',
+    interaction:'拖动 A、B，调节旋转角 θ；观察两个全等三角形绕 O 旋转重合，手拉线构成的两个等腰三角形顶角恒等、彼此相似。',
     yUp:true,
     controls:[
-      {type:'buttons',key:'mode',items:[{label:'反手(推荐)',onclick:function(b,s){s.mode=-1;}},{label:'正手对比',onclick:function(b,s){s.mode=1;}}]},
-      {type:'range',key:'alpha',label:'顶角 °',min:30,max:110,step:1,digits:0}
+      {type:'range',key:'theta',label:'旋转角 θ °',min:40,max:160,step:1,digits:0},
+      {type:'buttons',key:'iso',items:[
+        {label:'显示等腰',onclick:function(b,s){s.showIso=true;}},
+        {label:'隐藏等腰',onclick:function(b,s){s.showIso=false;}}
+      ]}
     ],
-    init:function(b,s){s.mode=-1;s.alpha=70;s.A=P(-150,80);s.C=P(140,60);},
+    init:function(b,s){s.theta=120;s.showIso=true;s.A=P(-170,90);s.B=P(-170,-90);},
     draw:function(b,s){
-      var O0=O(),a=s.alpha*D2R;
-      var B=rot(s.A,O0,a),D0=rot(s.C,O0,s.mode*a);
-      b.poly([O0,s.A,B],C.blue,.10,C.blue,2.4);
-      b.poly([O0,s.C,D0],C.orange,.10,C.orange,2.4);
-      var L1p,L1q,L2p,L2q,lbl1,lbl2,d1,d2;
-      if(s.mode<0){ L1p=s.A;L1q=D0;L2p=B;L2q=s.C;lbl1='AD';lbl2='BC'; }
-      else{ L1p=s.A;L1q=s.C;L2p=B;L2q=D0;lbl1='AC';lbl2='BD'; }
-      d1=dist(L1p,L1q);d2=dist(L2p,L2q);
-      b.line(L1p,L1q,C.green,3);b.line(L2p,L2q,C.green,3);
-      tick(b,O0,s.A,C.blue);tick(b,O0,B,C.blue);tick(b,O0,s.C,C.orange);tick(b,O0,D0,C.orange);
-      b.circle(O0,5,C.slate,C.slate,2);b.text({x:O0.x-14,y:O0.y-16},'O',C.slate,13,'middle',700);
-      [[s.A,'A',C.blue],[B,'B',C.blue],[s.C,'C',C.orange],[D0,'D',C.orange]].forEach(function(t){
-        b.circle(t[0],5,t[2],t[2],2);b.text({x:t[0].x,y:t[0].y-14},t[1],t[2],13,'middle',700);});
-      segLabel(b,L1p,L1q,lbl1+'='+d1.toFixed(1),C.green);
-      segLabel(b,L2p,L2q,lbl2+'='+d2.toFixed(1),C.green);
-      b.handle(s.A,'A',18);b.handle(s.C,'C',18);
-      b.text(P(0,-235),s.mode<0?'反向：连 A-D 与 B-C':'同向：连 A-C 与 B-D',C.purple,13,'middle',700);
-      b.readout((s.mode<0?'反手 AD=BC':'正手 AC=BD')+'：'+lbl1+'='+d1.toFixed(2)+'　'+lbl2+'='+d2.toFixed(2)+'　差='+(d1-d2).toFixed(3));
+      var O0=O(),th=s.theta*D2R;
+      var A=s.A,B=s.B,C0=rot(A,O0,th),D0=rot(B,O0,th);
+      // 1) 两个全等三角形（绕 O 旋转重合）
+      b.poly([O0,A,B],C.blue,.08,C.blue,2.4);
+      b.poly([O0,C0,D0],C.orange,.08,C.orange,2.4);
+      // 2) 等腰三角形高亮（手拉线 + 两条腰）
+      if(s.showIso){
+        b.poly([O0,A,C0],C.purple,.14,C.purple,2.2);
+        b.poly([O0,B,D0],C.teal,.14,C.teal,2.2);
+      }
+      // 3) 手拉线
+      b.line(A,C0,C.purple,3);b.line(B,D0,C.teal,3);
+      // 4) 旋转弧（表示可绕 O 旋转重合）与 θ 标注
+      var aA=Math.atan2(A.y-O0.y,A.x-O0.x);
+      b.arc(O0,50,aA,aA+th,C.slate,1.8);
+      var lab={x:O0.x+105*Math.cos(aA+th/2),y:O0.y+105*Math.sin(aA+th/2)};
+      b.circle(lab,15,null,'#ffffff',0,0,0.75);
+      b.text(lab,'θ='+s.theta+'°',C.slate,12,'middle',700);
+      // 5) 等长刻痕：OA=OC（蓝）、OB=OD（橙）
+      tick(b,O0,A,C.blue);tick(b,O0,C0,C.blue);
+      tick(b,O0,B,C.orange);tick(b,O0,D0,C.orange);
+      // 6) 顶点与标签
+      b.circle(O0,5,C.slate,C.slate,2);
+      b.text({x:O0.x-14,y:O0.y-16},'O',C.slate,13,'middle',700);
+      [[A,'A',C.blue],[B,'B',C.blue],[C0,'C',C.orange],[D0,'D',C.orange]].forEach(function(t){
+        b.circle(t[0],5,t[2],t[2],2);
+        b.text({x:t[0].x,y:t[0].y-14},t[1],t[2],13,'middle',700);
+      });
+      segLabel(b,A,C0,'AC='+dist(A,C0).toFixed(1),C.purple);
+      segLabel(b,B,D0,'BD='+dist(B,D0).toFixed(1),C.teal);
+      b.handle(A,'A',18);b.handle(B,'B',18);
+      // 7) 读数：顶角相等 + 相似比验证
+      var ratio1=dist(O0,A)/dist(O0,B),ratio2=dist(A,C0)/dist(B,D0);
+      var ok=Math.abs(ratio1-ratio2)<5e-4?' ✓':'（拖动中…）';
+      b.text(P(0,-250),'∠AOC = ∠BOD = '+s.theta+'°　⇒　等腰△OAC ∽ 等腰△OBD',C.purple,13,'middle',700);
+      b.readout('∠AOC = ∠BOD = '+s.theta.toFixed(1)+'°（顶角相等）　△OAC∽△OBD　OA/OB='+ratio1.toFixed(3)+'　AC/BD='+ratio2.toFixed(3)+ok);
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else b.state.C=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else b.state.B=w;}
   };
   R(handReverse);
 
@@ -456,7 +491,7 @@
       b.handle(A,'A',18);b.handle(B,'B',18);b.handle(C1,'C',18);
       b.readout('AC='+dist(A,C1).toFixed(1)+'　BE='+dist(B,E).toFixed(1)+'　AD='+dist(A,D).toFixed(1)+'　AE='+dist(A,E).toFixed(1)+'(=2AD)');
     },
-    onDrag:function(b,n,w){var q=L(w);if(n==='A')b.state.A=q;else if(n==='B')b.state.B=q;else b.state.C=q;}
+    onDrag:function(b,n,w){if(n==='A')b.state.A=w;else if(n==='B')b.state.B=w;else b.state.C=w;}
   };
   R(doubleMedian);
 

@@ -104,8 +104,9 @@
         b.text({x:rt(w/2,h/2).x,y:rt(w/2,h/2).y},'面积 = a²−b²',C.green,14,'middle',800);
         b.text({x:rt(w/2,0).x,y:rt(w/2,0).y+22},'长 a+b='+(aa+bb2).toFixed(1),'var(--mh-muted)',12,'middle');
         b.text({x:rt(0,h/2).x-8,y:rt(0,h/2).y},'宽 a−b='+(aa-bb2).toFixed(1),'var(--mh-muted)',12,'end');
-        b.text({x:pt(A/2,A/2).x,y:pt(A/2,A/2).y},'a²',C.blue,14,'middle',700);
-        b.text({x:pt(Bb/2,Bb/2).x,y:pt(Bb/2,Bb/2).y},'b²',C.orange,14,'middle',700);
+        // 标签跟随实际大小：aa=max(a,b) 为大正方形边长，bb2=min(a,b)
+        b.text({x:pt(A/2,A/2).x,y:pt(A/2,A/2).y},'('+(aa===s.a?'a':'b')+')²',C.blue,14,'middle',700);
+        b.text({x:pt(Bb/2,Bb/2).x,y:pt(Bb/2,Bb/2).y},'('+(bb2===s.b?'b':'a')+')²',C.orange,14,'middle',700);
         var l=aa*aa-bb2*bb2,r=(aa+bb2)*(aa-bb2);
         b.readout('a²−b² = '+l.toFixed(2)+'　=　(a+b)(a−b) = '+r.toFixed(2)+'  ✓');
       }
@@ -152,8 +153,8 @@
       var tx=2,ty=s.k*tx+s.b;
       b.line(P(0,s.b),P(tx,s.b),'#10b981',2,'5 4');
       b.line(P(tx,s.b),P(tx,ty),'#10b981',2,'5 4');
-      b.text({x:P(tx/2,s.b).x,y:P(tx/2,s.b).y+18},'Δx='+tx,'#059669',11,'middle');
-      b.text({x:P(tx,(s.b+ty)/2).x+8,y:P(tx,(s.b+ty)/2).y},'Δy='+(s.k*tx).toFixed(1),'#059669',11,'start');
+      b.text({x:P(tx/2,s.b).x,y:P(tx/2,s.b).y+18},'Δx='+tx,'#4f7a5b',11,'middle');
+      b.text({x:P(tx,(s.b+ty)/2).x+8,y:P(tx,(s.b+ty)/2).y},'Δy='+(s.k*tx).toFixed(1),'#4f7a5b',11,'start');
       b.readout('y = '+s.k.toFixed(1)+'x '+(s.b>=0?'+ ':'− ')+Math.abs(s.b).toFixed(1)+'　'+(s.k>0?'↗ 递增':s.k<0?'↘ 递减':'→ 水平'));
     }
   };
@@ -237,6 +238,17 @@
       function f(x){return s.a*x*x+s.b*x+s.c;}
       var pts=[];for(var x=-6;x<=6;x+=0.05){var y=f(x);if(Math.abs(y)<=7)pts.push(P(x,y));}
       if(pts.length>1)b.polyline(pts,C.blue,2.8);
+      var cp=P(0,s.c);b.circle(cp,5,'#0ea5e9','#fff',2);
+      b.text({x:cp.x+8,y:cp.y+14},'(0,'+s.c.toFixed(1)+')','#0ea5e9',11,'start');
+      var eq='y = '+s.a.toFixed(2)+'x² '+(s.b>=0?'+':'-')+Math.abs(s.b).toFixed(1)+'x '+(s.c>=0?'+':'-')+Math.abs(s.c).toFixed(1);
+      // a≈0 时退化为一次函数：无对称轴/顶点，Δ 判据失效，避免 Infinity / 假「两个交点」
+      if(Math.abs(s.a)<1e-6){
+        var xint=Math.abs(s.b)<1e-9?null:-s.c/s.b;
+        b.text(P(0,-255),'a = 0：退化为一次函数 y = '+s.b.toFixed(1)+'x + '+s.c.toFixed(1),C.purple,13,'middle',700);
+        b.readout(eq+'　a=0 非二次函数：无对称轴/顶点　'+
+          (xint===null?(Math.abs(s.c)<1e-9?'恒为 0（无数根）':'无零点'):'与 x 轴交于 x='+xint.toFixed(2)+'（一个交点）'));
+        return;
+      }
       var xv=-s.b/(2*s.a),yv=f(xv);
       if(Math.abs(xv)<=7&&Math.abs(yv)<=7){
         // 对称轴
@@ -244,12 +256,9 @@
         var vp=P(xv,yv);b.circle(vp,7,C.orange,'#fff',2.5);
         b.text({x:vp.x+10,y:vp.y-8},'顶点('+xv.toFixed(2)+','+yv.toFixed(2)+')',C.orange,12,'start',700);
       }
-      var cp=P(0,s.c);b.circle(cp,5,'#0ea5e9','#fff',2);
-      b.text({x:cp.x+8,y:cp.y+14},'(0,'+s.c.toFixed(1)+')','#0ea5e9',11,'start');
       var d=s.b*s.b-4*s.a*s.c;
       var rootTxt=d>0?'两个交点':d<0?'无交点':'一个交点(相切)';
-      b.readout('y = '+s.a.toFixed(2)+'x² '+(s.b>=0?'+':'-')+Math.abs(s.b).toFixed(1)+'x '+(s.c>=0?'+':'-')+Math.abs(s.c).toFixed(1)+
-        '　对称轴 x='+xv.toFixed(2)+'　Δ='+d.toFixed(2)+'（'+rootTxt+'）');
+      b.readout(eq+'　对称轴 x='+xv.toFixed(2)+'　Δ='+d.toFixed(2)+'（'+rootTxt+'）');
     }
   };
   R(quadFn);
@@ -290,7 +299,7 @@
       b.text({x:v1.x+10,y:v1.y-8},'('+s.h.toFixed(1)+','+s.k.toFixed(1)+')',C.orange,12,'start',700);
       // 位移虚线
       b.line(v0,v1,C.green,1.8,'4 4');
-      b.text({x:(v0.x+v1.x)/2,y:(v0.y+v1.y)/2-10},'位移','#059669',11,'middle');
+      b.text({x:(v0.x+v1.x)/2,y:(v0.y+v1.y)/2-10},'位移','#4f7a5b',11,'middle');
       var htxt=s.h>0?'右移 '+s.h.toFixed(1):s.h<0?'左移 '+Math.abs(s.h).toFixed(1):'不左右移';
       var ktxt=s.k>0?'上移 '+s.k.toFixed(1):s.k<0?'下移 '+Math.abs(s.k).toFixed(1):'不上下移';
       b.readout('y = (x−'+s.h.toFixed(1)+')² + '+s.k.toFixed(1)+'　'+htxt+'、'+ktxt);

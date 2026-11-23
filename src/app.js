@@ -5,11 +5,12 @@
   var models=M.models;
 
   /* ---------- 领域与主题元数据 ---------- */
+  /* 风格 A「几何手账」领域色板（与 styles.css / engine.js 同源） */
   var DOMAINS=[
-    {id:'algebra',name:'数与代数',color:'#2563eb',desc:'从数轴到函数，让抽象的代数关系看得见、拖得动。'},
-    {id:'geometry',name:'图形与几何',color:'#7c3aed',desc:'平移旋转、全等相似、圆与最值，图形在指尖变化中显露出规律。'},
-    {id:'stats',name:'统计与概率',color:'#ea580c',desc:'用大数模拟和动态图表，把随机与数据的直觉建立起来。'},
-    {id:'practice',name:'综合与实践',color:'#059669',desc:'经典几何模型与真实测量场景，连接课堂与生活中的数学。'}
+    {id:'algebra',name:'数与代数',color:'#3c6e8f',desc:'从数轴到函数，让抽象的代数关系看得见、拖得动。'},
+    {id:'geometry',name:'图形与几何',color:'#c2563c',desc:'平移旋转、全等相似、圆与最值，图形在指尖变化中显露出规律。'},
+    {id:'stats',name:'统计与概率',color:'#c2703a',desc:'用大数模拟和动态图表，把随机与数据的直觉建立起来。'},
+    {id:'practice',name:'综合与实践',color:'#4f7a5b',desc:'经典几何模型与真实测量场景，连接课堂与生活中的数学。'}
   ];
   var TOPICS={
     algebra:[
@@ -219,36 +220,45 @@
     var playable=isPlayable(m);
     var html=crumb([['首页','#/'],[d.name,'#/d/'+d.id],[topicName(m.domain,m.topic),'#/d/'+d.id],[m.title,null]])+
       '<div class="mh-work">'+
-        '<aside class="mh-panel mh-side" id="mh-side">'+
-          '<h3>调节与操作</h3><p class="mh-side-sub">'+(m.hint||'拖动点、调节参数，观察规律')+'</p>'+
-          '<div id="mh-controls"></div>'+
-          '<div class="mh-side-divider"></div>'+
-          '<div class="mh-btnrow">'+
-            (playable?'<button class="mh-mini" id="mh-play">▶ 播放</button>':'')+
-            '<button class="mh-mini" id="mh-reset">↺ 重置</button>'+
-          '</div>'+
-          '<div class="mh-btnrow">'+
-            '<button class="mh-mini" id="mh-zin">＋ 放大</button>'+
-            '<button class="mh-mini" id="mh-zout">－ 缩小</button>'+
-            '<button class="mh-mini" id="mh-zfit">适配</button>'+
-          '</div>'+
-          '<div class="mh-side-divider"></div>'+
-          '<label class="mh-check"><input type="checkbox" id="mh-done"'+(done[m.id]?' checked':'')+'><span>标记为已学</span></label>'+
-        '</aside>'+
-        '<section>'+
+        '<section class="mh-stage-col">'+
           '<div class="mh-panel mh-stage">'+
             '<div class="mh-stage-head">'+
               '<div class="mh-legend">'+(m.legend||[]).map(function(l){
                 return '<span><i style="border-color:'+l.c+'"></i>'+l.t+'</span>';
               }).join('')+'</div>'+
-              '<div class="mh-zoom"><button id="mh-zo">－</button><span class="zlevel" data-mh-z="mh-svg">100%</span><button id="mh-zi">＋</button></div>'+
+              '<div class="mh-zoom">'+
+                '<button id="mh-lock" class="mh-lock" aria-pressed="true" title="画布已锁定，点击解锁后可编辑">🔒 已锁定</button>'+
+                '<button id="mh-zo">－</button><span class="zlevel" data-mh-z="mh-svg">100%</span><button id="mh-zi">＋</button>'+
+              '</div>'+
             '</div>'+
-            '<svg id="mh-svg" class="mh-canvas" viewBox="0 0 '+(m.W||900)+' '+(m.H||600)+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="'+esc(m.title)+'互动演示"></svg>'+
+            '<div class="mh-canvas-wrap">'+
+              '<svg id="mh-svg" class="mh-canvas" viewBox="0 0 '+(m.W||900)+' '+(m.H||600)+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="'+esc(m.title)+'互动演示"></svg>'+
+              '<div class="mh-lock-veil" id="mh-lock-veil" aria-hidden="false"><span class="mh-lock-msg">🔒 画布已锁定 · 点击右上角「解锁」后可编辑</span></div>'+
+            '</div>'+
             '<div class="mh-readout-wrap"><div id="mh-readout" aria-live="polite">准备就绪</div></div>'+
             '<div class="mh-hint">'+(m.interaction||'滚轮缩放，拖动图形空白处平移；拖动关键点观察变化。')+'</div>'+
           '</div>'+
-          '<div class="mh-panel mh-notes" id="mh-notes"></div>'+
         '</section>'+
+        '<aside class="mh-panel mh-side" id="mh-side">'+
+          '<button class="mh-fold" id="mh-fold" aria-expanded="false"><span class="mh-fold-t">调节与操作</span><span class="mh-fold-caret">▾</span></button>'+
+          '<div class="mh-side-body" id="mh-side-body">'+
+            '<h3 class="mh-side-h">调节与操作</h3><p class="mh-side-sub">'+(m.hint||'拖动点、调节参数，观察规律')+'</p>'+
+            '<div id="mh-controls"></div>'+
+            '<div class="mh-side-divider"></div>'+
+            '<div class="mh-btnrow">'+
+              (playable?'<button class="mh-mini" id="mh-play">▶ 播放</button>':'')+
+              '<button class="mh-mini" id="mh-reset">↺ 重置</button>'+
+            '</div>'+
+            '<div class="mh-btnrow">'+
+              '<button class="mh-mini" id="mh-zin">＋ 放大</button>'+
+              '<button class="mh-mini" id="mh-zout">－ 缩小</button>'+
+              '<button class="mh-mini" id="mh-zfit">适配</button>'+
+            '</div>'+
+            '<div class="mh-side-divider"></div>'+
+            '<label class="mh-check"><input type="checkbox" id="mh-done"'+(done[m.id]?' checked':'')+'><span>标记为已学</span></label>'+
+          '</div>'+
+        '</aside>'+
+        '<div class="mh-panel mh-notes" id="mh-notes"></div>'+
       '</div>';
     document.getElementById('mh-view').innerHTML=html;
     bindCrumb();
@@ -272,6 +282,28 @@
     document.getElementById('mh-zfit').onclick=function(){currentBoard.resetView();};
     document.getElementById('mh-zin').onclick=function(){currentBoard.zoomAt(1.25);};
     document.getElementById('mh-zout').onclick=function(){currentBoard.zoomAt(0.8);};
+    // 画布锁定开关：默认锁定，须手动解锁；每个 Board 实例独立
+    var lockBtn=document.getElementById('mh-lock');
+    var lockVeil=document.getElementById('mh-lock-veil');
+    function syncLockUI(locked){
+      lockBtn.textContent=locked?'🔒 已锁定':'🔓 解锁';
+      lockBtn.setAttribute('aria-pressed',locked?'true':'false');
+      lockBtn.title=locked?'画布已锁定，点击解锁后可编辑（拖动点位、平移、缩放）':'点击锁定画布，锁定后不可编辑';
+      if(lockVeil){lockVeil.classList.toggle('hidden',!locked);lockVeil.setAttribute('aria-hidden',locked?'false':'true');}
+    }
+    lockBtn.onclick=function(){
+      syncLockUI(currentBoard.setLocked(!currentBoard.locked));
+    };
+    syncLockUI(currentBoard.locked); // 初始化：Board 默认锁定
+    // 控制面板折叠：移动端首屏优先画布，控件默认收起；桌面端默认展开
+    var foldBtn=document.getElementById('mh-fold');
+    var sideEl=document.getElementById('mh-side');
+    function setFold(collapsed){
+      sideEl.classList.toggle('collapsed',collapsed);
+      if(foldBtn)foldBtn.setAttribute('aria-expanded',collapsed?'false':'true');
+    }
+    if(foldBtn)foldBtn.onclick=function(){setFold(!sideEl.classList.contains('collapsed'));};
+    setFold(window.matchMedia&&window.matchMedia('(max-width:900px)').matches);
     document.getElementById('mh-done').onchange=function(e){
       done[m.id]=e.target.checked;store.set('done',done);
     };
@@ -294,6 +326,21 @@
       (Array.isArray(m.tips)?m.tips:[m.tips]).forEach(function(t){h+='<li>'+t+'</li>';});
       h+='</ul>';
     }
+    // 扩展内容：适用场景 / 图示需求 / 典型例题 / 易错点（复用现有样式，保持风格一致）
+    function block(title,val,ordered){
+      if(!val)return '';
+      var s='<h3>'+title+'</h3>';
+      if(Array.isArray(val)){
+        s+=ordered?'<ol>':'<ul>';
+        val.forEach(function(t){s+='<li>'+t+'</li>';});
+        s+=ordered?'</ol>':'</ul>';
+      }else s+='<p>'+val+'</p>';
+      return s;
+    }
+    h+=block('🎯 适用场景',m.scenario);
+    h+=block('🖼 图示需求',m.figure);
+    h+=block('📝 典型例题',m.example,true);
+    h+=block('⚠️ 易错点',m.mistakes);
     h+='<div style="margin-top:18px">'+
       '<span class="mh-tag">'+LEVEL_NAME[m.level]+'</span>'+
       '<span class="mh-tag">'+(m.tags||[]).join(' · ')+'</span></div>';
