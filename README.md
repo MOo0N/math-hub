@@ -105,14 +105,14 @@ R(myModel);
 
 ## 四、协作开发规范
 
-1. **分支**：`main` 为可发布分支；功能开发用 `feature/xxx`，修复用 `fix/xxx`。
+1. **分支**：`master` 为可发布分支（远端默认分支）；功能开发用 `feature/xxx`，修复用 `fix/xxx`。
 2. **每次改动后运行一键门禁**：
 
    ```bash
    bash tests/check.sh
    ```
 
-   它会依次执行：全量 `node --check` → `python3 build.py` 重建 → 逐模型无头渲染（查零运行时错误、读数无 `NaN/undefined`）→ **8 条几何恒等式自动断言** → 锁定/解锁交互测试。任一步失败即以非零码退出。依赖：Python 3 + Node.js + Playwright + Chromium。单独跑某项：`python3 tests/verify.py`（渲染+恒等式）、`python3 tests/test_lock.py`（锁定交互）。报告见 `tests/report.json`，截图见 `tests/shots/`（均为生成物，已 gitignore）。
+   它会依次执行：全量 `node --check` → `python3 build.py` 重建 → 逐模型无头渲染（查零运行时错误、读数无 `NaN/undefined`）→ **13 条几何恒等式自动断言** → 锁定/解锁交互测试。任一步失败即以非零码退出。依赖：Python 3 + Node.js + Playwright + Chromium。单独跑某项：`python3 tests/verify.py`（渲染+恒等式）、`python3 tests/test_lock.py`（锁定交互）。报告见 `tests/report.json`，截图见 `tests/shots/`（均为生成物，已 gitignore）。
 3. **数学正确性优先**：几何模型改动须核对读数中的恒等式（如 `AC−BD=0`、`σ²` 计算），不能只看画面。恒等式断言清单维护在 `tests/verify.py` 的 `IDENTITIES`，新增几何模型时同步补充。
 4. **坐标系**：新增几何模型一律 `yUp:true` + 数学坐标，避免重复历史 bug。
 5. **不引入外部依赖**：保持零依赖、单文件可直接部署。
@@ -123,3 +123,24 @@ R(myModel);
 ## 五、发布
 
 本地 `dist/index.html` 可直接作为静态站点托管（当前线上即由此部署）。在 WorkBuddy 中可用「发布为应用」能力更新公开链接；更新会覆盖链接现有内容，发布前请与团队确认。
+
+---
+
+## 六、版本记录与回滚
+
+版本以 Git tag 标记，每个 tag 对应一个通过一键门禁的稳定状态。
+
+| 版本 | tag | 内容 | 日期 |
+|---|---|---|---|
+| v1.0.0 | `v1.0.0` | 首个发布版：几何手账风格、62+5=67 个模型、画布默认锁定、全站拖动修复、8 项显示逻辑修复、13 条恒等式门禁、移动端/平板适配 | 2026-11-24 |
+
+**回滚方式**（任何时候可回到稳定版）：
+
+```bash
+git tag -l                       # 查看所有稳定版本
+git checkout v1.0.0              # 切换到该版本（只读查看）
+git revert <commit>              # 撤销某次改动并保留历史
+git reset --hard v1.0.0          # ⚠️ 彻底回到该版本（会丢弃之后的改动）
+```
+
+`dist/index.html` 是生成物，回滚源码后务必重跑 `python3 build.py` 重建，并用 `bash tests/check.sh` 验证。
