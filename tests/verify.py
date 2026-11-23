@@ -111,11 +111,14 @@ def _id_tangent(r):
 
 
 def _id_vieta(r):
-    s1 = _f(r"x₁\+x₂=([-\d.]+)", r); s2 = _f(r"−b/a=([-\d.]+)", r)
-    p1 = _f(r"x₁·x₂=([-\d.]+)", r); p2 = _f(r"c/a=([-\d.]+)", r)
+    # 新读数用求根公式实测的和/积对比系数公式（真正验证），兼容旧格式
+    s1 = _f(r"实测和=([-\d.]+)", r) or _f(r"x₁\+x₂=([-\d.]+)", r)
+    s2 = _f(r"−b/a=([-\d.]+)", r)
+    p1 = _f(r"实测积=([-\d.]+)", r) or _f(r"x₁·x₂=([-\d.]+)", r)
+    p2 = _f(r"c/a=([-\d.]+)", r)
     if None in (s1, s2, p1, p2): return False, "未解析到韦达读数"
     if abs(s1 - s2) > 0.005 or abs(p1 - p2) > 0.005: return False, "和与积与系数不符"
-    return True, "和=%.2f, 积=%.2f" % (s1, p1)
+    return True, "实测和=%.2f vs −b/a=%.2f, 积=%.2f vs c/a=%.2f" % (s1, s2, p1, p2)
 
 
 def _id_midline(r):

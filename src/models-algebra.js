@@ -104,8 +104,9 @@
         b.text({x:rt(w/2,h/2).x,y:rt(w/2,h/2).y},'面积 = a²−b²',C.green,14,'middle',800);
         b.text({x:rt(w/2,0).x,y:rt(w/2,0).y+22},'长 a+b='+(aa+bb2).toFixed(1),'var(--mh-muted)',12,'middle');
         b.text({x:rt(0,h/2).x-8,y:rt(0,h/2).y},'宽 a−b='+(aa-bb2).toFixed(1),'var(--mh-muted)',12,'end');
-        b.text({x:pt(A/2,A/2).x,y:pt(A/2,A/2).y},'a²',C.blue,14,'middle',700);
-        b.text({x:pt(Bb/2,Bb/2).x,y:pt(Bb/2,Bb/2).y},'b²',C.orange,14,'middle',700);
+        // 标签跟随实际大小：aa=max(a,b) 为大正方形边长，bb2=min(a,b)
+        b.text({x:pt(A/2,A/2).x,y:pt(A/2,A/2).y},'('+(aa===s.a?'a':'b')+')²',C.blue,14,'middle',700);
+        b.text({x:pt(Bb/2,Bb/2).x,y:pt(Bb/2,Bb/2).y},'('+(bb2===s.b?'b':'a')+')²',C.orange,14,'middle',700);
         var l=aa*aa-bb2*bb2,r=(aa+bb2)*(aa-bb2);
         b.readout('a²−b² = '+l.toFixed(2)+'　=　(a+b)(a−b) = '+r.toFixed(2)+'  ✓');
       }
@@ -237,6 +238,17 @@
       function f(x){return s.a*x*x+s.b*x+s.c;}
       var pts=[];for(var x=-6;x<=6;x+=0.05){var y=f(x);if(Math.abs(y)<=7)pts.push(P(x,y));}
       if(pts.length>1)b.polyline(pts,C.blue,2.8);
+      var cp=P(0,s.c);b.circle(cp,5,'#0ea5e9','#fff',2);
+      b.text({x:cp.x+8,y:cp.y+14},'(0,'+s.c.toFixed(1)+')','#0ea5e9',11,'start');
+      var eq='y = '+s.a.toFixed(2)+'x² '+(s.b>=0?'+':'-')+Math.abs(s.b).toFixed(1)+'x '+(s.c>=0?'+':'-')+Math.abs(s.c).toFixed(1);
+      // a≈0 时退化为一次函数：无对称轴/顶点，Δ 判据失效，避免 Infinity / 假「两个交点」
+      if(Math.abs(s.a)<1e-6){
+        var xint=Math.abs(s.b)<1e-9?null:-s.c/s.b;
+        b.text(P(0,-255),'a = 0：退化为一次函数 y = '+s.b.toFixed(1)+'x + '+s.c.toFixed(1),C.purple,13,'middle',700);
+        b.readout(eq+'　a=0 非二次函数：无对称轴/顶点　'+
+          (xint===null?(Math.abs(s.c)<1e-9?'恒为 0（无数根）':'无零点'):'与 x 轴交于 x='+xint.toFixed(2)+'（一个交点）'));
+        return;
+      }
       var xv=-s.b/(2*s.a),yv=f(xv);
       if(Math.abs(xv)<=7&&Math.abs(yv)<=7){
         // 对称轴
@@ -244,12 +256,9 @@
         var vp=P(xv,yv);b.circle(vp,7,C.orange,'#fff',2.5);
         b.text({x:vp.x+10,y:vp.y-8},'顶点('+xv.toFixed(2)+','+yv.toFixed(2)+')',C.orange,12,'start',700);
       }
-      var cp=P(0,s.c);b.circle(cp,5,'#0ea5e9','#fff',2);
-      b.text({x:cp.x+8,y:cp.y+14},'(0,'+s.c.toFixed(1)+')','#0ea5e9',11,'start');
       var d=s.b*s.b-4*s.a*s.c;
       var rootTxt=d>0?'两个交点':d<0?'无交点':'一个交点(相切)';
-      b.readout('y = '+s.a.toFixed(2)+'x² '+(s.b>=0?'+':'-')+Math.abs(s.b).toFixed(1)+'x '+(s.c>=0?'+':'-')+Math.abs(s.c).toFixed(1)+
-        '　对称轴 x='+xv.toFixed(2)+'　Δ='+d.toFixed(2)+'（'+rootTxt+'）');
+      b.readout(eq+'　对称轴 x='+xv.toFixed(2)+'　Δ='+d.toFixed(2)+'（'+rootTxt+'）');
     }
   };
   R(quadFn);

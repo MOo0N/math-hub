@@ -135,8 +135,12 @@
       var dot=v1.x*v2.x+v1.y*v2.y;
       var names={para:'平行四边形',rect:'矩形',rhombus:'菱形',square:'正方形'};
       var feat={para:'一般平行四边形',rect:'对角线相等',rhombus:'对角线垂直',square:'对角线相等且垂直'}[mode];
+      var inactive=[];
+      if(mode==='rhombus'||mode==='square')inactive.push('邻边 b（=a）');
+      if(mode==='rect'||mode==='square')inactive.push('∠A（=90°）');
+      var note=inactive.length?('　[当前无效滑块：'+inactive.join('、')+']'):'';
       b.text(P(0,-250),'【'+names[mode]+'】'+feat,C.purple,13,'middle',700);
-      b.readout('['+names[mode]+'] AC='+ac.toFixed(2)+' BD='+bd.toFixed(2)+' 对角线点积='+dot.toFixed(3)+'（'+feat+'）');
+      b.readout('['+names[mode]+'] AC='+ac.toFixed(2)+' BD='+bd.toFixed(2)+' 对角线点积='+dot.toFixed(3)+'（'+feat+'）'+note);
     }
   };
   R(specialQuad);

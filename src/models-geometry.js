@@ -135,8 +135,11 @@
     ],
     init:function(b,s){s.method='SSS';},
     draw:function(b,s){
-      var g=b.scene,T1=[{x:180,y:420},{x:120,y:220},{x:360,y:220}]; // A B C
-      var T2=[{x:560,y:420},{x:500,y:220},{x:740,y:220}];
+      var g=b.scene;
+      // HL 分支要求 B 处为直角：令 A 与 B 同 x（BA 竖直）、BC 水平
+      var hl=(s.method==='HL');
+      var T1=hl?[{x:120,y:420},{x:120,y:220},{x:360,y:220}]:[{x:180,y:420},{x:120,y:220},{x:360,y:220}]; // A B C
+      var T2=hl?[{x:500,y:420},{x:500,y:220},{x:740,y:220}]:[{x:560,y:420},{x:500,y:220},{x:740,y:220}];
       function sc(p){return p;}
       var method=s.method;
       b.poly(T1,C.blue,.12,C.blue,2.6);b.poly(T2,C.orange,.12,C.orange,2.6);
@@ -269,8 +272,9 @@
       var g=b.scene,O={x:450,y:300},r=170;
       // 弦方向（垂直于直径方向）
       var rad=s.ang*Math.PI/180;
-      var n={x:Math.cos(rad),y:Math.sin(rad)}; // 垂径方向
-      var t={x:-n.y,y:n.x}; // 弦方向
+      var n={x:Math.cos(rad),y:Math.sin(rad)}; // 垂径数学方向
+      // 屏幕 y 向下翻转，垂径实际方向为 (n.x,-n.y)；弦须与其垂直 ⇒ t=(-n.y,-n.x)
+      var t={x:-n.y,y:-n.x}; // 弦方向（已按屏幕 y 翻转，保证 n·t=0）
       var M={x:O.x+n.x*s.d,y:O.y-n.y*s.d}; // 弦中点（注意y翻转）
       var half=Math.sqrt(Math.max(0,r*r-s.d*s.d));
       var C={x:M.x+t.x*half,y:M.y+t.y*half},D={x:M.x-t.x*half,y:M.y-t.y*half};

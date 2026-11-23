@@ -119,8 +119,18 @@
     ],
     init:function(b,s){s.a=1;s.b=-1;s.c=-6;},
     draw:function(b,s){
-      var a=s.a||0.001;
       function sc(x,y){return{x:450+x*54,y:300-y*40};}
+      // a=0 不是二次方程，韦达定理不适用；明确提示而非用 a||0.001 伪装成巨型数值
+      if(Math.abs(s.a)<1e-6){
+        b.line(sc(-6,0),sc(6,0),'#a9a3a0',1.6);b.line(sc(0,-6),sc(0,7),'#a9a3a0',1.6);
+        var ylin=Math.abs(s.b)<1e-9?null:-s.c/s.b;
+        b.text(P(0,-255),'a = 0：不是二次方程，韦达定理（两根和/积）不适用',C.purple,13,'middle',700);
+        b.readout('a=0：方程为 '+s.b.toFixed(1)+'x + '+s.c.toFixed(1)+' = 0（一次方程）　'+
+          (ylin===null?(Math.abs(s.c)<1e-9?'恒等式，任意 x 均为解':'无解'):'唯一解 x='+ylin.toFixed(3))+
+          '　无「两根之和/积」可言');
+        return;
+      }
+      var a=s.a;
       b.line(sc(-6,0),sc(6,0),'#a9a3a0',1.6);b.line(sc(0,-6),sc(0,7),'#a9a3a0',1.6);
       // 抛物线
       var pts=[];
@@ -142,10 +152,15 @@
       }
       var has=D>=-0.0001;
       b.text(P(0,-255),'Δ = '+D.toFixed(2)+(has?' ≥ 0（有实根）':' < 0（无实根）'),C.purple,13,'middle',700);
-      if(has){
-        b.readout('x₁+x₂='+sum.toFixed(3)+'　−b/a='+sum.toFixed(3)+'　x₁·x₂='+prod.toFixed(3)+'　c/a='+prod.toFixed(3)+'　恒成立 ✓');
+      if(has&&x1!==null&&x2!==null){
+        // 用求根公式得到的两根去「实测」和与积，再与系数公式对照，才是真正的验证
+        var realSum=x1+x2,realProd=x1*x2;
+        var okS=Math.abs(realSum-sum)<1e-6,okP=Math.abs(realProd-prod)<1e-6;
+        b.readout('由求根公式：x₁='+x1.toFixed(3)+'　x₂='+x2.toFixed(3)+
+          '　实测和='+realSum.toFixed(3)+' vs −b/a='+sum.toFixed(3)+(okS?' ✓':' ✗')+
+          '　实测积='+realProd.toFixed(3)+' vs c/a='+prod.toFixed(3)+(okP?' ✓':' ✗'));
       }else{
-        b.readout('Δ<0，无实根：此处仅演示系数关系 x₁+x₂=−b/a='+sum.toFixed(3)+'，x₁·x₂=c/a='+prod.toFixed(3));
+        b.readout('Δ<0，无实根：系数关系 x₁+x₂=−b/a='+sum.toFixed(3)+'，x₁·x₂=c/a='+prod.toFixed(3)+' 仅作演示（此处无实根可验证）');
       }
     }
   };

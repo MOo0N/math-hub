@@ -775,8 +775,9 @@ button{font-family:inherit}
         b.text({x:rt(w/2,h/2).x,y:rt(w/2,h/2).y},'面积 = a²−b²',C.green,14,'middle',800);
         b.text({x:rt(w/2,0).x,y:rt(w/2,0).y+22},'长 a+b='+(aa+bb2).toFixed(1),'var(--mh-muted)',12,'middle');
         b.text({x:rt(0,h/2).x-8,y:rt(0,h/2).y},'宽 a−b='+(aa-bb2).toFixed(1),'var(--mh-muted)',12,'end');
-        b.text({x:pt(A/2,A/2).x,y:pt(A/2,A/2).y},'a²',C.blue,14,'middle',700);
-        b.text({x:pt(Bb/2,Bb/2).x,y:pt(Bb/2,Bb/2).y},'b²',C.orange,14,'middle',700);
+        // 标签跟随实际大小：aa=max(a,b) 为大正方形边长，bb2=min(a,b)
+        b.text({x:pt(A/2,A/2).x,y:pt(A/2,A/2).y},'('+(aa===s.a?'a':'b')+')²',C.blue,14,'middle',700);
+        b.text({x:pt(Bb/2,Bb/2).x,y:pt(Bb/2,Bb/2).y},'('+(bb2===s.b?'b':'a')+')²',C.orange,14,'middle',700);
         var l=aa*aa-bb2*bb2,r=(aa+bb2)*(aa-bb2);
         b.readout('a²−b² = '+l.toFixed(2)+'　=　(a+b)(a−b) = '+r.toFixed(2)+'  ✓');
       }
@@ -908,6 +909,17 @@ button{font-family:inherit}
       function f(x){return s.a*x*x+s.b*x+s.c;}
       var pts=[];for(var x=-6;x<=6;x+=0.05){var y=f(x);if(Math.abs(y)<=7)pts.push(P(x,y));}
       if(pts.length>1)b.polyline(pts,C.blue,2.8);
+      var cp=P(0,s.c);b.circle(cp,5,'#0ea5e9','#fff',2);
+      b.text({x:cp.x+8,y:cp.y+14},'(0,'+s.c.toFixed(1)+')','#0ea5e9',11,'start');
+      var eq='y = '+s.a.toFixed(2)+'x² '+(s.b>=0?'+':'-')+Math.abs(s.b).toFixed(1)+'x '+(s.c>=0?'+':'-')+Math.abs(s.c).toFixed(1);
+      // a≈0 时退化为一次函数：无对称轴/顶点，Δ 判据失效，避免 Infinity / 假「两个交点」
+      if(Math.abs(s.a)<1e-6){
+        var xint=Math.abs(s.b)<1e-9?null:-s.c/s.b;
+        b.text(P(0,-255),'a = 0：退化为一次函数 y = '+s.b.toFixed(1)+'x + '+s.c.toFixed(1),C.purple,13,'middle',700);
+        b.readout(eq+'　a=0 非二次函数：无对称轴/顶点　'+
+          (xint===null?(Math.abs(s.c)<1e-9?'恒为 0（无数根）':'无零点'):'与 x 轴交于 x='+xint.toFixed(2)+'（一个交点）'));
+        return;
+      }
       var xv=-s.b/(2*s.a),yv=f(xv);
       if(Math.abs(xv)<=7&&Math.abs(yv)<=7){
         // 对称轴
@@ -915,12 +927,9 @@ button{font-family:inherit}
         var vp=P(xv,yv);b.circle(vp,7,C.orange,'#fff',2.5);
         b.text({x:vp.x+10,y:vp.y-8},'顶点('+xv.toFixed(2)+','+yv.toFixed(2)+')',C.orange,12,'start',700);
       }
-      var cp=P(0,s.c);b.circle(cp,5,'#0ea5e9','#fff',2);
-      b.text({x:cp.x+8,y:cp.y+14},'(0,'+s.c.toFixed(1)+')','#0ea5e9',11,'start');
       var d=s.b*s.b-4*s.a*s.c;
       var rootTxt=d>0?'两个交点':d<0?'无交点':'一个交点(相切)';
-      b.readout('y = '+s.a.toFixed(2)+'x² '+(s.b>=0?'+':'-')+Math.abs(s.b).toFixed(1)+'x '+(s.c>=0?'+':'-')+Math.abs(s.c).toFixed(1)+
-        '　对称轴 x='+xv.toFixed(2)+'　Δ='+d.toFixed(2)+'（'+rootTxt+'）');
+      b.readout(eq+'　对称轴 x='+xv.toFixed(2)+'　Δ='+d.toFixed(2)+'（'+rootTxt+'）');
     }
   };
   R(quadFn);
@@ -2117,8 +2126,18 @@ button{font-family:inherit}
     ],
     init:function(b,s){s.a=1;s.b=-1;s.c=-6;},
     draw:function(b,s){
-      var a=s.a||0.001;
       function sc(x,y){return{x:450+x*54,y:300-y*40};}
+      // a=0 不是二次方程，韦达定理不适用；明确提示而非用 a||0.001 伪装成巨型数值
+      if(Math.abs(s.a)<1e-6){
+        b.line(sc(-6,0),sc(6,0),'#a9a3a0',1.6);b.line(sc(0,-6),sc(0,7),'#a9a3a0',1.6);
+        var ylin=Math.abs(s.b)<1e-9?null:-s.c/s.b;
+        b.text(P(0,-255),'a = 0：不是二次方程，韦达定理（两根和/积）不适用',C.purple,13,'middle',700);
+        b.readout('a=0：方程为 '+s.b.toFixed(1)+'x + '+s.c.toFixed(1)+' = 0（一次方程）　'+
+          (ylin===null?(Math.abs(s.c)<1e-9?'恒等式，任意 x 均为解':'无解'):'唯一解 x='+ylin.toFixed(3))+
+          '　无「两根之和/积」可言');
+        return;
+      }
+      var a=s.a;
       b.line(sc(-6,0),sc(6,0),'#a9a3a0',1.6);b.line(sc(0,-6),sc(0,7),'#a9a3a0',1.6);
       // 抛物线
       var pts=[];
@@ -2140,10 +2159,15 @@ button{font-family:inherit}
       }
       var has=D>=-0.0001;
       b.text(P(0,-255),'Δ = '+D.toFixed(2)+(has?' ≥ 0（有实根）':' < 0（无实根）'),C.purple,13,'middle',700);
-      if(has){
-        b.readout('x₁+x₂='+sum.toFixed(3)+'　−b/a='+sum.toFixed(3)+'　x₁·x₂='+prod.toFixed(3)+'　c/a='+prod.toFixed(3)+'　恒成立 ✓');
+      if(has&&x1!==null&&x2!==null){
+        // 用求根公式得到的两根去「实测」和与积，再与系数公式对照，才是真正的验证
+        var realSum=x1+x2,realProd=x1*x2;
+        var okS=Math.abs(realSum-sum)<1e-6,okP=Math.abs(realProd-prod)<1e-6;
+        b.readout('由求根公式：x₁='+x1.toFixed(3)+'　x₂='+x2.toFixed(3)+
+          '　实测和='+realSum.toFixed(3)+' vs −b/a='+sum.toFixed(3)+(okS?' ✓':' ✗')+
+          '　实测积='+realProd.toFixed(3)+' vs c/a='+prod.toFixed(3)+(okP?' ✓':' ✗'));
       }else{
-        b.readout('Δ<0，无实根：此处仅演示系数关系 x₁+x₂=−b/a='+sum.toFixed(3)+'，x₁·x₂=c/a='+prod.toFixed(3));
+        b.readout('Δ<0，无实根：系数关系 x₁+x₂=−b/a='+sum.toFixed(3)+'，x₁·x₂=c/a='+prod.toFixed(3)+' 仅作演示（此处无实根可验证）');
       }
     }
   };
@@ -2994,8 +3018,11 @@ button{font-family:inherit}
     ],
     init:function(b,s){s.method='SSS';},
     draw:function(b,s){
-      var g=b.scene,T1=[{x:180,y:420},{x:120,y:220},{x:360,y:220}]; // A B C
-      var T2=[{x:560,y:420},{x:500,y:220},{x:740,y:220}];
+      var g=b.scene;
+      // HL 分支要求 B 处为直角：令 A 与 B 同 x（BA 竖直）、BC 水平
+      var hl=(s.method==='HL');
+      var T1=hl?[{x:120,y:420},{x:120,y:220},{x:360,y:220}]:[{x:180,y:420},{x:120,y:220},{x:360,y:220}]; // A B C
+      var T2=hl?[{x:500,y:420},{x:500,y:220},{x:740,y:220}]:[{x:560,y:420},{x:500,y:220},{x:740,y:220}];
       function sc(p){return p;}
       var method=s.method;
       b.poly(T1,C.blue,.12,C.blue,2.6);b.poly(T2,C.orange,.12,C.orange,2.6);
@@ -3128,8 +3155,9 @@ button{font-family:inherit}
       var g=b.scene,O={x:450,y:300},r=170;
       // 弦方向（垂直于直径方向）
       var rad=s.ang*Math.PI/180;
-      var n={x:Math.cos(rad),y:Math.sin(rad)}; // 垂径方向
-      var t={x:-n.y,y:n.x}; // 弦方向
+      var n={x:Math.cos(rad),y:Math.sin(rad)}; // 垂径数学方向
+      // 屏幕 y 向下翻转，垂径实际方向为 (n.x,-n.y)；弦须与其垂直 ⇒ t=(-n.y,-n.x)
+      var t={x:-n.y,y:-n.x}; // 弦方向（已按屏幕 y 翻转，保证 n·t=0）
       var M={x:O.x+n.x*s.d,y:O.y-n.y*s.d}; // 弦中点（注意y翻转）
       var half=Math.sqrt(Math.max(0,r*r-s.d*s.d));
       var C={x:M.x+t.x*half,y:M.y+t.y*half},D={x:M.x-t.x*half,y:M.y-t.y*half};
@@ -3325,10 +3353,15 @@ button{font-family:inherit}
         var ratio=dist(A,D)/dist(A,B);
         b.readout('DE∥BC ⇒ △ADE∽△ABC　相似比 AD/AB = '+ratio.toFixed(2)+'　DE/BC = '+ratio.toFixed(2));
       }else{
-        var A={x:300,y:180},B={x:420,y:180},Cc={x:380,y:460},D={x:500,y:460};
-        var O={x:410,y:310};
-        b.line(A,Cc,C.blue,2.6);b.line(B,D,C.blue,2.6);
-        b.line(A,B,C.orange,3);b.line(Cc,D,C.orange,3);
+        // X 型（8 字型）：上下两条平行线 AB∥CD，交叉线 AD 与 BC 交于 O
+        var A={x:300,y:180},B={x:420,y:180},Cc={x:360,y:460},D={x:500,y:460};
+        // 求 AD 与 BC 的真实交点（保证对顶角存在）
+        var ux=D.x-A.x,uy=D.y-A.y,vx=Cc.x-B.x,vy=Cc.y-B.y;
+        var den=ux*vy-uy*vx;
+        var tt=den!==0?((B.x-A.x)*vy-(B.y-A.y)*vx)/den:0.5;
+        var O={x:A.x+ux*tt,y:A.y+uy*tt};
+        b.line(A,D,C.blue,2.6);b.line(B,Cc,C.blue,2.6); // 交叉线（对顶角在 O）
+        b.line(A,B,C.orange,3);b.line(Cc,D,C.orange,3); // 平行线 AB∥CD
         [[A,'A'],[B,'B'],[Cc,'C'],[D,'D'],[O,'O']].forEach(function(p){
           b.circle(p[0],5,p[1]==='O'?'#334155':C.blue,'#fff',2.2);
           b.text({x:p[0].x-9,y:p[0].y-7},p[1],'#334155',12,'end',700);});
@@ -3865,8 +3898,12 @@ button{font-family:inherit}
       var dot=v1.x*v2.x+v1.y*v2.y;
       var names={para:'平行四边形',rect:'矩形',rhombus:'菱形',square:'正方形'};
       var feat={para:'一般平行四边形',rect:'对角线相等',rhombus:'对角线垂直',square:'对角线相等且垂直'}[mode];
+      var inactive=[];
+      if(mode==='rhombus'||mode==='square')inactive.push('邻边 b（=a）');
+      if(mode==='rect'||mode==='square')inactive.push('∠A（=90°）');
+      var note=inactive.length?('　[当前无效滑块：'+inactive.join('、')+']'):'';
       b.text(P(0,-250),'【'+names[mode]+'】'+feat,C.purple,13,'middle',700);
-      b.readout('['+names[mode]+'] AC='+ac.toFixed(2)+' BD='+bd.toFixed(2)+' 对角线点积='+dot.toFixed(3)+'（'+feat+'）');
+      b.readout('['+names[mode]+'] AC='+ac.toFixed(2)+' BD='+bd.toFixed(2)+' 对角线点积='+dot.toFixed(3)+'（'+feat+'）'+note);
     }
   };
   R(specialQuad);
@@ -3938,7 +3975,7 @@ button{font-family:inherit}
     idea:'点 A、C、B 共线，∠ACE=∠D=∠E=θ（三个等角）。由外角定理 ∠DCE=∠A+∠AEC，导得 ∠A=∠CEB，配合等角，得 △ACE∽△BED。',
     proof:['∠ACE=∠D=∠E=θ。','由外角定理：∠DCE=∠A+∠AEC，又 ∠DCE=θ+∠CEB（拆分），可导出 ∠A=∠CEB。','再由 ∠ACE=∠E=θ，两角对应相等。','故 △ACE∽△BED（AA），对应边成比例 AC/BE=CE/ED=AE/BD。'],
     formula:'△ACE ∽ △BED　→　AC/BE = CE/ED = AE/BD',
-    tips:['拖动 D、E 改变构型','调节等角 θ 的大小','观察对应边比值恒相等'],
+    tips:['拖动 E 改变等角 θ 与构型','调节等角 θ 的大小','观察对应边比值恒相等'],
     legend:[{c:C.blue,t:'△ACE'},{c:C.orange,t:'△BED'},{c:C.slate,t:'共线 A-C-B'}],
     hint:'外角定理导角 → AA 相似',interaction:'拖动点，观察同侧一线三等角下两三角形相似比恒定。',
     yUp:true,
@@ -3974,7 +4011,19 @@ button{font-family:inherit}
       var r1=AC/BE,r2=dist(C1,E)/EDlen,r3=dist(A,E)/dist(B2,Dd);
       b.readout('AC/BE='+r1.toFixed(3)+'　CE/ED='+r2.toFixed(3)+'　AE/BD='+r3.toFixed(3)+'　（三者相等 → 相似）');
     },
-    onDrag:function(b,n,w){if(n==='E')b.state_E=w;}
+    onDrag:function(b,n,w){
+      // E 在以 C1 为端点的射线上，由 ∠ACE=θ 决定：拖 E 反推 θ
+      if(n==='E'){
+        var C1=P(-20,0);
+        var vx=w.x-C1.x,vy=w.y-C1.y;
+        if(Math.hypot(vx,vy)>1){
+          var th=Math.atan2(vy,-vx)/D2R; // dirCE=(-cosθ,sinθ) ⇒ θ=atan2(vy,-vx)
+          th=Math.max(35,Math.min(75,th));
+          b.state.theta=Math.round(th);
+          H.refreshControls(b.state);
+        }
+      }
+    }
   };
   R(threeEqSame);
 

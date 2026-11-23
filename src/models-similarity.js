@@ -64,7 +64,7 @@
     idea:'点 A、C、B 共线，∠ACE=∠D=∠E=θ（三个等角）。由外角定理 ∠DCE=∠A+∠AEC，导得 ∠A=∠CEB，配合等角，得 △ACE∽△BED。',
     proof:['∠ACE=∠D=∠E=θ。','由外角定理：∠DCE=∠A+∠AEC，又 ∠DCE=θ+∠CEB（拆分），可导出 ∠A=∠CEB。','再由 ∠ACE=∠E=θ，两角对应相等。','故 △ACE∽△BED（AA），对应边成比例 AC/BE=CE/ED=AE/BD。'],
     formula:'△ACE ∽ △BED　→　AC/BE = CE/ED = AE/BD',
-    tips:['拖动 D、E 改变构型','调节等角 θ 的大小','观察对应边比值恒相等'],
+    tips:['拖动 E 改变等角 θ 与构型','调节等角 θ 的大小','观察对应边比值恒相等'],
     legend:[{c:C.blue,t:'△ACE'},{c:C.orange,t:'△BED'},{c:C.slate,t:'共线 A-C-B'}],
     hint:'外角定理导角 → AA 相似',interaction:'拖动点，观察同侧一线三等角下两三角形相似比恒定。',
     yUp:true,
@@ -100,7 +100,19 @@
       var r1=AC/BE,r2=dist(C1,E)/EDlen,r3=dist(A,E)/dist(B2,Dd);
       b.readout('AC/BE='+r1.toFixed(3)+'　CE/ED='+r2.toFixed(3)+'　AE/BD='+r3.toFixed(3)+'　（三者相等 → 相似）');
     },
-    onDrag:function(b,n,w){if(n==='E')b.state_E=w;}
+    onDrag:function(b,n,w){
+      // E 在以 C1 为端点的射线上，由 ∠ACE=θ 决定：拖 E 反推 θ
+      if(n==='E'){
+        var C1=P(-20,0);
+        var vx=w.x-C1.x,vy=w.y-C1.y;
+        if(Math.hypot(vx,vy)>1){
+          var th=Math.atan2(vy,-vx)/D2R; // dirCE=(-cosθ,sinθ) ⇒ θ=atan2(vy,-vx)
+          th=Math.max(35,Math.min(75,th));
+          b.state.theta=Math.round(th);
+          H.refreshControls(b.state);
+        }
+      }
+    }
   };
   R(threeEqSame);
 
