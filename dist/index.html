@@ -785,48 +785,137 @@ button{font-family:inherit}
   };
   R(multFormula);
 
-  /* ---------- 一次函数 k/b ---------- */
+  /* 一次函数坐标映射：数学(x,y) ↔ SVG，绘制与拖动共用同一套映射，
+     保证「改 k 绕 B 旋转、改 b 上下平移」两件事彼此独立、互不串扰。 */
+  var LX=450,LY=300,LS=70;
+  function linP(x,y){return{x:LX+x*LS,y:LY-y*LS};}   // 数学 → SVG
+  function linT(w){return{x:(w.x-LX)/LS,y:(LY-w.y)/LS};} // SVG → 数学
+
+  /* ---------- 一次函数 k/b（重构：k 绕 (0,b) 旋转、b 上下平移） ---------- */
   var linearFn={
     id:'linear-function',domain:'algebra',topic:'function',level:1,
-    title:'一次函数 · k 与 b',brief:'y=kx+b：k 控制倾斜方向与陡峭程度，b 控制与 y 轴交点的位置。',
-    keys:'一次函数 斜率 k 截距 b 直线',
-    idea:'k 是斜率：k>0 直线上升，k<0 直线下降，|k| 越大越陡；b 是纵截距，决定直线与 y 轴交点的位置 (0,b)。',
-    proof:['斜率 k = Δy/Δx，表示 x 每增加 1，y 变化 k。k>0 递增，k<0 递减。','令 x=0 得 y=b，所以直线必过点 (0,b)，b 叫纵截距。','拖动 k、b 观察直线如何绕 (0,b) 旋转、上下平移。'],
-    formula:'y = kx + b　　k：斜率　　b：纵截距（过定点 (0,b)）',
-    tips:['拖动 k 滑块，观察直线倾斜程度的变化','拖动 b 滑块，观察直线沿 y 轴上下平移','k=0 时直线水平'],
-    legend:[{c:C.blue,t:'直线 y=kx+b'},{c:C.orange,t:'纵截距 (0,b)'}],
-    hint:'k 定方向，b 定位置',
-    interaction:'拖动 k、b 滑块，观察直线如何变化。',
-    controls:[
-      {type:'range',key:'k',label:'斜率 k',min:-4,max:4,step:0.1,digits:1},
-      {type:'range',key:'b',label:'截距 b',min:-4,max:4,step:0.1,digits:1}
+    title:'一次函数 · k 与 b',brief:'y=kx+b：k 定倾斜（绕 (0,b) 旋转），b 定位置（沿 y 轴上下平移）；两直线交点就是方程的解。',
+    keys:'一次函数 斜率 k 截距 b 直线 增减性 象限 交点 方程 不等式 解集',
+    idea:'k 是斜率，决定倾斜方向与陡峭；b 是纵截距，直线恒过定点 B(0,b)。改 k 时 B 不动、直线绕 B 旋转；改 b 时倾斜不变、直线上下平移。两直线交点的横坐标就是方程的解，图像的上下对应不等式的解集。',
+    proof:[
+      '斜率 k = Δy/Δx：从 B(0,b) 水平走 Δx、再竖直走 Δy=Δx·k 回到直线，比值恒为 k。k>0 上升，k<0 下降，|k| 越大越陡。',
+      '令 x=0 得 y=b，直线恒过定点 B(0,b)。所以只改 k 时直线绕 B 旋转（B 不动）；只改 b 时斜率不变，整条线沿 y 轴上下平移——两者互不影响。',
+      '两直线 y=kx+b 与 y=k₂x+b₂ 的交点满足 kx+b=k₂x+b₂，解得 x=(b₂−b)/(k−k₂)，这正是方程的解。若 k>k₂，交点右侧第一条更高，不等式 kx+b>k₂x+b₂ 的解集为 x>交点横坐标；k<k₂ 时取左侧。'
     ],
-    init:function(b,s){s.k=1.5;s.b=1;},
-    sx:function(x){return{x:450+x*70,y:300};},
-    sy:function(s,y){return{x:450,y:300-y*70};},
+    formula:'y = kx + b　｜　k = Δy/Δx　｜　纵截距 B(0,b)　｜　x 轴交点 (−b/k, 0)　｜　两线交点横坐标 x=(b₂−b)/(k−k₂)',
+    tips:[
+      '先解锁画布，再拖橙色点 B：只改 b，直线上下平移，倾斜不变',
+      '拖绿色点 Q：只改 k，直线绕 B(0,b) 旋转，截距不动',
+      '打开「对比直线」，交点横坐标就是方程 kx+b=k₂x+b₂ 的解',
+      'x 轴上的绿色粗线标出不等式 kx+b>k₂x+b₂ 的解集'
+    ],
+    legend:[{c:C.blue,t:'主直线 y=kx+b'},{c:C.orange,t:'截距 B(0,b)·平移'},
+      {c:C.green,t:'斜率点 Q·旋转'},{c:C.purple,t:'对比线 y=k₂x+b₂'},{c:C.red,t:'交点（方程的解）'}],
+    hint:'B 点管上下，Q 点管倾斜；交点给出方程的解',
+    interaction:'先解锁画布：拖橙色 B 点改 b（上下平移），拖绿色 Q 点改 k（绕 B 旋转）；也可拖右侧滑块。打开对比直线看交点与方程、不等式。',
+    scenario:['判断一次函数的增减性、经过哪些象限','从图像快速读出与两坐标轴的交点','用图像解方程与不等式（中考高频）'],
+    figure:['蓝色主直线与紫色虚线对比直线','橙色截距点 B(0,b) 与绿色斜率三角形 Δx、Δy','红色交点及 x 轴上的绿色解集区间'],
+    example:[
+      'y=2x−4：k=2>0 递增；b=−4，过一、三、四象限；与 y 轴交于 (0,−4)，与 x 轴交于 (2,0)。',
+      '解 2x−4 > −x+2：两线交点横坐标 x=2，因 2>−1，故解集为 x>2（在交点右侧）。'
+    ],
+    mistakes:[
+      '把 k 与 b 的作用弄反：k 管倾斜旋转，b 管上下平移',
+      '误以为改 k 会让直线上下移动——其实直线恒过 (0,b)，不会平移',
+      'k=0 时是常数函数 y=b，不是一次函数；除非 b=0 否则没有 x 轴交点',
+      '找不等式解集时忘记比较 k 与 k₂：k<k₂ 时解集在交点左侧'
+    ],
+    controls:[
+      {type:'range',key:'k',label:'斜率 k（旋转）',min:-4,max:4,step:0.1,digits:1},
+      {type:'range',key:'b',label:'截距 b（平移）',min:-4,max:4,step:0.1,digits:1},
+      {type:'check',key:'showCompare',label:'显示对比直线（交点与不等式）'},
+      {type:'range',key:'k2',label:'对比斜率 k₂',min:-4,max:4,step:0.1,digits:1},
+      {type:'range',key:'b2',label:'对比截距 b₂',min:-4,max:4,step:0.1,digits:1},
+      {type:'buttons',key:'presets',items:[
+        {label:'k 变号（绕B转）',onclick:function(bd,s){s.k=Math.round(-s.k*10)/10;H.refreshControls(s);}},
+        {label:'b 变号（平移）',onclick:function(bd,s){s.b=Math.round(-s.b*10)/10;H.refreshControls(s);}},
+        {label:'两线平行',onclick:function(bd,s){s.k2=s.k;s.b2=s.b+2;s.showCompare=true;H.refreshControls(s);}},
+        {label:'隐藏对比',onclick:function(bd,s){s.showCompare=false;H.refreshControls(s);}}
+      ]}
+    ],
+    init:function(b,s){s.k=1.5;s.b=1;s.k2=-0.8;s.b2=-2;s.showCompare=true;},
     draw:function(b,s){
-      var g=b.scene,m=b.model,ox=450,oy=300,sc=70;
-      // 坐标轴
-      b.line(m.sx(-6),m.sx(6),'#94a3b8',1.8);
-      b.line({x:ox,y:oy+6*sc},{x:ox,y:oy-6*sc},'#94a3b8',1.8);
-      b.text({x:m.sx(6).x+6,y:oy+18},'x','var(--mh-muted)',13,'start',700);
-      b.text({x:ox+10,y:oy-6*sc},'y','var(--mh-muted)',13,'start',700);
-      for(var v=-6;v<=6;v++){if(v===0)continue;b.line({x:ox+v*sc,y:oy-5},{x:ox+v*sc,y:oy+5},'#94a3b8',1);
-        b.line({x:ox-5,y:oy+v*sc},{x:ox+5,y:oy+v*sc},'#94a3b8',1);}
-      // 直线
-      var x1=-6,x2=6,y1=s.k*x1+s.b,y2=s.k*x2+s.b;
-      function P(x,y){return{x:ox+x*sc,y:oy-y*sc};}
-      b.line(P(x1,Math.max(-7,Math.min(7,y1))),P(x2,Math.max(-7,Math.min(7,y2))),C.blue,3);
-      // 截距点
-      var ip=P(0,s.b);b.circle(ip,7,C.orange,'#fff',2.5);
-      b.text({x:ip.x+10,y:ip.y-8},'(0,'+s.b.toFixed(1)+')',C.orange,12,'start',700);
-      // 斜率三角形
-      var tx=2,ty=s.k*tx+s.b;
-      b.line(P(0,s.b),P(tx,s.b),'#10b981',2,'5 4');
-      b.line(P(tx,s.b),P(tx,ty),'#10b981',2,'5 4');
-      b.text({x:P(tx/2,s.b).x,y:P(tx/2,s.b).y+18},'Δx='+tx,'#4f7a5b',11,'middle');
-      b.text({x:P(tx,(s.b+ty)/2).x+8,y:P(tx,(s.b+ty)/2).y},'Δy='+(s.k*tx).toFixed(1),'#4f7a5b',11,'start');
-      b.readout('y = '+s.k.toFixed(1)+'x '+(s.b>=0?'+ ':'− ')+Math.abs(s.b).toFixed(1)+'　'+(s.k>0?'↗ 递增':s.k<0?'↘ 递减':'→ 水平'));
+      var P=linP,k=s.k,bb=s.b,k2=s.k2,b2=s.b2,show=!!s.showCompare;
+      function nf(v,d){return typeof v==='number'?v.toFixed(d==null?1:d):String(v);}
+      // 坐标轴（带箭头、刻度、数字）
+      b.line(P(-6.3,0),P(6.3,0),'var(--mh-muted)',1.6);
+      b.line(P(0,-4.3),P(0,4.3),'var(--mh-muted)',1.6);
+      b.poly([P(6.35,0),P(6.12,0.14),P(6.12,-0.14)],'var(--mh-muted)',1);
+      b.poly([P(0,4.35),P(-0.14,4.12),P(0.14,4.12)],'var(--mh-muted)',1);
+      b.text({x:P(6.3,0).x+10,y:P(6.3,0).y+4},'x','var(--mh-muted)',13,'start',700);
+      b.text({x:P(0,4.3).x+10,y:P(0,4.3).y-2},'y','var(--mh-muted)',13,'start',700);
+      for(var i=-6;i<=6;i++){if(i!==0){b.line(P(i,-0.07),P(i,0.07),'var(--mh-muted)',1);
+        b.text({x:P(i,0).x,y:P(i,0).y+18},String(i),'var(--mh-muted)',10,'middle');}}
+      for(var j=-4;j<=4;j++){if(j!==0){b.line(P(-0.06,j),P(0.06,j),'var(--mh-muted)',1);
+        b.text({x:P(0,j).x-8,y:P(0,j).y+4},String(j),'var(--mh-muted)',10,'end');}}
+      b.text({x:P(0,0).x-8,y:P(0,0).y+18},'0','var(--mh-muted)',10,'end');
+      // 对比直线（紫色虚线）
+      if(show)b.line(P(-6.3,-6.3*k2+b2),P(6.3,6.3*k2+b2),C.purple,2.6,'7 5');
+      // 主直线（SVG 视口自动裁剪超出部分）
+      b.line(P(-6.3,-6.3*k+bb),P(6.3,6.3*k+bb),C.blue,3.4);
+      // 截距点 B：注册可拖手柄，拖动只改 b（上下平移）
+      var Bp=P(0,bb);b.circle(Bp,8,C.orange,'#fff',2.6);b.handle(Bp,'B',20);
+      b.text({x:Bp.x+12,y:Bp.y-10},'B(0,'+nf(bb,1)+')',C.orange,12,'start',700);
+      // 斜率三角形 + 斜率点 Q：拖动只改 k（绕 B 旋转）
+      var dx=2,qy=k*dx+bb,Hpt=P(dx,bb),Qp=P(dx,qy);
+      b.line(Bp,Hpt,'#4f7a5b',1.8,'5 4');b.line(Hpt,Qp,'#4f7a5b',1.8,'5 4');
+      b.circle(Qp,7,C.green,'#fff',2.4);b.handle(Qp,'Q',20);
+      b.text({x:(Bp.x+Hpt.x)/2,y:Bp.y+18},'Δx='+dx,'#4f7a5b',11,'middle',700);
+      b.text({x:Qp.x+10,y:(Hpt.y+Qp.y)/2},'Δy='+nf(k*dx,1),'#4f7a5b',11,'start',700);
+      b.text({x:Qp.x+10,y:Qp.y-11},'Q 改斜率',C.green,11,'start',700);
+      // x 轴交点
+      if(Math.abs(k)>0.03){var xx=-bb/k;
+        if(xx>=-6.3&&xx<=6.3){var Xp=P(xx,0);b.circle(Xp,5,C.blue,'#fff',2);
+          b.text({x:Xp.x,y:Xp.y+32},'('+nf(xx,2)+',0)',C.blue,11,'middle',700);}}
+      // 解集带（x 轴上的绿色粗线）
+      function band(xa,xb){
+        var by=0.18;
+        b.line(P(xa,by),P(xb,by),C.green,6,null,0.55);
+        b.line(P(xa,by-0.13),P(xa,by+0.13),C.green,2);
+        b.line(P(xb,by-0.13),P(xb,by+0.13),C.green,2);
+      }
+      var extra='';
+      if(show){
+        var den=k-k2;
+        if(Math.abs(den)<0.03){
+          if(Math.abs(bb-b2)<0.03){extra='　｜两线重合：交点无数个';}
+          else{band(-6.2,6.2);extra='　｜两线平行：无交点，不等式'+(bb>b2?'恒成立':'无解');}
+        }else{
+          var xi=(b2-bb)/den,yi=k*xi+bb,Ip=P(xi,yi);
+          if(Math.abs(xi)<=6.3&&Math.abs(yi)<=4.3){
+            b.circle(Ip,7,C.red,'#fff',2.6);b.line(P(xi,0),Ip,C.red,1.3,'3 3',0.7);
+            b.text({x:Ip.x+11,y:Ip.y-10},'交点('+nf(xi,2)+','+nf(yi,2)+')',C.red,12,'start',700);
+            b.text({x:P(xi,0).x,y:P(xi,0).y+48},'x='+nf(xi,2),C.red,11,'middle',700);
+          }
+          if(den>0)band(Math.max(-6.2,xi),6.2);else band(-6.2,Math.min(6.2,xi));
+          extra='　｜交点横坐标 '+nf(xi,2)+' ⇔ 方程解 x='+nf(xi,2)+'　不等式>解集 x'+(den>0?'>':'<')+nf(xi,2);
+        }
+      }
+      function quads(kk,b0){
+        if(Math.abs(kk)<0.03)return b0>0.03?'一、二':b0<-0.03?'三、四':'—';
+        if(Math.abs(b0)<0.03)return kk>0?'一、三':'二、四';
+        if(kk>0)return b0>0?'一、二、三':'一、三、四';
+        return b0>0?'一、二、四':'二、三、四';
+      }
+      var trend=k>0.03?'↗ k>0 递增':k<-0.03?'↘ k<0 递减':'→ k=0 水平';
+      var xTxt=Math.abs(k)>0.03?'('+nf(-bb/k,2)+', 0)':'无（与 x 轴平行）';
+      b.readout('y = '+nf(k,1)+'x '+(bb>=0?'+ ':'− ')+nf(Math.abs(bb),1)+
+        '　'+trend+'　过'+quads(k,bb)+'象限　y轴(0,'+nf(bb,1)+')　x轴'+xTxt+extra);
+    },
+    onDrag:function(b,n,w){
+      var s=b.state,m=linT(w);
+      if(n==='B'){
+        s.b=Math.max(-4,Math.min(4,Math.round(m.y*10)/10)); // 只改 b：上下平移，k 保持
+      }else if(n==='Q'){
+        var dx=2;
+        s.k=Math.max(-4,Math.min(4,Math.round((m.y-s.b)/dx*10)/10)); // 只改 k：绕 B 旋转，b 保持
+      }
+      H.refreshControls(s);
     }
   };
   R(linearFn);
