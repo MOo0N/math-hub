@@ -168,9 +168,18 @@
     else if(n==='Q')s.k=Math.max(-4,Math.min(4,Math.round((m.y-s.b)/2*10)/10));
     H.refreshControls(s);
   }
-  /* 缓入缓出按钮：走补间动画，图像与滑块同步过渡 */
-  function linKFlip(bd,s){bd.tweenTo({k:Math.round(-s.k*10)/10},0.55);}
-  function linBFlip(bd,s){bd.tweenTo({b:Math.round(-s.b*10)/10},0.55);}
+  /* 缓入缓出按钮：先结算上一段补间到稳定终点，再基于当前真实状态取反，
+     保证连续/快速点击每次都正确（不会出现取到中间值而取反不到位）。 */
+  function linKFlip(bd){
+    bd.finishTween();
+    var s=bd.state;
+    bd.tweenTo({k:Math.round(-s.k*10)/10},0.55);
+  }
+  function linBFlip(bd){
+    bd.finishTween();
+    var s=bd.state;
+    bd.tweenTo({b:Math.round(-s.b*10)/10},0.55);
+  }
 
   /* ---------- 一次函数（初级）· k 与 b：形状、旋转、平移 ---------- */
   var linearFn={

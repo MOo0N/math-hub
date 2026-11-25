@@ -174,6 +174,7 @@ button{font-family:inherit}
 /* 统一模型卡片：顶部标签 / 标题 / 简介 / 底部操作 四区层级 */
 .mh-card{
   position:relative;display:flex;flex-direction:column;min-height:170px;
+  container-type:inline-size; /* 简介按卡片自身宽度自适应行数，与视口断点解耦 */
   background:var(--mh-panel);border:1.5px solid var(--mh-line);border-radius:var(--mh-radius);
   padding:16px 17px 12px;cursor:pointer;overflow:hidden;
   box-shadow:var(--mh-shadow);
@@ -194,15 +195,23 @@ button{font-family:inherit}
 .mh-card:active{transform:translateY(-1px)}
 .mh-card:focus-visible{outline:2px solid var(--mh-primary);outline-offset:2px}
 :root[data-mh-theme="dark"] .mh-card:hover{box-shadow:0 12px 26px rgba(0,0,0,.4)}
-/* 顶部区：等级标签右对齐 */
-.mh-card-top{display:flex;justify-content:flex-end;align-items:center;min-height:20px;margin-bottom:2px}
-/* 标题 */
-.mh-card-title{margin:0 0 7px;font-size:16px;line-height:1.35;color:var(--mh-ink);font-family:var(--mh-font-kai);font-weight:700}
-/* 简介固定两行，保证同主题卡片等高对齐 */
+/* 标题行：等级标签与标题始终同一行，两者均不换行、不截断 */
+.mh-card-head{display:flex;align-items:flex-start;gap:8px;margin-bottom:7px}
+.mh-card-title{
+  flex:1 1 auto;min-width:0;margin:0;font-size:16px;line-height:1.45;color:var(--mh-ink);
+  font-family:var(--mh-font-kai);font-weight:700;
+  overflow-wrap:break-word;word-break:break-word; /* 标题完整可见：长标题在剩余宽度内折行，绝不截断 */
+}
+/* 等级标签：不换行、不被压缩，始终完整可见 */
+.mh-level{flex:0 0 auto;white-space:nowrap;margin-top:1px}
+/* 简介：默认两行；由容器查询按卡片实际宽度自动匹配行数（尺寸变化即自适应） */
 .mh-card-desc{
   margin:0 0 12px;font-size:12px;color:var(--mh-muted);line-height:1.6;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:38px;
 }
+/* 小卡(窄)<270px 保持2行；中卡 270–340px 显示3行；大卡≥340px 显示4行，文案随尺寸匹配 */
+@container (min-width:270px){.mh-card-desc{-webkit-line-clamp:3;min-height:57px}}
+@container (min-width:340px){.mh-card-desc{-webkit-line-clamp:4;min-height:76px}}
 /* 底部操作区：进入提示 + 收藏按钮，与主体用虚线分隔 */
 .mh-card-foot{
   margin-top:auto;padding-top:10px;border-top:1px dashed var(--mh-line);
@@ -414,9 +423,9 @@ body.mh-dragging .mh-canvas text{user-select:none!important}
   /* 子页面模型卡片：两列网格 + 紧凑内部，与首页领域卡片节奏统一 */
   .mh-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
   .mh-card{min-height:150px;padding:12px 12px 9px;border-radius:12px}
-  .mh-card-title{font-size:14px;margin-bottom:5px}
+  .mh-card-head{gap:6px;margin-bottom:5px}
+  .mh-card-title{font-size:14px}
   .mh-card-desc{font-size:11px;line-height:1.5;min-height:34px;margin-bottom:8px}
-  .mh-card-top{min-height:18px}
   .mh-level{font-size:9.5px;padding:2px 7px}
   .mh-card-foot{padding-top:7px}
   .mh-card-go{font-size:10px}
@@ -721,6 +730,18 @@ body.mh-dragging .mh-canvas text{user-select:none!important}
     for(var k in to)if(Object.prototype.hasOwnProperty.call(to,k))from[k]=this.state[k];
     this._tween={from:from,to:to,t:0,dur:dur||0.6,onDone:onDone||null};
   };
+  /* 把进行中的补间立即结算到目标值并同步控件，返回是否已结算。
+     供按钮在启动新动画前调用，确保基于稳定状态取反，避免连续点击取到中间值。 */
+  Board.prototype.finishTween=function(){
+    var tw=this._tween;
+    if(!tw)return false;
+    for(var k in tw.to)if(Object.prototype.hasOwnProperty.call(tw.to,k))this.state[k]=tw.to[k];
+    this._tween=null;
+    refreshControls(this.state);
+    this.draw();
+    if(tw.onDone)tw.onDone(this,this.state);
+    return true;
+  };
   Board.prototype.step=function(dt){
     if(this._tween){
       var tw=this._tween,s=this.state;
@@ -1003,9 +1024,18 @@ body.mh-dragging .mh-canvas text{user-select:none!important}
     else if(n==='Q')s.k=Math.max(-4,Math.min(4,Math.round((m.y-s.b)/2*10)/10));
     H.refreshControls(s);
   }
-  /* 缓入缓出按钮：走补间动画，图像与滑块同步过渡 */
-  function linKFlip(bd,s){bd.tweenTo({k:Math.round(-s.k*10)/10},0.55);}
-  function linBFlip(bd,s){bd.tweenTo({b:Math.round(-s.b*10)/10},0.55);}
+  /* 缓入缓出按钮：先结算上一段补间到稳定终点，再基于当前真实状态取反，
+     保证连续/快速点击每次都正确（不会出现取到中间值而取反不到位）。 */
+  function linKFlip(bd){
+    bd.finishTween();
+    var s=bd.state;
+    bd.tweenTo({k:Math.round(-s.k*10)/10},0.55);
+  }
+  function linBFlip(bd){
+    bd.finishTween();
+    var s=bd.state;
+    bd.tweenTo({b:Math.round(-s.b*10)/10},0.55);
+  }
 
   /* ---------- 一次函数（初级）· k 与 b：形状、旋转、平移 ---------- */
   var linearFn={
@@ -4818,10 +4848,10 @@ body.mh-dragging .mh-canvas text{user-select:none!important}
 
   function cardHTML(m){
     return '<article class="mh-card'+(done[m.id]?' done':'')+'" data-id="'+m.id+'">'+
-      '<div class="mh-card-top">'+
+      '<div class="mh-card-head">'+
+        '<h4 class="mh-card-title">'+esc(m.title)+'</h4>'+
         '<span class="mh-level mh-level-'+m.level+'">'+LEVEL_NAME[m.level]+'</span>'+
       '</div>'+
-      '<h4 class="mh-card-title">'+esc(m.title)+'</h4>'+
       '<p class="mh-card-desc">'+esc(m.brief)+'</p>'+
       '<div class="mh-card-foot">'+
         '<span class="mh-card-go">进入实验 <span aria-hidden="true">›</span></span>'+

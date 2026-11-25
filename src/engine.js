@@ -267,6 +267,18 @@
     for(var k in to)if(Object.prototype.hasOwnProperty.call(to,k))from[k]=this.state[k];
     this._tween={from:from,to:to,t:0,dur:dur||0.6,onDone:onDone||null};
   };
+  /* 把进行中的补间立即结算到目标值并同步控件，返回是否已结算。
+     供按钮在启动新动画前调用，确保基于稳定状态取反，避免连续点击取到中间值。 */
+  Board.prototype.finishTween=function(){
+    var tw=this._tween;
+    if(!tw)return false;
+    for(var k in tw.to)if(Object.prototype.hasOwnProperty.call(tw.to,k))this.state[k]=tw.to[k];
+    this._tween=null;
+    refreshControls(this.state);
+    this.draw();
+    if(tw.onDone)tw.onDone(this,this.state);
+    return true;
+  };
   Board.prototype.step=function(dt){
     if(this._tween){
       var tw=this._tween,s=this.state;

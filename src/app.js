@@ -254,10 +254,10 @@
 
   function cardHTML(m){
     return '<article class="mh-card'+(done[m.id]?' done':'')+'" data-id="'+m.id+'">'+
-      '<div class="mh-card-top">'+
+      '<div class="mh-card-head">'+
+        '<h4 class="mh-card-title">'+esc(m.title)+'</h4>'+
         '<span class="mh-level mh-level-'+m.level+'">'+LEVEL_NAME[m.level]+'</span>'+
       '</div>'+
-      '<h4 class="mh-card-title">'+esc(m.title)+'</h4>'+
       '<p class="mh-card-desc">'+esc(m.brief)+'</p>'+
       '<div class="mh-card-foot">'+
         '<span class="mh-card-go">进入实验 <span aria-hidden="true">›</span></span>'+
