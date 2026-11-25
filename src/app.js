@@ -30,6 +30,13 @@
   };
   var LEVEL_NAME={1:'基础',2:'进阶',3:'压轴'};
 
+  /* ---------- 署名与版本信息 ---------- */
+  var BRAND_AUTHOR='纳川老师制作';
+  var VERSION={
+    number:'v1.1.0',date:'2026-11-25',
+    summary:'一次函数拆分为初级/进阶两页；对比直线默认隐藏、按需开启；k/b 变号改为缓入缓出动画；拖动不再选中文字；锁定提示上移；全站署名与版本信息。'
+  };
+
   /* ---------- 本地状态 ---------- */
   var store={
     get:function(k,d){try{var v=localStorage.getItem('mathhub_'+k);return v?JSON.parse(v):d;}catch(e){return d;}},
@@ -69,7 +76,15 @@
       '<header class="mh-top"><div class="mh-top-in">'+
         '<div class="mh-brand" id="mh-home-btn">'+
           '<div class="mh-logo">M</div>'+
-          '<div class="mh-brand-txt"><b>数学互动实验室</b><span>初中数学 · 交互模型课件库</span></div>'+
+          '<div class="mh-brand-txt"><b>数学互动实验室</b><span>初中数学 · 交互模型课件库</span>'+
+            '<span class="mh-by">'+BRAND_AUTHOR+' <em>'+VERSION.number+'</em></span></div>'+
+        '</div>'+
+        '<div class="mh-version" id="mh-version" title="点击查看版本更新">'+
+          '<button class="mh-version-btn" id="mh-version-btn" aria-expanded="false">✦ '+VERSION.number+' 更新</button>'+
+          '<div class="mh-version-pop" id="mh-version-pop" hidden>'+
+            '<div class="mh-version-head">'+VERSION.number+' · '+VERSION.date+'</div>'+
+            '<div class="mh-version-body">'+esc(VERSION.summary)+'</div>'+
+          '</div>'+
         '</div>'+
         '<div class="mh-search-wrap">'+
           '<div class="mh-search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>'+
@@ -82,6 +97,17 @@
       '<footer class="mh-footer">数学互动实验室 · 初中数学交互模型课件库　|　让每一个数学规律都看得见</footer>';
 
     document.getElementById('mh-home-btn').onclick=function(){go('#/');};
+    var verBtn=document.getElementById('mh-version-btn');
+    var verPop=document.getElementById('mh-version-pop');
+    if(verBtn&&verPop){
+      verBtn.onclick=function(e){
+        e.stopPropagation();
+        var open=verPop.hidden;
+        verPop.hidden=!open;
+        verBtn.setAttribute('aria-expanded',open?'true':'false');
+      };
+      verPop.onclick=function(e){e.stopPropagation();};
+    }
     document.getElementById('mh-theme-btn').onclick=function(){
       theme=theme==='dark'?'light':'dark';
       document.documentElement.setAttribute('data-mh-theme',theme);
@@ -93,6 +119,12 @@
     document.addEventListener('click',function(e){
       if(!e.target.closest('.mh-search-wrap')){
         var sr=document.getElementById('mh-sr');if(sr)sr.hidden=true;
+      }
+      if(!e.target.closest('.mh-version')){
+        var vp=document.getElementById('mh-version-pop');
+        var vb=document.getElementById('mh-version-btn');
+        if(vp)vp.hidden=true;
+        if(vb)vb.setAttribute('aria-expanded','false');
       }
     });
   }

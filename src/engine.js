@@ -36,6 +36,7 @@
     this.pan=null;
     this.drag=null;
     this.playing=false;
+    this._tween=null; // 参数补间动画：按钮触发的平滑过渡（缓入缓出）
     this.locked=true; // 画布默认锁定：新建/加载即锁定，须手动解锁后才能编辑（每个 Board 实例独立）
     this.t=0;
     this.speed=1;
@@ -203,6 +204,10 @@
     },{passive:false});
     svg.addEventListener('pointerdown',function(e){
       if(self.locked)return; // 锁定态：禁止一切画布编辑（拖点、平移、缩放）
+      // 进入交互态：阻止浏览器默认的文本选取（坐标轴数字/页面文字不再出现蓝色高亮）。
+      // 仅当前可动点与画布平移响应指针，松手后在 end() 恢复正常文本选择。
+      if(e.cancelable)e.preventDefault();
+      document.body.classList.add('mh-dragging');
       var w=self.toWorld(e);
       var best=null,bd=1e9;
       // _handles 由最近一次 draw() 收集，随状态更新保持最新
@@ -237,10 +242,15 @@
     });
     function end(e){
       self.drag=null;self.pan=null;svg.style.cursor='';
+      // 松开指针：恢复正常文本选择状态
+      document.body.classList.remove('mh-dragging');
       // pan 之后需重绘 README 读数不受影响
     }
     svg.addEventListener('pointerup',end);
     svg.addEventListener('pointercancel',end);
+    // 指针在画布外松开时也要恢复文本选择，避免 body 残留 mh-dragging
+    window.addEventListener('pointerup',function(){document.body.classList.remove('mh-dragging');});
+    window.addEventListener('pointercancel',function(){document.body.classList.remove('mh-dragging');});
   };
   Board.prototype.draw=function(){
     this.scene.replaceChildren();
@@ -248,19 +258,39 @@
     if(this.model.draw)this.model.draw(this,this.state);
     this._collected=true;
   };
+  /* 缓入缓出（easeInOutCubic），供参数补间使用 */
+  function easeInOut(t){return t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
+  /* 启动一个参数补间动画：to={key:目标值,...}，时长 dur 秒，结束时回调 onDone。
+     动画逐帧更新 state 并同步滑块读数，避免瞬间跳转。 */
+  Board.prototype.tweenTo=function(to,dur,onDone){
+    var from={};
+    for(var k in to)if(Object.prototype.hasOwnProperty.call(to,k))from[k]=this.state[k];
+    this._tween={from:from,to:to,t:0,dur:dur||0.6,onDone:onDone||null};
+  };
   Board.prototype.step=function(dt){
+    if(this._tween){
+      var tw=this._tween,s=this.state;
+      tw.t+=dt;
+      var p=Math.min(1,tw.t/tw.dur),e=easeInOut(p);
+      for(var k in tw.to)if(Object.prototype.hasOwnProperty.call(tw.to,k))
+        s[k]=tw.from[k]+(tw.to[k]-tw.from[k])*e;
+      refreshControls(s); // 图像与滑块位置同步
+      if(p>=1){var done=tw.onDone;this._tween=null;if(done)done(this,s);}
+      this.draw();
+      return; // 补间期间优先，避免与播放扫描叠加
+    }
     if(this.playing){
       this.t+=dt*this.speed;
       if(this.model.step){
         this.model.step(this,this.state,dt);
       }else if(this._autoCtl){
         // 无自定义动画：让首个滑块参数在区间内往返扫描，形成自动演示
-        var c=this._autoCtl,s=this.state;
+        var c=this._autoCtl,s2=this.state;
         var span=c.max-c.min;
         var tri=Math.asin(Math.sin(this.t*this.speed*1.1))*2/Math.PI; // -1..1 三角波
-        s[c.key]=c.min+span*(tri+1)/2;
-        if(c.onchange)c.onchange(this,s);
-        refreshControls(s);
+        s2[c.key]=c.min+span*(tri+1)/2;
+        if(c.onchange)c.onchange(this,s2);
+        refreshControls(s2);
       }
       this.draw();
     }
@@ -278,6 +308,7 @@
         var lab=document.createElement('div');lab.className='mh-ctl-lab';
         var name=document.createElement('span');name.textContent=c.label;
         var val=document.createElement('b');val.id='mhv-'+c.key;
+        val.setAttribute('data-digits',c.digits!=null?c.digits:'');
         val.textContent=fmt(state[c.key],c.digits);
         lab.appendChild(name);lab.appendChild(val);
         var input=document.createElement('input');
@@ -286,6 +317,7 @@
         input.value=state[c.key];
         input.setAttribute('aria-label',c.label);
         input.oninput=function(){
+          board._tween=null; // 用户手动操作优先，取消进行中的补间动画
           state[c.key]=parseFloat(input.value);
           val.textContent=fmt(state[c.key],c.digits);
           if(c.onchange)c.onchange(board,state);
@@ -329,7 +361,10 @@
       var r=document.getElementById('mhr-'+k);
       if(r)r.value=state[k];
       var v=document.getElementById('mhv-'+k);
-      if(v)v.textContent=fmt(state[k]);
+      if(v){
+        var d=v.getAttribute('data-digits');
+        v.textContent=fmt(state[k],d===''?null:parseInt(d,10));
+      }
       var c=document.getElementById('mhc-'+k);
       if(c)c.checked=!!state[k];
     }
