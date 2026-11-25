@@ -74,6 +74,28 @@ button{font-family:inherit}
 }
 .mh-version-head{font-family:var(--mh-font-kai);font-weight:800;font-size:14px;color:var(--mh-primary);margin-bottom:7px}
 .mh-version-body{font-size:12px;line-height:1.7;color:var(--mh-ink)}
+/* 更新日志分页 */
+.mh-change-title{font-family:var(--mh-font-kai);font-weight:800;font-size:14px;color:var(--mh-primary);margin-bottom:9px;display:flex;align-items:center;gap:5px}
+.mh-change-list{min-height:96px}
+.mh-change-item{padding:8px 0;border-bottom:1px dashed var(--mh-line)}
+.mh-change-item:first-child{padding-top:0}
+.mh-change-item:last-child{border-bottom:none;padding-bottom:2px}
+.mh-change-head{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
+.mh-change-ver{font-family:var(--mh-font-kai);font-weight:800;font-size:13px;color:var(--mh-primary);
+  background:var(--mh-primary-soft);border-radius:6px;padding:1px 7px}
+.mh-change-ver.mh-change-dev{font-size:11px;font-weight:600;opacity:.8;background:transparent;
+  border:1px dashed var(--mh-primary-line);padding:0 6px}
+.mh-change-date{font-size:10.5px;color:var(--mh-muted);font-variant-numeric:tabular-nums}
+.mh-change-body{font-size:11.5px;line-height:1.65;color:var(--mh-ink)}
+.mh-change-nav{display:flex;align-items:center;justify-content:space-between;gap:6px;
+  margin-top:10px;padding-top:9px;border-top:1px dashed var(--mh-line)}
+.mh-change-btn{font-family:var(--mh-font-kai);font-size:11px;font-weight:700;color:var(--mh-primary);
+  background:var(--mh-canvas-bg);border:1.5px solid var(--mh-primary-line);border-radius:8px;
+  padding:5px 9px;cursor:pointer;white-space:nowrap;min-height:30px;transition:background .15s,border-color .15s}
+.mh-change-btn:hover:not(:disabled){background:var(--mh-primary-soft);border-style:solid}
+.mh-change-btn:disabled{opacity:.38;cursor:not-allowed;border-style:dashed}
+.mh-change-page{font-size:10.5px;color:var(--mh-muted);text-align:center;flex:1;font-variant-numeric:tabular-nums}
+.mh-change-empty{font-size:12px;color:var(--mh-muted);text-align:center;padding:22px 0;font-family:var(--mh-font-kai)}
 .mh-search{
   flex:1;min-width:160px;max-width:360px;margin-left:auto;position:relative;
 }
@@ -331,6 +353,9 @@ body.mh-dragging .mh-canvas text{user-select:none!important}
   .mh-brand-txt .mh-by{display:block;font-size:10px}
   .mh-version-btn{padding:5px 9px;font-size:10.5px}
   .mh-version-pop{width:min(290px,86vw);left:auto;right:0}
+  .mh-change-btn{padding:5px 7px;font-size:10.5px;min-height:32px;min-width:60px}
+  .mh-change-page{font-size:10px}
+  .mh-change-nav{gap:4px}
   .mh-search-wrap{max-width:none;order:3;flex-basis:100%;margin-left:0}
   .mh-main{padding:16px 13px 50px}
   .mh-hero{padding:22px 20px}
@@ -4494,10 +4519,23 @@ body.mh-dragging .mh-canvas text{user-select:none!important}
 
   /* ---------- 署名与版本信息 ---------- */
   var BRAND_AUTHOR='纳川老师制作';
-  var VERSION={
-    number:'v1.1.0',date:'2026-11-25',
-    summary:'一次函数拆分为初级/进阶两页；对比直线默认隐藏、按需开启；k/b 变号改为缓入缓出动画；拖动不再选中文字；锁定提示上移；全站署名与版本信息。'
-  };
+  /* 更新日志（新→旧）。每条：v=版本号(仅正式版) / date / text=更新内容 */
+  var CHANGES=[
+    {v:'v1.1.0',date:'2026-11-25',text:'一次函数拆分为初级/进阶两页；对比直线默认隐藏、按需开启；k/b 变号改为缓入缓出动画；拖动不再选中文字；锁定提示上移；全站署名与版本号。'},
+    {v:'',date:'2026-11-25',text:'开发流程规范化：建立 develop 开发分支，功能先集成验证再合并主分支；新增安全推送脚本，变更全程可追踪；更新日志支持分页浏览。'},
+    {v:'v1.0.0',date:'2026-11-24',text:'首个正式发布版：几何手账风格统一全站，67 个交互模型，13 条几何恒等式门禁，移动端/平板画布优先适配。'},
+    {v:'',date:'2026-11-24',text:'画布锁定机制：所有模型进入默认锁定，解锁前完全不可编辑并显示明确提示，避免误操作。'},
+    {v:'',date:'2026-11-24',text:'交互问题修复：修复全站拖动失效，重构反手拉手模型，修正 8 处模型图文/数学不一致。'},
+    {v:'',date:'2026-11-23',text:'知识点扩展：模型从 62 增至 67，补齐四边形、圆切线、方程、中位线等初中核心知识点缺口。'},
+    {v:'',date:'2026-11-22',text:'视觉风格改版：落地设计风格 A「几何手账」，暖米纸底、楷体、朱砂主色、方格纸画布。'},
+    {v:'',date:'2026-11-22',text:'项目初始化：搭建零依赖单文件架构、构建脚本与交互引擎，首批 62 个交互模型上线。'}
+  ];
+  var VERSION={number:(CHANGES[0]&&CHANGES[0].v)||'v1.1.0',date:(CHANGES[0]&&CHANGES[0].date)||'',summary:(CHANGES[0]&&CHANGES[0].text)||''};
+  var CHANGE_PAGE_SIZE=2;              /* 每页展示的日志条数 */
+  var changePage=0;                    /* 当前页（从 0 开始） */
+  /* 暴露到命名空间，便于测试替换数据以覆盖单页/空日志等边界；正常运行不改它 */
+  M.CHANGE_DATA=CHANGES;
+  M.CHANGE_PAGE_SIZE=CHANGE_PAGE_SIZE;
 
   /* ---------- 本地状态 ---------- */
   var store={
@@ -4531,6 +4569,55 @@ body.mh-dragging .mh-canvas text{user-select:none!important}
   function domainOf(id){for(var i=0;i<DOMAINS.length;i++)if(DOMAINS[i].id===id)return DOMAINS[i];return null;}
   function topicName(d,t){var ts=TOPICS[d]||[];for(var i=0;i<ts.length;i++)if(ts[i].id===t)return ts[i].name;return t;}
 
+  /* ---------- 更新日志分页渲染 ---------- */
+  function renderChangeLog(dir){
+    var pop=document.getElementById('mh-version-pop');
+    if(!pop)return;
+    var data=M.CHANGE_DATA||[];
+    var size=M.CHANGE_PAGE_SIZE||CHANGE_PAGE_SIZE;
+    var totalPages=Math.ceil(data.length/size);
+    /* 切换页码（带边界钳制） */
+    if(dir===-1)changePage=Math.max(0,changePage-1);
+    if(dir===1)changePage=Math.min(Math.max(0,totalPages-1),changePage+1);
+    if(totalPages===0)changePage=0;
+    else if(changePage>totalPages-1)changePage=totalPages-1;
+
+    var html='<div class="mh-change-title">✦ 更新日志</div>';
+    if(!data.length){
+      /* 暂无日志 */
+      html+='<div class="mh-change-empty">暂无更新日志</div>';
+    }else{
+      var start=changePage*size;
+      var pageItems=data.slice(start,start+size);
+      html+='<div class="mh-change-list">';
+      for(var i=0;i<pageItems.length;i++){
+        var c=pageItems[i];
+        html+='<div class="mh-change-item">'+
+          '<div class="mh-change-head">'+
+            (c.v?'<span class="mh-change-ver">'+esc(c.v)+'</span>':'<span class="mh-change-ver mh-change-dev">开发记录</span>')+
+            '<span class="mh-change-date">'+esc(c.date)+'</span>'+
+          '</div>'+
+          '<div class="mh-change-body">'+esc(c.text)+'</div>'+
+        '</div>';
+      }
+      html+='</div>';
+      /* 分页控件：只有一页时仍显示页码，但两侧按钮禁用 */
+      var atFirst=changePage<=0;
+      var atLast=changePage>=totalPages-1;
+      html+='<div class="mh-change-nav">'+
+        '<button type="button" class="mh-change-btn" id="mh-chg-prev" '+(atFirst?'disabled':'')+' aria-label="上一页">‹ 上一页</button>'+
+        '<span class="mh-change-page">第 '+(changePage+1)+' / '+totalPages+' 页 · 第 '+(start+1)+'-'+Math.min(start+size,data.length)+' 条</span>'+
+        '<button type="button" class="mh-change-btn" id="mh-chg-next" '+(atLast||totalPages<=1?'disabled':'')+' aria-label="下一页">下一页 ›</button>'+
+      '</div>';
+    }
+    pop.innerHTML=html;
+
+    var prev=document.getElementById('mh-chg-prev');
+    var next=document.getElementById('mh-chg-next');
+    if(prev)prev.onclick=function(e){e.stopPropagation();renderChangeLog(-1);};
+    if(next)next.onclick=function(e){e.stopPropagation();renderChangeLog(1);};
+  }
+
   /* ---------- 顶栏 ---------- */
   function renderTop(){
     var searchVal=document.getElementById('mh-q')?document.getElementById('mh-q').value:'';
@@ -4541,12 +4628,9 @@ body.mh-dragging .mh-canvas text{user-select:none!important}
           '<div class="mh-brand-txt"><b>数学互动实验室</b><span>初中数学 · 交互模型课件库</span>'+
             '<span class="mh-by">'+BRAND_AUTHOR+' <em>'+VERSION.number+'</em></span></div>'+
         '</div>'+
-        '<div class="mh-version" id="mh-version" title="点击查看版本更新">'+
-          '<button class="mh-version-btn" id="mh-version-btn" aria-expanded="false">✦ '+VERSION.number+' 更新</button>'+
-          '<div class="mh-version-pop" id="mh-version-pop" hidden>'+
-            '<div class="mh-version-head">'+VERSION.number+' · '+VERSION.date+'</div>'+
-            '<div class="mh-version-body">'+esc(VERSION.summary)+'</div>'+
-          '</div>'+
+          '<div class="mh-version" id="mh-version" title="点击查看更新日志">'+
+          '<button class="mh-version-btn" id="mh-version-btn" aria-expanded="false">✦ '+VERSION.number+' 更新日志</button>'+
+          '<div class="mh-version-pop" id="mh-version-pop" hidden></div>'+
         '</div>'+
         '<div class="mh-search-wrap">'+
           '<div class="mh-search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>'+
@@ -4567,6 +4651,7 @@ body.mh-dragging .mh-canvas text{user-select:none!important}
         var open=verPop.hidden;
         verPop.hidden=!open;
         verBtn.setAttribute('aria-expanded',open?'true':'false');
+        if(open)renderChangeLog();   /* 每次展开渲染当前页 */
       };
       verPop.onclick=function(e){e.stopPropagation();};
     }
