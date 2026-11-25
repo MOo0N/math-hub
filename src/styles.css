@@ -350,13 +350,42 @@ body.mh-dragging .mh-canvas text{user-select:none!important}
   .mh-change-page{font-size:10px}
   .mh-change-nav{gap:4px}
   .mh-search-wrap{max-width:none;order:3;flex-basis:100%;margin-left:0}
-  .mh-main{padding:16px 13px 50px}
-  .mh-hero{padding:22px 20px}
-  .mh-hero h1{font-size:23px}
-  .mh-hero-stats{gap:18px}
+  .mh-main{padding:13px 13px 50px}
+  /* hero 紧凑：缩小标题/正文/统计，减少纵向占位 */
+  .mh-hero{padding:16px 18px;margin-bottom:14px}
+  .mh-hero h1{font-size:21px;margin-bottom:6px}
+  .mh-hero p{font-size:12px;line-height:1.55}
+  .mh-hero-stats{gap:0;margin-top:12px;justify-content:space-between;flex-wrap:nowrap}
+  .mh-hero-stats div{flex:1;text-align:center}
+  .mh-hero-stats div b{font-size:19px}
+  .mh-hero-stats div span{font-size:11px}
   .mh-hero:after{display:none}
-  .mh-domains{grid-template-columns:1fr}
+  /* 区块标题上间距收紧 */
+  .mh-section-title{margin:15px 0 10px;font-size:17px}
+  /* 领域卡片：两列网格 + 紧凑内部，确保首屏完整呈现 */
+  .mh-domains{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .mh-domain{padding:12px 13px 11px;border-top-width:4px}
+  .mh-domain h3{font-size:16px;margin-bottom:4px}
+  .mh-domain p{font-size:11px;line-height:1.45;min-height:0;margin-bottom:8px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .mh-domain .mh-dom-meta{gap:8px;font-size:10px}
+  .mh-domain .mh-dom-meta b{font-size:14px}
   .mh-cards{grid-template-columns:1fr}
+}
+/* 超窄屏（≤360px）：进一步压缩，保持两列不溢出 */
+@media(max-width:360px){
+  .mh-hero{padding:12px 13px;margin-bottom:10px}
+  .mh-hero h1{font-size:18px;margin-bottom:4px}
+  .mh-hero p{font-size:11px;line-height:1.45}
+  .mh-hero-stats{margin-top:9px}
+  .mh-hero-stats div b{font-size:17px}
+  .mh-section-title{margin:11px 0 8px;font-size:16px}
+  .mh-domains{gap:7px}
+  .mh-domain{padding:9px 9px 8px}
+  .mh-domain h3{font-size:14px;margin-bottom:3px}
+  .mh-domain p{font-size:10.5px;margin-bottom:6px}
+  .mh-domain .mh-dom-meta{gap:4px;font-size:9.5px}
+  .mh-domain .mh-dom-meta b{font-size:13px}
 }
 @media(min-width:2000px){
   .mh-main,.mh-top-in{max-width:1500px}
