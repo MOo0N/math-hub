@@ -105,7 +105,7 @@ R(myModel);
 
 ## 四、协作开发规范
 
-1. **分支**：`master` 为可发布分支（远端默认分支）；功能开发用 `feature/xxx`，修复用 `fix/xxx`。
+1. **分支（develop 开发分支制）**：`master` 为主分支/发布分支，**禁止直接提交**；`develop` 为开发主分支，所有新功能、修复、优化先在 develop 完成并验证，确认无误后再合并 master。功能用 `feature/xxx`、修复用 `fix/xxx`，均从 develop 切出、做完合并回 develop。合并一律 `--no-ff` 保留痕迹。详见 `DEVELOPMENT_WORKFLOW.md`。
 2. **每次改动后运行一键门禁**：
 
    ```bash
