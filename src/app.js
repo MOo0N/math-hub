@@ -253,11 +253,17 @@
   }
 
   function cardHTML(m){
-    return '<div class="mh-card'+(done[m.id]?' done':'')+'" data-id="'+m.id+'">'+
-      '<span class="mh-level mh-level-'+m.level+'">'+LEVEL_NAME[m.level]+'</span>'+
-      '<h4>'+esc(m.title)+'</h4><p>'+esc(m.brief)+'</p>'+
-      '<button class="mh-fav'+(favs[m.id]?' on':'')+'" data-fav="'+m.id+'" title="收藏">'+(favs[m.id]?'★':'☆')+'</button>'+
-      '</div>';
+    return '<article class="mh-card'+(done[m.id]?' done':'')+'" data-id="'+m.id+'">'+
+      '<div class="mh-card-top">'+
+        '<span class="mh-level mh-level-'+m.level+'">'+LEVEL_NAME[m.level]+'</span>'+
+      '</div>'+
+      '<h4 class="mh-card-title">'+esc(m.title)+'</h4>'+
+      '<p class="mh-card-desc">'+esc(m.brief)+'</p>'+
+      '<div class="mh-card-foot">'+
+        '<span class="mh-card-go">进入实验 <span aria-hidden="true">›</span></span>'+
+        '<button class="mh-fav'+(favs[m.id]?' on':'')+'" data-fav="'+m.id+'" title="收藏" aria-label="收藏 '+esc(m.title)+'">'+(favs[m.id]?'★':'☆')+'</button>'+
+      '</div>'+
+      '</article>';
   }
   function bindCards(){
     Array.prototype.forEach.call(document.querySelectorAll('.mh-card'),function(el){
