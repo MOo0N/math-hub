@@ -43,7 +43,10 @@ button{font-family:inherit}
 .mh-top{
   position:sticky;top:0;z-index:50;background:var(--mh-panel);
   border-bottom:2px dashed var(--mh-line);box-shadow:var(--mh-shadow);
+  transition:transform .32s ease,box-shadow .32s ease;will-change:transform;
 }
+/* 模型页滚动智能收起：向下滚动时平滑上移隐藏，回到顶部或上滑时展开 */
+.mh-top.mh-hide{transform:translateY(-100%);box-shadow:none}
 .mh-top-in{
   max-width:1280px;margin:0 auto;padding:10px 20px;
   display:flex;align-items:center;gap:14px;flex-wrap:wrap;
@@ -338,9 +341,16 @@ body.mh-dragging .mh-canvas text{user-select:none!important}
 .mh-notes li{margin:5px 0}
 .mh-formula{
   background:var(--mh-canvas-bg);border:1px dashed var(--mh-line);border-left:4px solid var(--mh-orange);
-  border-radius:7px;padding:9px 12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-  font-size:12px;margin:9px 0;overflow-x:auto;
+  border-radius:7px;padding:11px 14px;font-size:14px;margin:9px 0;overflow-x:auto;
+  line-height:2;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px;
 }
+/* LaTeX/MathML 规范排版：清晰字号与合理间距 */
+.mh-math{font-family:"STIX Two Math","Cambria Math","Times New Roman",serif;font-size:1.06em;line-height:1.2}
+.mh-math math{display:inline}
+.mh-formula .mh-math{margin:0 1px}
+/* 数学片段中的中文叙述以普通字体显示 */
+math mtext{font-family:inherit}
+:root[data-mh-theme="dark"] .mh-math{color:var(--mh-ink)}
 .mh-tag{display:inline-block;font-size:11px;padding:2px 9px;border-radius:999px;
   background:var(--mh-primary-soft);color:var(--mh-primary);border:1px solid var(--mh-primary-line);margin-right:6px}
 
@@ -385,10 +395,22 @@ body.mh-dragging .mh-canvas text{user-select:none!important}
   .mh-canvas{width:100%}
   .mh-lock-msg{font-size:11px;padding:8px 13px;max-width:88%}
   /* 按钮压缩：减小内边距与字号，减少纵向占位 */
-  .mh-mini{padding:4px 8px;font-size:11.5px;border-radius:7px}
-  .mh-btnrow{gap:5px;margin:8px 0}
+  .mh-mini{padding:6px 9px;font-size:11.5px;border-radius:7px;min-height:32px}
+  .mh-btnrow{gap:5px;margin:6px 0}
   .mh-zoom button,.mh-lock{padding:3px 7px;font-size:11.5px;min-width:26px}
   .mh-notes{padding:15px 16px}
+  /* 调节面板紧凑：缩小内边距、控件与分隔间距，按钮保持可触摸尺寸 */
+  .mh-side{padding:10px 12px}
+  .mh-side.collapsed{padding:9px 12px}
+  .mh-side .mh-side-body{margin-top:8px}
+  .mh-side .mh-side-h{font-size:13px;margin-bottom:2px}
+  .mh-side .mh-side-sub{font-size:10.5px;margin-bottom:8px}
+  .mh-ctl{margin-bottom:8px}
+  .mh-ctl-lab{font-size:11px;margin-bottom:3px}
+  .mh-check{font-size:11.5px;margin:6px 0}
+  .mh-check input{width:16px;height:16px}
+  .mh-side-divider{margin:8px 0}
+  .mh-wide{margin:4px 0}
 }
 @media(max-width:760px){
   .mh-top-in{padding:9px 14px;gap:9px}
@@ -4664,6 +4686,133 @@ body.mh-dragging .mh-canvas text{user-select:none!important}
   /* ---------- 工具 ---------- */
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+  /* ---------- 轻量 LaTeX → MathML 渲染器（零依赖） ----------
+     支持初中常见语法：$…$ 行内公式、\frac{}{}、\sqrt[]{}/√、^{}/^、_{}/_、
+     希腊字母与运算符命令；未包 $ 的纯文本会智能识别 Unicode 数学记号，
+     把其中的数学片段渲染为规范 MathML，中文叙述保持原样。 */
+  var TEX_SYM={
+    alpha:'α',beta:'β',gamma:'γ',delta:'δ',theta:'θ',lambda:'λ',mu:'μ',pi:'π',sigma:'σ',phi:'φ',omega:'ω',
+    Alpha:'Α',Beta:'Β',Gamma:'Γ',Delta:'Δ',Theta:'Θ',Lambda:'Λ',Pi:'Π',Sigma:'Σ',Phi:'Φ',Omega:'Ω',
+    times:'×',div:'÷',cdot:'·',pm:'±',mp:'∓',le:'≤',leq:'≤',ge:'≥',geq:'≥',ne:'≠',neq:'≠',approx:'≈',
+    in:'∈',notIn:'∉',infty:'∞',sum:'∑',prod:'∏',int:'∫',angle:'∠',triangle:'△',perp:'⊥',parallel:'∥',
+    Rightarrow:'⇒',Leftarrow:'⇐',Leftrightarrow:'⇔',to:'→',mapsto:'↦',circ:'∘',degree:'°',
+    forall:'∀',exists:'∃',therefore:'∴',because:'∵',ll:'≪',gg:'≫',subset:'⊂',subseteq:'⊆',cup:'∪',cap:'∩',
+    empty:'∅',partial:'∂',ell:'ℓ',prime:'′',quad:' ',qquad:' ', ' ': ' '
+  };
+  var TEX_ESC={'\\':'\\','{':'{','}':'}','$':'$','%':'%','&':'&','_':'_','#':'#'};
+  /* 把源串解析成 MathML 节点序列（ES5 兼容，手写递归解析） */
+  function texNodes(src){
+    var i=0,n=src.length,out=[];
+    function exitGroup(stopBrace){return stopBrace?'}':null;}
+    function parseArg(){
+      // 跳过空白
+      while(i<n&&src.charAt(i)===' ')i++;
+      if(i<n&&src.charAt(i)==='{'){
+        i++;return parseList(true);
+      }
+      if(i<n&&src.charAt(i)==='\\'&&i+1<n){
+        var c=src.charAt(i+1);
+        if(/[a-zA-Z]/.test(c)){i+=2;return parseCommand(c);}
+      }
+      // 单字符参数，如 ^2、_1
+      return [textNode(src.charAt(i++))];
+    }
+    function parseCommand(c){
+      if(c==='frac'){
+        var a=parseArg(),bb=parseArg();
+        return ['<mfrac><mrow>'+a.join('')+'</mrow><mrow>'+bb.join('')+'</mrow></mfrac>'];
+      }
+      if(c==='sqrt'){
+        while(i<n&&src.charAt(i)===' ')i++;
+        if(i<n&&src.charAt(i)==='['){ // 根指数
+          i++;var idx=[];while(i<n&&src.charAt(i)!==']')idx.push(src.charAt(i++));i++;
+          var body=parseArg();
+          return ['<mroot><mrow>'+body.join('')+'</mrow><mrow>'+esc(idx.join(''))+'</mrow></mroot>'];
+        }
+        var b=parseArg();
+        return ['<msqrt><mrow>'+b.join('')+'</mrow></msqrt>'];
+      }
+      if(c==='text'||c==='mathrm'){
+        var t=parseArg().map(function(x){return x.replace(/<mi>/g,'<mtext>').replace(/<\/mi>/g,'</mtext>');});
+        return t;
+      }
+      if(c==='left'||c==='right'){return [];} // 括号由 unicode 直接呈现
+      if(c==='big'||c==='Big'||c==='bigg'||c==='Bigg'){return [];}
+      if(Object.prototype.hasOwnProperty.call(TEX_SYM,c))return ['<mo>'+esc(TEX_SYM[c])+'</mo>'];
+      if(Object.prototype.hasOwnProperty.call(TEX_ESC,c))return ['<mo>'+esc(TEX_ESC[c])+'</mo>'];
+      return ['<mi>'+esc(c)+'</mi>'];
+    }
+    /* Unicode 上标/下标字符 → 规范 MathML 上下标（突出"规范 LaTeX 展示"） */
+    var SUP={'⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9',
+      '⁺':'+','⁻':'−','ⁿ':'n'};
+    var SUB={'₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9',
+      'ᵢ':'i','ₐ':'a'};
+    function textNode(ch){
+      if(!ch)return '';
+      if(Object.prototype.hasOwnProperty.call(SUP,ch))return '<msup><mrow></mrow><mrow><mn>'+esc(SUP[ch])+'</mn></mrow></msup>';
+      if(Object.prototype.hasOwnProperty.call(SUB,ch))return '<msub><mrow></mrow><mrow><mn>'+esc(SUB[ch])+'</mn></mrow></msub>';
+      if(/[0-9]/.test(ch))return '<mn>'+ch+'</mn>';
+      if(/[a-zA-Z]/.test(ch))return '<mi>'+ch+'</mi>';
+      return '<mo>'+esc(ch)+'</mo>';
+    }
+    function parseList(stopBrace){
+      var nodes=[];
+      while(i<n){
+        var ch=src.charAt(i);
+        if(stopBrace&&ch==='}'){i++;break;}
+        if(ch==='\\'){
+          if(i+1<n&&/[a-zA-Z]/.test(src.charAt(i+1))){var c=src.charAt(i+1);i+=2;nodes=nodes.concat(parseCommand(c));continue;}
+          i++;continue;
+        }
+        if(ch==='^'||ch==='_'){
+          i++;var a=parseArg();
+          if(ch==='^')nodes.push('<msup><mrow>'+(nodes.length?nodes.pop():'')+'</mrow><mrow>'+a.join('')+'</mrow></msup>');
+          else nodes.push('<msub><mrow>'+(nodes.length?nodes.pop():'')+'</mrow><mrow>'+a.join('')+'</mrow></msub>');
+          continue;
+        }
+        if(ch==='$'){i++;continue;}
+        /* Unicode 上下标附着到前一个节点，形成规范 msup/msub（而非孤立字符） */
+        if(Object.prototype.hasOwnProperty.call(SUP,ch)||Object.prototype.hasOwnProperty.call(SUB,ch)){
+          var isSup=Object.prototype.hasOwnProperty.call(SUP,ch);
+          var val=isSup?SUP[ch]:SUB[ch];
+          var base=nodes.length?nodes.pop():'';
+          nodes.push('<'+(isSup?'msup':'msub')+'><mrow>'+base+'</mrow><mrow><mn>'+esc(val)+'</mn></mrow></'+(isSup?'msup':'msub')+'>');
+          i++;continue;
+        }
+        nodes.push(textNode(ch));i++;
+      }
+      return nodes;
+    }
+    return parseList(false);
+  }
+  /* 把一段含 $…$ 或纯 Unicode 数学记号的文本渲染为 HTML。
+     中文叙述保留；数学表达式用 <math> 规范排版。 */
+  function tex(str){
+    if(str==null)return '';
+    str=String(str);
+    // 含 $...$：逐段渲染
+    if(str.indexOf('$')>=0){
+      var parts=str.split('$'),h='',math=false;
+      for(var i=0;i<parts.length;i++){
+        if(math&&parts[i].trim())h+='<math class="mh-math" xmlns="http://www.w3.org/1998/Math/MathML"><mrow>'+texNodes(parts[i]).join('')+'</mrow></math>';
+        else if(!math)h+=esc(parts[i]);
+        math=!math;
+      }
+      return h;
+    }
+    // 纯文本：把连续数学片段（不含中文）转为 MathML，中文叙述保留
+    var segs=str.split(/([\u4e00-\u9fff，。、；：（）「」“”‘’｜　\s]+)/);
+    var html='';
+    for(var k=0;k<segs.length;k++){
+      var s=segs[k];
+      if(!s)continue;
+      if(/^[\u4e00-\u9fff，。、；：（）「」“”‘’｜　\s]+$/.test(s)){html+=esc(s);continue;}
+      // 数学片段：直接解析（Unicode 记号走 textNode，已覆盖常见符号）
+      html+='<math class="mh-math" xmlns="http://www.w3.org/1998/Math/MathML"><mrow>'+texNodes(s).join('')+'</mrow></math>';
+    }
+    return html;
+  }
   function modelsOf(domain,topic){
     var arr=[];
     for(var id in models){var m=models[id];
@@ -5012,7 +5161,7 @@ body.mh-dragging .mh-canvas text{user-select:none!important}
         h+='<ol>';m.proof.forEach(function(s){h+='<li>'+s+'</li>';});h+='</ol>';
       }
     }
-    if(m.formula)h+='<h3>🔢 关键公式</h3><div class="mh-formula">'+m.formula+'</div>';
+    if(m.formula)h+='<h3>🔢 关键公式</h3><div class="mh-formula">'+tex(m.formula)+'</div>';
     if(m.tips){
       h+='<h3>💡 操作提示</h3><ul>';
       (Array.isArray(m.tips)?m.tips:[m.tips]).forEach(function(t){h+='<li>'+t+'</li>';});
@@ -5051,6 +5200,34 @@ body.mh-dragging .mh-canvas text{user-select:none!important}
     });
   }
 
+  /* ---------- 顶栏滚动智能收起（仅模型页） ---------- */
+  var lastScrollY=0;
+  var topScrollTicking=false;
+  function getTopEl(){return document.querySelector('.mh-top');}
+  function resetTopHide(){
+    lastScrollY=window.scrollY||window.pageYOffset||0;
+    var top=getTopEl();
+    if(top)top.classList.remove('mh-hide');
+  }
+  function updateTopOnScroll(){
+    var top=getTopEl();
+    if(!top)return;
+    var y=window.scrollY||window.pageYOffset||0;
+    if(parseHash().view!=='m'||y<=20){          /* 非模型页或到达顶部：展开 */
+      top.classList.remove('mh-hide');
+    }else if(y>lastScrollY+2){                  /* 向下滚动：平滑收起 */
+      top.classList.add('mh-hide');
+    }else if(y<lastScrollY-2){                  /* 向上滚动：重新展开 */
+      top.classList.remove('mh-hide');
+    }
+    lastScrollY=y;
+  }
+  window.addEventListener('scroll',function(){
+    if(topScrollTicking)return;
+    topScrollTicking=true;
+    requestAnimationFrame(function(){updateTopOnScroll();topScrollTicking=false;});
+  },{passive:true});
+
   /* ---------- 路由分发 ---------- */
   function route(){
     var r=parseHash();
@@ -5059,6 +5236,7 @@ body.mh-dragging .mh-canvas text{user-select:none!important}
     else if(r.view==='m')renderModel(r.a);
     else renderHome();
     window.scrollTo(0,0);
+    resetTopHide();                              /* 切换页面后顶栏恢复展开 */
   }
 
   /* ---------- 全局动画循环 ---------- */

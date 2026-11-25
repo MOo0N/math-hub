@@ -70,6 +70,133 @@
   /* ---------- 工具 ---------- */
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+  /* ---------- 轻量 LaTeX → MathML 渲染器（零依赖） ----------
+     支持初中常见语法：$…$ 行内公式、\frac{}{}、\sqrt[]{}/√、^{}/^、_{}/_、
+     希腊字母与运算符命令；未包 $ 的纯文本会智能识别 Unicode 数学记号，
+     把其中的数学片段渲染为规范 MathML，中文叙述保持原样。 */
+  var TEX_SYM={
+    alpha:'α',beta:'β',gamma:'γ',delta:'δ',theta:'θ',lambda:'λ',mu:'μ',pi:'π',sigma:'σ',phi:'φ',omega:'ω',
+    Alpha:'Α',Beta:'Β',Gamma:'Γ',Delta:'Δ',Theta:'Θ',Lambda:'Λ',Pi:'Π',Sigma:'Σ',Phi:'Φ',Omega:'Ω',
+    times:'×',div:'÷',cdot:'·',pm:'±',mp:'∓',le:'≤',leq:'≤',ge:'≥',geq:'≥',ne:'≠',neq:'≠',approx:'≈',
+    in:'∈',notIn:'∉',infty:'∞',sum:'∑',prod:'∏',int:'∫',angle:'∠',triangle:'△',perp:'⊥',parallel:'∥',
+    Rightarrow:'⇒',Leftarrow:'⇐',Leftrightarrow:'⇔',to:'→',mapsto:'↦',circ:'∘',degree:'°',
+    forall:'∀',exists:'∃',therefore:'∴',because:'∵',ll:'≪',gg:'≫',subset:'⊂',subseteq:'⊆',cup:'∪',cap:'∩',
+    empty:'∅',partial:'∂',ell:'ℓ',prime:'′',quad:' ',qquad:' ', ' ': ' '
+  };
+  var TEX_ESC={'\\':'\\','{':'{','}':'}','$':'$','%':'%','&':'&','_':'_','#':'#'};
+  /* 把源串解析成 MathML 节点序列（ES5 兼容，手写递归解析） */
+  function texNodes(src){
+    var i=0,n=src.length,out=[];
+    function exitGroup(stopBrace){return stopBrace?'}':null;}
+    function parseArg(){
+      // 跳过空白
+      while(i<n&&src.charAt(i)===' ')i++;
+      if(i<n&&src.charAt(i)==='{'){
+        i++;return parseList(true);
+      }
+      if(i<n&&src.charAt(i)==='\\'&&i+1<n){
+        var c=src.charAt(i+1);
+        if(/[a-zA-Z]/.test(c)){i+=2;return parseCommand(c);}
+      }
+      // 单字符参数，如 ^2、_1
+      return [textNode(src.charAt(i++))];
+    }
+    function parseCommand(c){
+      if(c==='frac'){
+        var a=parseArg(),bb=parseArg();
+        return ['<mfrac><mrow>'+a.join('')+'</mrow><mrow>'+bb.join('')+'</mrow></mfrac>'];
+      }
+      if(c==='sqrt'){
+        while(i<n&&src.charAt(i)===' ')i++;
+        if(i<n&&src.charAt(i)==='['){ // 根指数
+          i++;var idx=[];while(i<n&&src.charAt(i)!==']')idx.push(src.charAt(i++));i++;
+          var body=parseArg();
+          return ['<mroot><mrow>'+body.join('')+'</mrow><mrow>'+esc(idx.join(''))+'</mrow></mroot>'];
+        }
+        var b=parseArg();
+        return ['<msqrt><mrow>'+b.join('')+'</mrow></msqrt>'];
+      }
+      if(c==='text'||c==='mathrm'){
+        var t=parseArg().map(function(x){return x.replace(/<mi>/g,'<mtext>').replace(/<\/mi>/g,'</mtext>');});
+        return t;
+      }
+      if(c==='left'||c==='right'){return [];} // 括号由 unicode 直接呈现
+      if(c==='big'||c==='Big'||c==='bigg'||c==='Bigg'){return [];}
+      if(Object.prototype.hasOwnProperty.call(TEX_SYM,c))return ['<mo>'+esc(TEX_SYM[c])+'</mo>'];
+      if(Object.prototype.hasOwnProperty.call(TEX_ESC,c))return ['<mo>'+esc(TEX_ESC[c])+'</mo>'];
+      return ['<mi>'+esc(c)+'</mi>'];
+    }
+    /* Unicode 上标/下标字符 → 规范 MathML 上下标（突出"规范 LaTeX 展示"） */
+    var SUP={'⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9',
+      '⁺':'+','⁻':'−','ⁿ':'n'};
+    var SUB={'₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9',
+      'ᵢ':'i','ₐ':'a'};
+    function textNode(ch){
+      if(!ch)return '';
+      if(Object.prototype.hasOwnProperty.call(SUP,ch))return '<msup><mrow></mrow><mrow><mn>'+esc(SUP[ch])+'</mn></mrow></msup>';
+      if(Object.prototype.hasOwnProperty.call(SUB,ch))return '<msub><mrow></mrow><mrow><mn>'+esc(SUB[ch])+'</mn></mrow></msub>';
+      if(/[0-9]/.test(ch))return '<mn>'+ch+'</mn>';
+      if(/[a-zA-Z]/.test(ch))return '<mi>'+ch+'</mi>';
+      return '<mo>'+esc(ch)+'</mo>';
+    }
+    function parseList(stopBrace){
+      var nodes=[];
+      while(i<n){
+        var ch=src.charAt(i);
+        if(stopBrace&&ch==='}'){i++;break;}
+        if(ch==='\\'){
+          if(i+1<n&&/[a-zA-Z]/.test(src.charAt(i+1))){var c=src.charAt(i+1);i+=2;nodes=nodes.concat(parseCommand(c));continue;}
+          i++;continue;
+        }
+        if(ch==='^'||ch==='_'){
+          i++;var a=parseArg();
+          if(ch==='^')nodes.push('<msup><mrow>'+(nodes.length?nodes.pop():'')+'</mrow><mrow>'+a.join('')+'</mrow></msup>');
+          else nodes.push('<msub><mrow>'+(nodes.length?nodes.pop():'')+'</mrow><mrow>'+a.join('')+'</mrow></msub>');
+          continue;
+        }
+        if(ch==='$'){i++;continue;}
+        /* Unicode 上下标附着到前一个节点，形成规范 msup/msub（而非孤立字符） */
+        if(Object.prototype.hasOwnProperty.call(SUP,ch)||Object.prototype.hasOwnProperty.call(SUB,ch)){
+          var isSup=Object.prototype.hasOwnProperty.call(SUP,ch);
+          var val=isSup?SUP[ch]:SUB[ch];
+          var base=nodes.length?nodes.pop():'';
+          nodes.push('<'+(isSup?'msup':'msub')+'><mrow>'+base+'</mrow><mrow><mn>'+esc(val)+'</mn></mrow></'+(isSup?'msup':'msub')+'>');
+          i++;continue;
+        }
+        nodes.push(textNode(ch));i++;
+      }
+      return nodes;
+    }
+    return parseList(false);
+  }
+  /* 把一段含 $…$ 或纯 Unicode 数学记号的文本渲染为 HTML。
+     中文叙述保留；数学表达式用 <math> 规范排版。 */
+  function tex(str){
+    if(str==null)return '';
+    str=String(str);
+    // 含 $...$：逐段渲染
+    if(str.indexOf('$')>=0){
+      var parts=str.split('$'),h='',math=false;
+      for(var i=0;i<parts.length;i++){
+        if(math&&parts[i].trim())h+='<math class="mh-math" xmlns="http://www.w3.org/1998/Math/MathML"><mrow>'+texNodes(parts[i]).join('')+'</mrow></math>';
+        else if(!math)h+=esc(parts[i]);
+        math=!math;
+      }
+      return h;
+    }
+    // 纯文本：把连续数学片段（不含中文）转为 MathML，中文叙述保留
+    var segs=str.split(/([\u4e00-\u9fff，。、；：（）「」“”‘’｜　\s]+)/);
+    var html='';
+    for(var k=0;k<segs.length;k++){
+      var s=segs[k];
+      if(!s)continue;
+      if(/^[\u4e00-\u9fff，。、；：（）「」“”‘’｜　\s]+$/.test(s)){html+=esc(s);continue;}
+      // 数学片段：直接解析（Unicode 记号走 textNode，已覆盖常见符号）
+      html+='<math class="mh-math" xmlns="http://www.w3.org/1998/Math/MathML"><mrow>'+texNodes(s).join('')+'</mrow></math>';
+    }
+    return html;
+  }
   function modelsOf(domain,topic){
     var arr=[];
     for(var id in models){var m=models[id];
@@ -418,7 +545,7 @@
         h+='<ol>';m.proof.forEach(function(s){h+='<li>'+s+'</li>';});h+='</ol>';
       }
     }
-    if(m.formula)h+='<h3>🔢 关键公式</h3><div class="mh-formula">'+m.formula+'</div>';
+    if(m.formula)h+='<h3>🔢 关键公式</h3><div class="mh-formula">'+tex(m.formula)+'</div>';
     if(m.tips){
       h+='<h3>💡 操作提示</h3><ul>';
       (Array.isArray(m.tips)?m.tips:[m.tips]).forEach(function(t){h+='<li>'+t+'</li>';});
@@ -457,6 +584,34 @@
     });
   }
 
+  /* ---------- 顶栏滚动智能收起（仅模型页） ---------- */
+  var lastScrollY=0;
+  var topScrollTicking=false;
+  function getTopEl(){return document.querySelector('.mh-top');}
+  function resetTopHide(){
+    lastScrollY=window.scrollY||window.pageYOffset||0;
+    var top=getTopEl();
+    if(top)top.classList.remove('mh-hide');
+  }
+  function updateTopOnScroll(){
+    var top=getTopEl();
+    if(!top)return;
+    var y=window.scrollY||window.pageYOffset||0;
+    if(parseHash().view!=='m'||y<=20){          /* 非模型页或到达顶部：展开 */
+      top.classList.remove('mh-hide');
+    }else if(y>lastScrollY+2){                  /* 向下滚动：平滑收起 */
+      top.classList.add('mh-hide');
+    }else if(y<lastScrollY-2){                  /* 向上滚动：重新展开 */
+      top.classList.remove('mh-hide');
+    }
+    lastScrollY=y;
+  }
+  window.addEventListener('scroll',function(){
+    if(topScrollTicking)return;
+    topScrollTicking=true;
+    requestAnimationFrame(function(){updateTopOnScroll();topScrollTicking=false;});
+  },{passive:true});
+
   /* ---------- 路由分发 ---------- */
   function route(){
     var r=parseHash();
@@ -465,6 +620,7 @@
     else if(r.view==='m')renderModel(r.a);
     else renderHome();
     window.scrollTo(0,0);
+    resetTopHide();                              /* 切换页面后顶栏恢复展开 */
   }
 
   /* ---------- 全局动画循环 ---------- */
