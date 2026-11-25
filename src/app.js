@@ -345,7 +345,7 @@
     var favCount=0;for(var f in favs)if(favs[f])favCount++;
     var html='<div class="mh-hero">'+
       '<h1>初中数学 · 互动模型实验室</h1>'+
-      '<p>把课本里的定理、公式和最值模型变成可以亲手拖动、调节、播放的实验。从概念到证明，让抽象数学变得直观可见。支持滚轮缩放、拖动平移、参数调节与动画播放。</p>'+
+      '<p>把课本里的定理、公式和最值模型变成可以亲手拖动、调节、播放的实验。从概念到证明，让抽象数学变得直观可见。支持按钮缩放、拖动平移、参数调节与动画播放。</p>'+
       '<div class="mh-hero-stats">'+
         '<div><b>'+total+'</b><span>互动模型</span></div>'+
         '<div><b>'+domCount+'</b><span>知识领域</span></div>'+
@@ -461,7 +461,7 @@
               '<div class="mh-lock-veil" id="mh-lock-veil" aria-hidden="false"><span class="mh-lock-msg">🔒 画布已锁定 · 点击右上角「解锁」后可编辑</span></div>'+
             '</div>'+
             '<div class="mh-readout-wrap"><div id="mh-readout" aria-live="polite">准备就绪</div></div>'+
-            '<div class="mh-hint">'+(m.interaction||'滚轮缩放，拖动图形空白处平移；拖动关键点观察变化。')+'</div>'+
+            '<div class="mh-hint">'+(m.interaction||'点右上角 ＋/－ 缩放，拖动图形空白处平移；拖动关键点观察变化。')+'</div>'+
           '</div>'+
         '</section>'+
         '<aside class="mh-panel mh-side" id="mh-side">'+
@@ -473,11 +473,6 @@
             '<div class="mh-btnrow">'+
               (playable?'<button class="mh-mini" id="mh-play">▶ 播放</button>':'')+
               '<button class="mh-mini" id="mh-reset">↺ 重置</button>'+
-            '</div>'+
-            '<div class="mh-btnrow">'+
-              '<button class="mh-mini" id="mh-zin">＋ 放大</button>'+
-              '<button class="mh-mini" id="mh-zout">－ 缩小</button>'+
-              '<button class="mh-mini" id="mh-zfit">适配</button>'+
             '</div>'+
             '<div class="mh-side-divider"></div>'+
             '<label class="mh-check"><input type="checkbox" id="mh-done"'+(done[m.id]?' checked':'')+'><span>标记为已学</span></label>'+
@@ -502,11 +497,9 @@
       if(m.onReset)m.onReset(currentBoard,currentBoard.state);
       currentBoard.t=0;M.refreshControls(currentBoard.state);currentBoard.draw();updPlay();
     };
+    /* 唯一的缩放入口：锁定键右侧的 ＋/－ 按钮（zoomAt 内部仍受 locked 约束） */
     document.getElementById('mh-zi').onclick=function(){currentBoard.zoomAt(1.25);};
     document.getElementById('mh-zo').onclick=function(){currentBoard.zoomAt(0.8);};
-    document.getElementById('mh-zfit').onclick=function(){currentBoard.resetView();};
-    document.getElementById('mh-zin').onclick=function(){currentBoard.zoomAt(1.25);};
-    document.getElementById('mh-zout').onclick=function(){currentBoard.zoomAt(0.8);};
     // 画布锁定开关：默认锁定，须手动解锁；每个 Board 实例独立
     var lockBtn=document.getElementById('mh-lock');
     var lockVeil=document.getElementById('mh-lock-veil');

@@ -60,30 +60,33 @@ def main():
         check(pg.locator('#mh-lock-veil').is_visible(), '默认应显示锁定提示遮罩')
         check('画布已锁定' in pg.locator('#mh-lock-veil').inner_text(), '锁定提示文案缺失')
 
-        # 锁定态：平移 / 拖点 / 侧栏缩放 / 滚轮 全部禁止
+        # 锁定态：平移 / 拖点 / 按钮缩放 / 滚轮 全部禁止
         vb = view(pg)
         drag_scr(pg, svg2screen(pg, 800, 500), 60, 40)
         check(vb == view(pg), '锁定时画布平移应被禁止')
         a = handleA_svg(pg); s = svg2screen(pg, a[0], a[1])
         r0 = readout(pg); drag_scr(pg, s, 50, 40)
         check(r0 == readout(pg), '锁定时节点拖动应被禁止（读数不应变化）')
-        pg.click('#mh-zi'); pg.click('#mh-zo'); pg.click('#mh-zfit'); pg.wait_for_timeout(60)
-        check(vb == view(pg), '锁定时侧栏缩放应被禁止')
+        pg.click('#mh-zi'); pg.click('#mh-zo'); pg.wait_for_timeout(60)
+        check(vb == view(pg), '锁定时按钮缩放应被禁止')
         pg.mouse.move(svg2screen(pg, 450, 300)['x'], svg2screen(pg, 450, 300)['y'])
         pg.mouse.wheel(0, -300); pg.wait_for_timeout(80)
-        check(vb == view(pg), '锁定时滚轮缩放应被禁止')
+        check(vb == view(pg), '滚轮不得缩放画布（任何状态）')
         pg.screenshot(path=__import__('os').path.join(SHOTS, 'lock-default.png'), full_page=False)
 
-        # ---- 2. 解锁后全部恢复 ----
+        # ---- 2. 解锁后：平移/按钮缩放/节点拖动恢复，但滚轮仍不缩放 ----
         pg.click('#mh-lock'); pg.wait_for_timeout(100)
         check('解锁' in btn.inner_text() and btn.get_attribute('aria-pressed') == 'false', '解锁按钮状态错误')
         check(not pg.locator('#mh-lock-veil').is_visible(), '解锁后遮罩应隐藏')
         vb = view(pg); drag_scr(pg, svg2screen(pg, 800, 500), 60, 40)
         check(vb != view(pg), '解锁后画布平移应恢复')
-        pg.click('#mh-zfit'); pg.wait_for_timeout(60)
+        pg.click('#mh-reset'); pg.wait_for_timeout(60)     # 重置视图
         vb = view(pg); pg.click('#mh-zi'); pg.wait_for_timeout(60)
-        check(vb != view(pg), '解锁后侧栏缩放应恢复')
-        pg.click('#mh-zfit'); pg.wait_for_timeout(60)
+        check(vb != view(pg), '解锁后 ＋ 按钮缩放应恢复且视图同步')
+        vb2 = view(pg); pg.mouse.move(svg2screen(pg, 450, 300)['x'], svg2screen(pg, 450, 300)['y'])
+        pg.mouse.wheel(0, -300); pg.wait_for_timeout(80)
+        check(vb2 == view(pg), '解锁后滚轮仍不得缩放画布')
+        pg.click('#mh-reset'); pg.wait_for_timeout(60)     # 重置视图
         a = handleA_svg(pg); s = svg2screen(pg, a[0], a[1])
         r0 = readout(pg); drag_scr(pg, s, 50, 40)
         check(r0 != readout(pg), '解锁后节点应可拖动')

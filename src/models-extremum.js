@@ -19,7 +19,7 @@
     tips:['切换「线段 / 圆 / 自由」三种主动点路径','拖动 A、线段端点或圆来观察 Q 的轨迹如何同步变化','把 k 调成 1，观察全等（纯旋转）的特殊情形'],
     legend:[{c:C.blue,t:'主动点 P / 原轨迹'},{c:C.orange,t:'从动点 Q / 预测轨迹'}],
     hint:'定角 α、定比 k 决定 Q 的轨迹形状',
-    interaction:'滚轮缩放，拖空白处平移。拖 A、P 或路径端点；橙色虚线是预测轨迹，橙色点是 Q 的实际痕迹。',
+    interaction:'点右上角 ＋/－ 缩放，拖空白处平移。拖 A、P 或路径端点；橙色虚线是预测轨迹，橙色点是 Q 的实际痕迹。',
     controls:[
       {type:'buttons',key:'mode',items:[
         {label:'线段',onclick:function(b,s){s.mode='segment';b.model.onMode(b,'segment');}},
@@ -165,7 +165,7 @@
     tips:['拖动 A、B 改变定点位置','切换 k 的预设值，观察圆的大小与圆心如何变化','打开「阿氏圆族」看 k 连续变化时的一族圆'],
     legend:[{c:C.blue,t:'定点 A / 内分点 D'},{c:C.orange,t:'定点 B / 外分点 E'},{c:C.purple,t:'动点 P / 轨迹圆'}],
     hint:'比值 k = PA/PB 固定时，P 的轨迹是圆',
-    interaction:'滚轮缩放，拖动空白处平移；也可点上方 ＋ / － / 适配。拖动 A、B、P 都可以，取消锁定后自由拖 P。',
+    interaction:'拖动空白处平移；缩放请用右上角 ＋/－ 按钮。拖动 A、B、P 都可以，取消锁定后自由拖 P。',
     controls:[
       {type:'range',key:'k',label:'目标比值 k = PA/PB',min:0.4,max:5,step:0.05,digits:2},
       {type:'buttons',key:'presets',items:[
@@ -271,7 +271,7 @@
     tips:['选择第①问或第②问，观察构造点和最短路径','拖动 P 沿圆运动，读数实时显示当前值','点击「跳到最优点」验证取等条件'],
     legend:[{c:C.blue,t:'到 A 距离'},{c:C.orange,t:'到 B 距离'},{c:C.green,t:'构造定点 / 最短路径'}],
     hint:'系数距离 → 定点距离 → 两点之间线段最短',
-    interaction:'滚轮缩放，拖空白处平移。拖动 P 沿圆运动，绿色构造点把带系数的距离换成到定点的距离。',
+    interaction:'点右上角 ＋/－ 缩放，拖空白处平移。拖动 P 沿圆运动，绿色构造点把带系数的距离换成到定点的距离。',
     controls:[
       {type:'buttons',key:'q',items:[
         {label:'① AP + ½BP',onclick:function(b){b.state.q=1;b.model.toOpt(b);}},
@@ -360,7 +360,7 @@
     tips:['按 1→4 步依次探索，每一步拖动 E 或 M','第 4 步拖动 M 沿圆运动，读数实时显示 ½AM+CM','点击「跳到本步答案」查看关键位置'],
     legend:[{c:'#334155',t:'抛物线 / 直线'},{c:C.purple,t:'动点 / 构造'},{c:C.green,t:'最值路径'}],
     hint:'四步递进：总图 → 平行四边形 → 矩形 → 阿氏圆最值',
-    interaction:'滚轮缩放，拖空白处平移。第 4 步拖 M 沿圆运动，读数实时显示 ½AM+CM。',
+    interaction:'点右上角 ＋/－ 缩放，拖空白处平移。第 4 步拖 M 沿圆运动，读数实时显示 ½AM+CM。',
     controls:[
       {type:'buttons',key:'step',items:[
         {label:'1 总图',onclick:function(b){b.model.setStep(b,1);}},
@@ -467,7 +467,7 @@
     tips:['拖动 A、B 改变定点，拖动 P 沿 l 移动','打开对称点 B′，看折线如何被"拉直"','点击「跳到最优点」看三点共线'],
     legend:[{c:C.blue,t:'PA'},{c:C.orange,t:'PB / B′P'},{c:C.green,t:'拉直后的 AB′'}],
     hint:'对称 → 折线变直线 → 两点之间最短',
-    interaction:'拖动 A、B 或沿 l 拖动 P。滚轮缩放，拖空白处平移。',
+    interaction:'拖动 A、B 或沿 l 拖动 P。点右上角 ＋/－ 缩放，拖空白处平移。',
     controls:[
       {type:'check',key:'show',label:'显示对称点 B′ 与直线 AB′'},
       {type:'button',key:'best',label:'跳到最优点',onclick:function(b){b.model.toBest(b);}},

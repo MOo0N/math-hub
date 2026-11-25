@@ -682,11 +682,14 @@ math mtext{font-family:inherit}
   function svgCursor(svg,c){if(svg)svg.style.cursor=c;}
   Board.prototype._bindView=function(){
     var self=this,svg=this.svg;
-    svg.addEventListener('wheel',function(e){
-      if(self.locked)return; // 锁定后滚轮不缩放
-      e.preventDefault();
-      self.zoomAt(e.deltaY<0?1.16:1/1.16,self.toView(e));
-    },{passive:false});
+    /* 画布缩放只允许通过锁定键右侧的 ＋/－ 按钮触发。
+       这里显式关闭画布区域内的一切手势/操作缩放入口：
+       - 滚轮不再缩放（保留浏览器默认页面滚动，不 preventDefault）；
+       - 双击不缩放；
+       - 捏合/触摸手势不缩放（CSS 已设 touch-action:none，此处对 Safari 兜底）。 */
+    svg.addEventListener('dblclick',function(e){e.preventDefault();});
+    svg.addEventListener('gesturestart',function(e){e.preventDefault();});
+    svg.addEventListener('gesturechange',function(e){e.preventDefault();});
     svg.addEventListener('pointerdown',function(e){
       if(self.locked)return; // 锁定态：禁止一切画布编辑（拖点、平移、缩放）
       // 进入交互态：阻止浏览器默认的文本选取（坐标轴数字/页面文字不再出现蓝色高亮）。
@@ -2632,7 +2635,7 @@ math mtext{font-family:inherit}
     tips:['切换「线段 / 圆 / 自由」三种主动点路径','拖动 A、线段端点或圆来观察 Q 的轨迹如何同步变化','把 k 调成 1，观察全等（纯旋转）的特殊情形'],
     legend:[{c:C.blue,t:'主动点 P / 原轨迹'},{c:C.orange,t:'从动点 Q / 预测轨迹'}],
     hint:'定角 α、定比 k 决定 Q 的轨迹形状',
-    interaction:'滚轮缩放，拖空白处平移。拖 A、P 或路径端点；橙色虚线是预测轨迹，橙色点是 Q 的实际痕迹。',
+    interaction:'点右上角 ＋/－ 缩放，拖空白处平移。拖 A、P 或路径端点；橙色虚线是预测轨迹，橙色点是 Q 的实际痕迹。',
     controls:[
       {type:'buttons',key:'mode',items:[
         {label:'线段',onclick:function(b,s){s.mode='segment';b.model.onMode(b,'segment');}},
@@ -2778,7 +2781,7 @@ math mtext{font-family:inherit}
     tips:['拖动 A、B 改变定点位置','切换 k 的预设值，观察圆的大小与圆心如何变化','打开「阿氏圆族」看 k 连续变化时的一族圆'],
     legend:[{c:C.blue,t:'定点 A / 内分点 D'},{c:C.orange,t:'定点 B / 外分点 E'},{c:C.purple,t:'动点 P / 轨迹圆'}],
     hint:'比值 k = PA/PB 固定时，P 的轨迹是圆',
-    interaction:'滚轮缩放，拖动空白处平移；也可点上方 ＋ / － / 适配。拖动 A、B、P 都可以，取消锁定后自由拖 P。',
+    interaction:'拖动空白处平移；缩放请用右上角 ＋/－ 按钮。拖动 A、B、P 都可以，取消锁定后自由拖 P。',
     controls:[
       {type:'range',key:'k',label:'目标比值 k = PA/PB',min:0.4,max:5,step:0.05,digits:2},
       {type:'buttons',key:'presets',items:[
@@ -2884,7 +2887,7 @@ math mtext{font-family:inherit}
     tips:['选择第①问或第②问，观察构造点和最短路径','拖动 P 沿圆运动，读数实时显示当前值','点击「跳到最优点」验证取等条件'],
     legend:[{c:C.blue,t:'到 A 距离'},{c:C.orange,t:'到 B 距离'},{c:C.green,t:'构造定点 / 最短路径'}],
     hint:'系数距离 → 定点距离 → 两点之间线段最短',
-    interaction:'滚轮缩放，拖空白处平移。拖动 P 沿圆运动，绿色构造点把带系数的距离换成到定点的距离。',
+    interaction:'点右上角 ＋/－ 缩放，拖空白处平移。拖动 P 沿圆运动，绿色构造点把带系数的距离换成到定点的距离。',
     controls:[
       {type:'buttons',key:'q',items:[
         {label:'① AP + ½BP',onclick:function(b){b.state.q=1;b.model.toOpt(b);}},
@@ -2973,7 +2976,7 @@ math mtext{font-family:inherit}
     tips:['按 1→4 步依次探索，每一步拖动 E 或 M','第 4 步拖动 M 沿圆运动，读数实时显示 ½AM+CM','点击「跳到本步答案」查看关键位置'],
     legend:[{c:'#334155',t:'抛物线 / 直线'},{c:C.purple,t:'动点 / 构造'},{c:C.green,t:'最值路径'}],
     hint:'四步递进：总图 → 平行四边形 → 矩形 → 阿氏圆最值',
-    interaction:'滚轮缩放，拖空白处平移。第 4 步拖 M 沿圆运动，读数实时显示 ½AM+CM。',
+    interaction:'点右上角 ＋/－ 缩放，拖空白处平移。第 4 步拖 M 沿圆运动，读数实时显示 ½AM+CM。',
     controls:[
       {type:'buttons',key:'step',items:[
         {label:'1 总图',onclick:function(b){b.model.setStep(b,1);}},
@@ -3080,7 +3083,7 @@ math mtext{font-family:inherit}
     tips:['拖动 A、B 改变定点，拖动 P 沿 l 移动','打开对称点 B′，看折线如何被"拉直"','点击「跳到最优点」看三点共线'],
     legend:[{c:C.blue,t:'PA'},{c:C.orange,t:'PB / B′P'},{c:C.green,t:'拉直后的 AB′'}],
     hint:'对称 → 折线变直线 → 两点之间最短',
-    interaction:'拖动 A、B 或沿 l 拖动 P。滚轮缩放，拖空白处平移。',
+    interaction:'拖动 A、B 或沿 l 拖动 P。点右上角 ＋/－ 缩放，拖空白处平移。',
     controls:[
       {type:'check',key:'show',label:'显示对称点 B′ 与直线 AB′'},
       {type:'button',key:'best',label:'跳到最优点',onclick:function(b){b.model.toBest(b);}},
@@ -4961,7 +4964,7 @@ math mtext{font-family:inherit}
     var favCount=0;for(var f in favs)if(favs[f])favCount++;
     var html='<div class="mh-hero">'+
       '<h1>初中数学 · 互动模型实验室</h1>'+
-      '<p>把课本里的定理、公式和最值模型变成可以亲手拖动、调节、播放的实验。从概念到证明，让抽象数学变得直观可见。支持滚轮缩放、拖动平移、参数调节与动画播放。</p>'+
+      '<p>把课本里的定理、公式和最值模型变成可以亲手拖动、调节、播放的实验。从概念到证明，让抽象数学变得直观可见。支持按钮缩放、拖动平移、参数调节与动画播放。</p>'+
       '<div class="mh-hero-stats">'+
         '<div><b>'+total+'</b><span>互动模型</span></div>'+
         '<div><b>'+domCount+'</b><span>知识领域</span></div>'+
@@ -5077,7 +5080,7 @@ math mtext{font-family:inherit}
               '<div class="mh-lock-veil" id="mh-lock-veil" aria-hidden="false"><span class="mh-lock-msg">🔒 画布已锁定 · 点击右上角「解锁」后可编辑</span></div>'+
             '</div>'+
             '<div class="mh-readout-wrap"><div id="mh-readout" aria-live="polite">准备就绪</div></div>'+
-            '<div class="mh-hint">'+(m.interaction||'滚轮缩放，拖动图形空白处平移；拖动关键点观察变化。')+'</div>'+
+            '<div class="mh-hint">'+(m.interaction||'点右上角 ＋/－ 缩放，拖动图形空白处平移；拖动关键点观察变化。')+'</div>'+
           '</div>'+
         '</section>'+
         '<aside class="mh-panel mh-side" id="mh-side">'+
@@ -5089,11 +5092,6 @@ math mtext{font-family:inherit}
             '<div class="mh-btnrow">'+
               (playable?'<button class="mh-mini" id="mh-play">▶ 播放</button>':'')+
               '<button class="mh-mini" id="mh-reset">↺ 重置</button>'+
-            '</div>'+
-            '<div class="mh-btnrow">'+
-              '<button class="mh-mini" id="mh-zin">＋ 放大</button>'+
-              '<button class="mh-mini" id="mh-zout">－ 缩小</button>'+
-              '<button class="mh-mini" id="mh-zfit">适配</button>'+
             '</div>'+
             '<div class="mh-side-divider"></div>'+
             '<label class="mh-check"><input type="checkbox" id="mh-done"'+(done[m.id]?' checked':'')+'><span>标记为已学</span></label>'+
@@ -5118,11 +5116,9 @@ math mtext{font-family:inherit}
       if(m.onReset)m.onReset(currentBoard,currentBoard.state);
       currentBoard.t=0;M.refreshControls(currentBoard.state);currentBoard.draw();updPlay();
     };
+    /* 唯一的缩放入口：锁定键右侧的 ＋/－ 按钮（zoomAt 内部仍受 locked 约束） */
     document.getElementById('mh-zi').onclick=function(){currentBoard.zoomAt(1.25);};
     document.getElementById('mh-zo').onclick=function(){currentBoard.zoomAt(0.8);};
-    document.getElementById('mh-zfit').onclick=function(){currentBoard.resetView();};
-    document.getElementById('mh-zin').onclick=function(){currentBoard.zoomAt(1.25);};
-    document.getElementById('mh-zout').onclick=function(){currentBoard.zoomAt(0.8);};
     // 画布锁定开关：默认锁定，须手动解锁；每个 Board 实例独立
     var lockBtn=document.getElementById('mh-lock');
     var lockVeil=document.getElementById('mh-lock-veil');

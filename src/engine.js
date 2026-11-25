@@ -197,11 +197,14 @@
   function svgCursor(svg,c){if(svg)svg.style.cursor=c;}
   Board.prototype._bindView=function(){
     var self=this,svg=this.svg;
-    svg.addEventListener('wheel',function(e){
-      if(self.locked)return; // 锁定后滚轮不缩放
-      e.preventDefault();
-      self.zoomAt(e.deltaY<0?1.16:1/1.16,self.toView(e));
-    },{passive:false});
+    /* 画布缩放只允许通过锁定键右侧的 ＋/－ 按钮触发。
+       这里显式关闭画布区域内的一切手势/操作缩放入口：
+       - 滚轮不再缩放（保留浏览器默认页面滚动，不 preventDefault）；
+       - 双击不缩放；
+       - 捏合/触摸手势不缩放（CSS 已设 touch-action:none，此处对 Safari 兜底）。 */
+    svg.addEventListener('dblclick',function(e){e.preventDefault();});
+    svg.addEventListener('gesturestart',function(e){e.preventDefault();});
+    svg.addEventListener('gesturechange',function(e){e.preventDefault();});
     svg.addEventListener('pointerdown',function(e){
       if(self.locked)return; // 锁定态：禁止一切画布编辑（拖点、平移、缩放）
       // 进入交互态：阻止浏览器默认的文本选取（坐标轴数字/页面文字不再出现蓝色高亮）。
