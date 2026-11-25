@@ -268,6 +268,13 @@ button{font-family:inherit}
 }
 .mh-mini:hover{border-color:var(--mh-primary);color:var(--mh-primary)}
 .mh-mini.on{background:var(--mh-primary);border-color:var(--mh-primary);color:#fff}
+/* 答题选项反馈：揭晓后对错着色，.on 仍保留用户所选 */
+[data-choice] .mh-mini.correct{background:var(--mh-green)!important;border-color:var(--mh-green)!important;color:#fff!important}
+[data-choice] .mh-mini.wrong{background:var(--mh-red)!important;border-color:var(--mh-red)!important;color:#fff!important}
+[data-choice] .mh-mini:disabled{cursor:default;opacity:.92}
+.mh-quiz-score{display:flex;gap:14px;align-items:center;font-size:12px;margin:2px 0 8px;
+  padding:7px 11px;border:1px dashed var(--mh-primary-line);border-radius:8px;background:var(--mh-primary-soft)}
+.mh-quiz-score b{color:var(--mh-primary);font-size:15px}
 .mh-wide{width:100%;margin:6px 0}
 .mh-side-divider{height:0;border-top:1px dashed var(--mh-line);margin:14px 0}
 

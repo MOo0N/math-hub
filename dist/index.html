@@ -275,6 +275,13 @@ button{font-family:inherit}
 }
 .mh-mini:hover{border-color:var(--mh-primary);color:var(--mh-primary)}
 .mh-mini.on{background:var(--mh-primary);border-color:var(--mh-primary);color:#fff}
+/* 答题选项反馈：揭晓后对错着色，.on 仍保留用户所选 */
+[data-choice] .mh-mini.correct{background:var(--mh-green)!important;border-color:var(--mh-green)!important;color:#fff!important}
+[data-choice] .mh-mini.wrong{background:var(--mh-red)!important;border-color:var(--mh-red)!important;color:#fff!important}
+[data-choice] .mh-mini:disabled{cursor:default;opacity:.92}
+.mh-quiz-score{display:flex;gap:14px;align-items:center;font-size:12px;margin:2px 0 8px;
+  padding:7px 11px;border:1px dashed var(--mh-primary-line);border-radius:8px;background:var(--mh-primary-soft)}
+.mh-quiz-score b{color:var(--mh-primary);font-size:15px}
 .mh-wide{width:100%;margin:6px 0}
 .mh-side-divider{height:0;border-top:1px dashed var(--mh-line);margin:14px 0}
 
@@ -844,6 +851,25 @@ math mtext{font-family:inherit}
           g.appendChild(b);
         });
         host.appendChild(g);
+      }else if(c.type==='choice'){
+        /* 单选选项组：按钮点击写入 state[key]，并以 .on 标记当前选项。
+           供「看图猜式」等答题模型使用；refreshControls 会同步选中态。 */
+        var cg=document.createElement('div');cg.className='mh-btnrow';
+        cg.setAttribute('data-choice',c.key);
+        c.items.forEach(function(it){
+          var cb=document.createElement('button');cb.className='mh-mini';
+          cb.textContent=it.label;cb.setAttribute('data-value',String(it.value));
+          if(state[c.key]===it.value)cb.classList.add('on');
+          cb.onclick=function(){
+            state[c.key]=it.value;
+            Array.prototype.forEach.call(cg.children,function(x){x.classList.remove('on');});
+            cb.classList.add('on');
+            if(c.onchange)c.onchange(board,state);
+            board.draw();
+          };
+          cg.appendChild(cb);
+        });
+        host.appendChild(cg);
       }else if(c.type==='button'){
         var btn=document.createElement('button');btn.className='mh-mini mh-wide';
         btn.id='mhb-'+c.key;btn.textContent=c.label;
@@ -867,6 +893,10 @@ math mtext{font-family:inherit}
       }
       var c=document.getElementById('mhc-'+k);
       if(c)c.checked=!!state[k];
+      var cg=document.querySelector('[data-choice="'+k+'"]');
+      if(cg)Array.prototype.forEach.call(cg.children,function(x){
+        x.classList.toggle('on',x.getAttribute('data-value')===String(state[k]));
+      });
     }
   }
 
@@ -1049,6 +1079,14 @@ math mtext{font-family:inherit}
     else if(n==='Q')s.k=Math.max(-4,Math.min(4,Math.round((m.y-s.b)/2*10)/10));
     H.refreshControls(s);
   }
+  /* 预测模式：随机出一条目标直线（tk、tb），先隐藏解析式让学生调 k、b 去对齐 */
+  function predNew(s){
+    var ks=[-3,-2.5,-2,-1.5,-1,-0.5,0.5,1,1.5,2,2.5,3];
+    var bs=[-3,-2,-1,0,1,2,3];
+    s.tk=ks[Math.floor(Math.random()*ks.length)];
+    s.tb=bs[Math.floor(Math.random()*bs.length)];
+    s.predictRevealed=false;
+  }
   /* 缓入缓出按钮：先结算上一段补间到稳定终点，再基于当前真实状态取反，
      保证连续/快速点击每次都正确（不会出现取到中间值而取反不到位）。 */
   function linKFlip(bd){
@@ -1130,13 +1168,15 @@ math mtext{font-family:inherit}
       '先解锁画布；点「显示对比直线」调出紫色虚线',
       '拖橙色 B 点或绿色 Q 点改变主直线，观察交点怎样移动',
       '可调对比斜率 k₂、截距 b₂；交点横坐标即时给出方程解',
-      'x 轴上的绿色粗线标出不等式 kx+b>k₂x+b₂ 的解集'
+      'x 轴上的绿色粗线标出不等式 kx+b>k₂x+b₂ 的解集',
+      '预测挑战：勾选「预测模式」，调 k、b 让主直线与青色虚线重合，再点「揭晓」看目标解析式'
     ],
     legend:[{c:C.blue,t:'主直线 y=kx+b'},{c:C.orange,t:'截距 B·平移'},
-      {c:C.green,t:'斜率点 Q·旋转'},{c:C.purple,t:'对比线 y=k₂x+b₂'},{c:C.red,t:'交点（方程的解）'}],
+      {c:C.green,t:'斜率点 Q·旋转'},{c:C.purple,t:'对比线 y=k₂x+b₂'},
+      {c:C.red,t:'交点（方程的解）'},{c:C.teal,t:'预测目标线（青色虚线）'}],
     hint:'交点横坐标 = 方程解；图像上下 = 不等式解集',
     interaction:'先解锁画布，点「显示对比直线」开启第二组参数；拖动主直线上的 B、Q 点，观察交点与方程解、不等式解集如何变化。',
-    scenario:['用图像法解一元一次方程（求交点横坐标）','用图像法解一元一次不等式（看图像上下）','理解「方程的解 = 交点」「不等式解集 = 图像高低」'],
+    scenario:['用图像法解一元一次方程（求交点横坐标）','用图像法解一元一次不等式（看图像上下）','理解「方程的解 = 交点」「不等式解集 = 图像高低」','预测挑战：调 k、b 对齐目标直线，反推它的解析式'],
     figure:['蓝色主直线与紫色虚线对比直线','红色交点及其在 x 轴上的投影','x 轴上的绿色解集区间'],
     example:[
       '解 2x−4=−x+2：两线交点横坐标 x=2，即方程的解为 x=2（代入得 y=0，交点 (2,0)）。',
@@ -1160,12 +1200,47 @@ math mtext{font-family:inherit}
       {type:'buttons',key:'compareOps',items:[
         {label:'两线平行',onclick:function(bd,s){bd._tween=null;s.k2=s.k;s.b2=s.b+2;s.showCompare=true;H.refreshControls(s);}},
         {label:'隐藏对比',onclick:function(bd,s){bd._tween=null;s.showCompare=false;H.refreshControls(s);}}
+      ]},
+      {type:'check',key:'predictMode',label:'预测模式：显示目标直线（调 k、b 去对齐）'},
+      {type:'buttons',key:'predictOps',items:[
+        {label:'揭晓目标式',onclick:function(bd,s){s.predictRevealed=true;}},
+        {label:'换一个目标',onclick:function(bd,s){predNew(s);bd.finishTween();}}
       ]}
     ],
-    init:function(b,s){s.k=1.5;s.b=1;s.k2=-0.8;s.b2=-2;s.showCompare=false;},
+    init:function(b,s){
+      s.k=1.5;s.b=1;s.k2=-0.8;s.b2=-2;s.showCompare=false;
+      s.predictMode=false;predNew(s);   // 预测模式初始目标（隐藏，开启时才画）
+    },
     draw:function(b,s){
       linAxes(b);linMain(b,s);
       var P=linP,k=s.k,bb=s.b,k2=s.k2,b2=s.b2,show=!!s.showCompare,extra='';
+
+      /* 预测模式：画一条目标虚线（解析式先隐藏），学生调 k、b 去对齐，再揭晓。
+         独立于对比直线逻辑，不改动交点/不等式演示。 */
+      if(s.predictMode){
+        var tk=s.tk,tb=s.tb;
+        b.line(P(-6.3,-6.3*tk+tb),P(6.3,6.3*tk+tb),C.teal,3,'8 5',.9);
+        var hit=Math.abs(k-tk)<0.06&&Math.abs(bb-tb)<0.06;
+        var label=s.predictRevealed
+          ? ('目标：y='+linNF(tk,1)+'x '+(tb>=0?'+ ':'− ')+linNF(Math.abs(tb),1))
+          : '目标线（先猜，别看答案）';
+        /* 标签落在目标线上且在可见区内：优先右侧 x=4.4，越界则退到上/下边界交点 */
+        var lx=4.4,ly=tk*lx+tb;
+        if(ly>3.2||ly<-3.2){
+          ly=ly>0?3.2:-3.2;
+          lx=Math.abs(tk)>0.06?(ly-tb)/tk:0;
+          if(lx>5.4||lx<-5.4){lx=lx>0?5.4:-5.4;ly=tk*lx+tb;}
+        }
+        b.text({x:P(lx,ly).x+(lx>0?-8:8),y:P(lx,ly).y-11},label,C.teal,12,lx>0?'end':'start',800);
+        if(hit){
+          b.text({x:P(-5.9,3.9).x,y:P(-5.9,3.9).y},'✓ 已对齐目标！',C.green,15,'start',800);
+          extra+='　｜预测：✓ 已对齐（k='+linNF(k,1)+'，b='+linNF(bb,1)+'）';
+        }else{
+          var dk=tk-k,db=tb-bb;
+          extra+='　｜预测：目标线已画出，调 k（'+(dk>0.05?'再增大':dk<-0.05?'再减小':'已对')+'）、b（'+
+            (db>0.05?'再增大':db<-0.05?'再减小':'已对')+'）去对齐'+(s.predictRevealed?'　目标 y='+linNF(tk,1)+'x+' +linNF(tb,1):'');
+        }
+      }
       if(show){
         b.line(P(-6.3,-6.3*k2+b2),P(6.3,6.3*k2+b2),C.purple,2.6,'7 5');
         function band(xa,xb){
@@ -1176,8 +1251,8 @@ math mtext{font-family:inherit}
         }
         var den=k-k2;
         if(Math.abs(den)<0.03){
-          if(Math.abs(bb-b2)<0.03)extra='　｜两线重合：交点无数个';
-          else{band(-6.2,6.2);extra='　｜两线平行：无交点，方程无解；不等式'+(bb>b2?'恒成立':'无解');}
+          if(Math.abs(bb-b2)<0.03)extra+='　｜两线重合：交点无数个';
+          else{band(-6.2,6.2);extra+='　｜两线平行：无交点，方程无解；不等式'+(bb>b2?'恒成立':'无解');}
         }else{
           var xi=(b2-bb)/den,yi=k*xi+bb,Ip=P(xi,yi);
           if(Math.abs(xi)<=6.3&&Math.abs(yi)<=4.3){
@@ -1186,7 +1261,7 @@ math mtext{font-family:inherit}
             b.text({x:P(xi,0).x,y:P(xi,0).y+48},'x='+linNF(xi,2),C.red,11,'middle',700);
           }
           if(den>0)band(Math.max(-6.2,xi),6.2);else band(-6.2,Math.min(6.2,xi));
-          extra='　｜交点横坐标 '+linNF(xi,2)+' ⇔ 方程解 x='+linNF(xi,2)+'　不等式>解集 x'+(den>0?'>':'<')+linNF(xi,2);
+          extra+='　｜交点横坐标 '+linNF(xi,2)+' ⇔ 方程解 x='+linNF(xi,2)+'　不等式>解集 x'+(den>0?'>':'<')+linNF(xi,2);
         }
       }
       b.readout('y = '+linNF(k,1)+'x '+(bb>=0?'+ ':'− ')+linNF(Math.abs(bb),1)+
@@ -1195,6 +1270,334 @@ math mtext{font-family:inherit}
     onDrag:linOnDrag
   };
   R(linearAdv);
+
+  /* ---------- 一次函数③ · 变化率与残影：把 k 从「倾角」正解为「变化率」 ----------
+     教学意图：k 的抽象不在于倾斜，而在于「每向右走 1，y 变 k」。让动点沿直线
+     匀速跑，Δx 匀速增长、Δy=k·Δx 同步增长，比值恒为 k；拖 k 留扇形残影、
+     拖 b 留平行带残影，用「运动留痕」区分两种参数的本质差别。 */
+  /* 在参数改变前调用，把「改变前」的状态压入对应轨迹（保留最近 14 条） */
+  function rateRecord(b,key){
+    var s=b.state;
+    var trail=key==='k'?(b._trailK||(b._trailK=[])):(b._trailB||(b._trailB=[]));
+    var last=trail[trail.length-1];
+    if(!last||Math.abs(last.k-s.k)>0.06||Math.abs(last.b-s.b)>0.06){
+      trail.push({k:s.k,b:s.b});
+      if(trail.length>14)trail.shift();
+    }
+  }
+  function rateClear(b){b._trailK=[];b._trailB=[];}
+  function rateDrawTrails(b){
+    var P=linP;
+    (b._trailK||[]).forEach(function(t,i,arr){
+      var op=0.10+0.32*(i+1)/arr.length;
+      b.line(P(-6.3,-6.3*t.k+t.b),P(6.3,6.3*t.k+t.b),C.orange,1.7,null,op);
+    });
+    (b._trailB||[]).forEach(function(t,i,arr){
+      var op=0.10+0.32*(i+1)/arr.length;
+      b.line(P(-6.3,-6.3*t.k+t.b),P(6.3,6.3*t.k+t.b),C.green,1.7,null,op);
+    });
+  }
+  var linearRate={
+    id:'linear-function-rate',domain:'algebra',topic:'function',level:1,
+    title:'一次函数 · 变化率与残影',
+    brief:'k=Δy/Δx 是变化率（坡度），不是倾角；拖 k 留扇形、拖 b 留平行带，看懂两个参数的本质差别。',
+    keys:'一次函数 变化率 斜率 坡度 残影 旋转 平移 Δy/Δx',
+    idea:'k 的本质是「每向右走 1 格，y 上升 k 格」的变化率（坡度）。让动点沿直线匀速跑，Δx 匀速增长而 Δy=k·Δx 同步增长，比值恒为 k——这就是「斜率不变」的真正含义。拖 k 时直线绕定点 B(0,b) 转动、一串位置扫出扇形；拖 b 时斜率不变、一串位置排成平行带。',
+    proof:[
+      '从 B(0,b) 出发水平走 Δx、再竖直走 Δy 回到直线，则 Δy=k·Δx，所以 Δy/Δx=k 恒成立，与走多远无关——这就是「变化率恒定」。',
+      'k 是「变化快慢」：k=2 时每走 1 格上升 2 格，k=−1 时每走 1 格下降 1 格。k 不是倾角：k 从 1 变到 2，倾斜角并不翻倍（正切不是线性的）。',
+      '拖 k 时直线绕定点 B(0,b) 转动，一串位置扫出扇形（交于一点）；拖 b 时斜率不变，一串位置排成平行带（永不相交）。'
+    ],
+    formula:'k = Δy / Δx（每步爬升量，坡度）　｜　y = kx + b　｜　b = 起点高度（x=0 时的 y）',
+    tips:[
+      '点「播放」，看动点 P 沿直线匀速跑，Δx 与 Δy 同步跳动、比值恒为 k',
+      '拖橙色 B 点（或 b 滑块）：留下绿色平行带残影，方向始终不变',
+      '拖绿色 Q 点（或 k 滑块）：留下橙色扇形残影，全部绕 B 转动',
+      '点「清除残影」重置画面；把 k 调成负数，观察 Δy 变成下降'
+    ],
+    legend:[{c:C.blue,t:'主直线 y=kx+b'},{c:C.orange,t:'拖 k·扇形残影'},{c:C.green,t:'拖 b·平行带残影'},{c:C.red,t:'动点 P'}],
+    hint:'k 是每步爬升量，不是倾角',
+    interaction:'先点播放看动点跑动理解变化率；再拖动 B/Q 点或滑块，观察扇形与平行带两种残影。',
+    scenario:['理解「斜率 = 变化率 = 每步爬升量」','区分「k 管转动」与「b 管平移」的本质','解释为什么 k 越大直线越陡'],
+    figure:['匀速跑动的红点 P 与绿色直角三角形 Δx、Δy','拖 k 留下的橙色扇形残影','拖 b 留下的绿色平行带残影'],
+    example:[
+      'y=2x+1：从 B(0,1) 走 Δx=3，Δy=2×3=6，比值 Δy/Δx=6/3=2=k。每走 1 格上升 2 格。',
+      'y=−1.5x+1：每走 1 格下降 1.5 格，Δy/Δx=−1.5=k，动点向右跑时 y 不断减小。'
+    ],
+    mistakes:[
+      '把 k 当成倾斜角度：k 是 Δy/Δx 的比值（坡度），k 翻倍角度并不翻倍',
+      '以为动点跑得越远 k 越大：Δx、Δy 同步变大，比值 k 始终不变',
+      '把 b 当成「与 x 轴交点」：b 是起点高度（x=0 时的 y），是与 y 轴的交点纵坐标'
+    ],
+    controls:[
+      {type:'range',key:'k',label:'变化率 k（坡度·旋转）',min:-4,max:4,step:0.1,digits:1,
+        onchange:function(b,s){rateRecord(b,'k');}},
+      {type:'range',key:'b',label:'起点高度 b（平移）',min:-4,max:4,step:0.1,digits:1,
+        onchange:function(b,s){rateRecord(b,'b');}},
+      {type:'buttons',key:'rateOps',items:[
+        {label:'k 变号',onclick:function(b,s){b.finishTween();rateRecord(b,'k');b.tweenTo({k:Math.round(-s.k*10)/10},0.55);}},
+        {label:'b 变号',onclick:function(b,s){b.finishTween();rateRecord(b,'b');b.tweenTo({b:Math.round(-s.b*10)/10},0.55);}},
+        {label:'清除残影',onclick:function(b,s){rateClear(b);}}
+      ]}
+    ],
+    init:function(b,s){s.k=1.5;s.b=1;s.px=0;b._trailK=[];b._trailB=[];},
+    draw:function(b,s){
+      var P=linP,k=s.k,bb=s.b;
+      linAxes(b);rateDrawTrails(b);                 // 残影画在底层
+      b.line(P(-6.3,-6.3*k+bb),P(6.3,6.3*k+bb),C.blue,3.4);
+      var Bp=P(0,bb);
+      b.circle(Bp,9,C.orange,'#fff',2.6);b.handle(Bp,'B',20);
+      b.text({x:Bp.x+12,y:Bp.y-10},'B(0,'+linNF(bb,1)+')',C.orange,12,'start',700);
+      var dx=2,qy=k*dx+bb,Hp=P(dx,bb),Qp=P(dx,qy);
+      b.line(Bp,Hp,'#4f7a5b',1.5,'5 4');b.line(Hp,Qp,'#4f7a5b',1.5,'5 4');
+      b.circle(Qp,7,C.green,'#fff',2.4);b.handle(Qp,'Q',20);
+      b.text({x:Qp.x+10,y:Qp.y-11},'Q 改 k',C.green,11,'start',700);
+      // 动点 P 与变化率三角形：Δx 匀速增，Δy=k·Δx
+      var px=s.px==null?0:s.px,py=k*px+bb,Pp=P(px,py),Xp=P(px,bb);
+      b.line(Bp,Xp,C.green,2,'4 3');b.line(Xp,Pp,C.green,2,'4 3');
+      b.circle(Pp,8,C.red,'#fff',2.6);
+      b.text({x:Pp.x+11,y:Pp.y-10},'P',C.red,12,'start',800);
+      if(Math.abs(px)>0.15){
+        b.text({x:(Bp.x+Xp.x)/2,y:Bp.y+16},'Δx='+linNF(px,2),'#4f7a5b',11,'middle',700);
+        b.text({x:Xp.x+10,y:(Xp.y+Pp.y)/2},'Δy='+linNF(k*px,2),'#4f7a5b',11,'start',700);
+      }
+      b.readout('动点 P：Δx='+linNF(px,2)+'　Δy=k·Δx='+linNF(k*px,2)+
+        '　｜　Δy/Δx='+linNF(k,2)+' 恒为 k　｜　坡度 k='+linNF(k,1)+'　起点 b='+linNF(bb,1)+
+        '　'+(b.playing?'（跑动中）':'（点播放让 P 跑起来）'));
+    },
+    onDrag:function(b,n,w){
+      b._tween=null;
+      if(n==='B')rateRecord(b,'b');else if(n==='Q')rateRecord(b,'k');
+      linOnDrag(b,n,w);
+    },
+    step:function(b,s,dt){
+      s.px=(s.px==null?0:s.px)+dt*2.4;   // 水平匀速：每秒走 2.4 格
+      if(s.px>6)s.px=0;                    // 到右端回到起点重新跑
+    }
+  };
+  R(linearRate);
+
+  /* ---------- 一次函数④ · 看图猜式：反向推参数（带连对计分） ----------
+     认知冲突：学生习惯「拖参数看图像」，这里反过来——只看图像猜 k、b 符号与象限，
+     先选后揭晓，制造「我以为…原来是…」的落差，训练中考高频的读图能力。 */
+  var QUIZ_K=[-3,-2,-1.5,-1,-0.5,0.5,1,1.5,2,3];   // 避开 0 与过小值，图像清晰
+  var QUIZ_B=[-3,-2,-1,1,2,3];
+  function quizNew(s){
+    var k=QUIZ_K[Math.floor(Math.random()*QUIZ_K.length)];
+    var b=QUIZ_B[Math.floor(Math.random()*QUIZ_B.length)];
+    s.qk=k;s.qb=b;
+    s.qAnsK=null;s.qAnsB=null;s.qAnsQ=null;
+    s.qRevealed=false;s.qFeedback='';
+  }
+  function quizSign(v){return v>0?1:(v<0?-1:0);}
+  function quizCorrect(s){
+    return !!(s.qAnsK!=null&&s.qAnsB!=null&&s.qAnsQ!=null&&
+      s.qAnsK===quizSign(s.qk)&&s.qAnsB===quizSign(s.qb)&&s.qAnsQ===linQuads(s.qk,s.qb));
+  }
+  var linearQuiz={
+    id:'linear-function-guess',domain:'algebra',topic:'function',level:1,
+    title:'一次函数 · 看图猜式',
+    brief:'藏起解析式，只看图像判断 k 的符号、b 的符号与所过象限——先猜后揭晓，连对有计分。',
+    keys:'一次函数 看图 判断 k符号 b符号 象限 读图 练习',
+    idea:'正向是「由式子画图像」，反向是「由图像读参数」。看直线上升还是下降定 k 的正负；看它与 y 轴交于上方还是下方定 b 的正负；再由 k、b 符号组合判断经过哪几个象限。这是中考读图题的核心。',
+    proof:[
+      'k 定增减：直线从左向右上升 ⟹ k>0；下降 ⟹ k<0；水平 ⟹ k=0。',
+      'b 定纵截距：直线与 y 轴交于正半轴 ⟹ b>0；负半轴 ⟹ b<0；过原点 ⟹ b=0。',
+      '象限由 k、b 符号共同决定：k>0、b>0 过一二三；k>0、b<0 过一三四；k<0、b>0 过一二四；k<0、b<0 过二三○四。'
+    ],
+    formula:'k 看升降　｜　b 看 y 轴交点　｜　象限由 (k,b) 符号组合决定',
+    tips:[
+      '先不看答案，独立判断三个问题，再点「揭晓答案」',
+      '直线越陡不代表 k 的符号改变，只看上升还是下降',
+      '判断象限时先看 k 定「主方向」，再用 b 决定往上还是往下平移',
+      '连对会累计，答错归零；用「换一题」刷熟练度'
+    ],
+    legend:[{c:C.blue,t:'待判断的直线 y=kx+b'},{c:C.orange,t:'与 y 轴交点（定 b）'},{c:C.green,t:'x 轴交点'}],
+    hint:'只看图，先猜后揭晓',
+    scoreBadge:true,
+    interaction:'观察画布上的直线，在右侧依次选择 k 符号、b 符号与所过象限，再点「揭晓答案」核对。',
+    scenario:['由图像快速判断 k、b 的符号','由图像判断直线经过的象限','训练中考高频「一次函数图像与系数符号」读图题'],
+    figure:['隐藏解析式的蓝色直线','与 y 轴、x 轴的交点（揭晓后标出数值）','揭晓后显示真实解析式与对错反馈'],
+    example:[
+      '图像左低右高、与 y 轴交于正半轴：k>0、b>0，过一、二、三象限。',
+      '图像左高右低、与 y 轴交于负半轴：k<0、b<0，过二、三、四象限。'
+    ],
+    mistakes:[
+      '把「越陡」当成 k 的符号：陡峭只看 |k| 大小，符号只看升／降',
+      '找 b 时看成 x 轴交点：b 是 y 轴交点纵坐标，不是 x 轴交点',
+      '判断象限只凭 k：必须结合 b 的符号才能确定过哪三个象限'
+    ],
+    controls:[
+      {type:'choice',key:'qAnsK',label:'① k 的符号（看升降）',items:[
+        {value:1,label:'k > 0'},{value:-1,label:'k < 0'}]},
+      {type:'choice',key:'qAnsB',label:'② b 的符号（看 y 轴交点）',items:[
+        {value:1,label:'b > 0'},{value:-1,label:'b < 0'}]},
+      {type:'choice',key:'qAnsQ',label:'③ 经过的象限',items:[
+        {value:'一、二、三',label:'一二三'},{value:'一、三、四',label:'一三四'},
+        {value:'一、二、四',label:'一二四'},{value:'二、三、四',label:'二三四'}]},
+      {type:'button',key:'quizReveal',label:'揭晓答案',onclick:function(b,s){
+        if(s.qRevealed)return;
+        if(s.qAnsK==null||s.qAnsB==null||s.qAnsQ==null){s.qFeedback='⚠ 请先答完三题';return;}
+        s.qRevealed=true;
+        if(quizCorrect(s)){s.qStreak=(s.qStreak||0)+1;s.qBest=Math.max(s.qBest||0,s.qStreak);s.qFeedback='✓ 全对！真实式子：'+quizExpr(s);}
+        else{s.qStreak=0;s.qFeedback='✗ 再看一眼：'+quizExpr(s)+'　正确答案 k'+(quizSign(s.qk)>0?'>0':'<0')+'、b'+(quizSign(s.qb)>0?'>0':'<0')+'、过'+linQuads(s.qk,s.qb)+'象限';}
+      }},
+      {type:'button',key:'quizNext',label:'换一题 →',onclick:function(b,s){
+        quizNew(s);H.refreshControls(s);
+        // 清除选项选中态与对错着色
+        Array.prototype.forEach.call(document.querySelectorAll('#mh-controls [data-choice]'),function(g){
+          Array.prototype.forEach.call(g.children,function(x){x.classList.remove('on','correct','wrong');});
+        });
+      }}
+    ],
+    init:function(b,s){s.qStreak=0;s.qBest=0;quizNew(s);},
+    draw:function(b,s){
+      linAxes(b);
+      var k=s.qk,bb=s.qb,P=linP;
+      b.line(P(-6.3,-6.3*k+bb),P(6.3,6.3*k+bb),C.blue,3.4);
+      var Bp=P(0,bb);b.circle(Bp,8,C.orange,'#fff',2.6);
+      var show=s.qRevealed;
+      b.text({x:Bp.x+12,y:Bp.y-10},show?'B(0,'+linNF(bb,1)+')':'B(0, ?)',C.orange,12,'start',700);
+      if(Math.abs(k)>0.03){var xx=-bb/k;
+        if(xx>=-6.3&&xx<=6.3){var Xp=P(xx,0);b.circle(Xp,5,C.green,'#fff',2);
+          b.text({x:Xp.x,y:Xp.y+32},show?'('+linNF(xx,2)+',0)':'(?,0)',C.green,11,'middle',700);}}
+      if(show){
+        b.text({x:P(-5.8,4.0).x,y:P(-5.8,4.0).y},'真实：'+quizExpr(s),C.red,15,'start',800);
+      }
+      // 选项对错着色
+      if(show){
+        markChoice('qAnsK',quizSign(s.qk));markChoice('qAnsB',quizSign(s.qb));markChoice('qAnsQ',linQuads(s.qk,s.qb));
+      }
+      var sc=document.getElementById('mh-quiz-score');
+      if(sc)sc.innerHTML='连对 <b>'+(s.qStreak||0)+'</b>　最高连对 <b>'+(s.qBest||0)+'</b>';
+      b.readout((show?'✓ 已揭晓　':'? 请先判断　')+(s.qFeedback||'')+'　｜　点右侧选项作答');
+    }
+  };
+  function quizExpr(s){return 'y = '+linNF(s.qk,1)+'x '+(s.qb>=0?'+ ':'− ')+linNF(Math.abs(s.qb),1);}
+  function markChoice(key,truth){
+    var g=document.querySelector('[data-choice="'+key+'"]');
+    if(!g)return;
+    Array.prototype.forEach.call(g.children,function(x){
+      x.classList.remove('correct','wrong');
+      var v=x.getAttribute('data-value');
+      if(String(truth)===v)x.classList.add('correct');
+      else if(x.classList.contains('on'))x.classList.add('wrong');
+    });
+  }
+  R(linearQuiz);
+
+  /* ---------- 最优方案 · 线性规划入门（初中版） ----------
+     只用初中学过的知识：不等式组的解集（描点定一侧）、两直线交点=方程组解、
+     一次函数的上下平移（复用 b 平移的直觉）、把角点代回式子比大小。
+     不出现「可行域/目标函数/顶点定理」等高中术语。 */
+  var LPX=140,LPY=490,LPS=70;                 // 本模型专用坐标映射
+  function lpP(x,y){return{x:LPX+x*LPS,y:LPY-y*LPS};}
+  function lpT(w){return{x:(w.x-LPX)/LPS,y:(LPY-w.y)/LPS};}
+  function lpAxes(b){
+    b.line(lpP(-0.6,0),lpP(11,0),'var(--mh-muted)',1.8);
+    b.line(lpP(0,-1),lpP(0,6.6),'var(--mh-muted)',1.8);
+    b.poly([lpP(11,0),lpP(10.75,0.14),lpP(10.75,-0.14)],'var(--mh-muted)',1);
+    b.poly([lpP(0,6.6),lpP(-0.14,6.35),lpP(0.14,6.35)],'var(--mh-muted)',1);
+    b.text({x:lpP(11,0).x+8,y:lpP(11,0).y+4},'x','var(--mh-muted)',13,'start',700);
+    b.text({x:lpP(0,6.6).x+10,y:lpP(0,6.6).y-2},'y','var(--mh-muted)',13,'start',700);
+    for(var i=1;i<=10;i++){var px=lpP(i,0);
+      b.line({x:px.x,y:px.y-6},{x:px.x,y:px.y+6},'var(--mh-muted)',1);
+      b.text({x:px.x,y:px.y+18},String(i),'var(--mh-muted)',10,'middle');}
+    for(var j=1;j<=6;j++){var py=lpP(0,j);
+      b.line({x:py.x-6,y:py.y},{x:py.x+6,y:py.y},'var(--mh-muted)',1);
+      b.text({x:py.x-9,y:py.y+4},String(j),'var(--mh-muted)',10,'end');}
+    b.text({x:lpP(0,0).x-8,y:lpP(0,0).y+18},'0','var(--mh-muted)',10,'end');
+  }
+  var LP_VERTS=[{x:0,y:0,v:0},{x:8,y:0,v:24},{x:6,y:2,v:26},{x:0,y:5,v:20}];
+  var linearLP={
+    id:'linear-programming',domain:'practice',topic:'application',level:3,
+    title:'最优方案 · 线性规划入门',
+    brief:'摆摊卖 A、B 两种商品，本钱和货架有限——怎么进货赚最多？只用不等式组、交点与一次函数平移就能解决。',
+    keys:'线性规划 最优方案 不等式组 一次函数平移 交点 初中 应用题',
+    idea:'把「能选的方案」用不等式组圈成一块区域，把「赚钱多少」写成 P=3x+4y（即 y=−0.75x+P/4，是一条一次函数直线）。P 越大直线越往上平移，最后离开这块区域时经过的角点，就是最赚钱的方案。全程只用初中知识。',
+    proof:[
+      '设卖 A 商品 x 件、B 商品 y 件。限制条件：x≥0、y≥0（数量非负）；x+y≤8（货架只能放 8 件）；x+2y≤10（本钱 10 元，A 成本 1 元、B 成本 2 元）。',
+      '把每个不等式看成一条直线，用「代入 (0,0) 判断在哪一侧」描出所有能选的点，得到一块区域（蓝绿色阴影）。它的角点由两两直线的交点给出：解方程组 x+y=8 与 x+2y=10 得 (6,2)。',
+      '利润 P=3x+4y 改写成 y=−0.75x+P/4，是一次函数：P 增大时直线整体平移。把角点代回 P=3x+4y 比大小：(0,0)=0、(8,0)=24、(6,2)=26、(0,5)=20，最大 26——即 A 卖 6 件、B 卖 2 件。'
+    ],
+    formula:'P = 3x + 4y　⇔　y = −0.75x + P/4（一次函数平移）　｜　最大利润在角点取得',
+    tips:[
+      '先读限制条件：x+y≤8 是货架，x+2y≤10 是本钱，x、y 都不能为负',
+      '蓝绿色阴影是「所有能选的方案」；四个角点由边界直线相交得到',
+      '拖动橙色点或「利润线 P」滑块，看直线向上平移；它最后离开阴影的点就是最优',
+      '点「顶点代入表」把四个角点代回 P=3x+4y 比大小，验证平移的结论'
+    ],
+    legend:[{c:C.blue,t:'限制 x+y≤8'},{c:C.purple,t:'限制 x+2y≤10'},{c:C.green,t:'能选的方案区域'},{c:C.orange,t:'利润线 P=3x+4y'},{c:C.red,t:'最优角点'}],
+    hint:'平移利润线，最后离开区域的角点最优',
+    interaction:'拖动右侧「利润线 P」滑块或画布上橙色点，让利润线向上平移；观察它最后碰到阴影的哪个角点。',
+    scenario:['用不等式组刻画出所有可行方案','用一次函数平移找到最大利润','体会「限制条件 + 目标」的优化问题建模'],
+    figure:['蓝绿色阴影：满足全部限制的方案区域','四个角点及标注的最优角点 (6,2)','橙色利润线 y=−0.75x+P/4 随 P 平移'],
+    example:[
+      'A 商品赚 3 元、B 商品赚 4 元，货架 8 件、本钱 10 元。方案 (6,2)：6+2=8≤8，6+2×2=10≤10，利润 3×6+4×2=26 元，最大。',
+      '方案 (8,0) 虽然件数用满，但利润 3×8=24 元 < 26 元；方案 (0,5) 利润 4×5=20 元，都不是最优。'
+    ],
+    mistakes:[
+      '只看「货架放满」就选 (8,0)：件数多不等于赚钱多，要代入利润式比较',
+      '把限制条件的不等号方向画反：用测试点 (0,0) 代入判断阴影在哪一侧',
+      '以为最优点一定在区域中间：把利润线平移后会发现最优总在边界角点上'
+    ],
+    controls:[
+      {type:'range',key:'P',label:'利润线 P（上下平移）',min:0,max:32,step:0.5,digits:1},
+      {type:'buttons',key:'lpOps',items:[
+        {label:'自动平移演示',onclick:function(b,s){b.finishTween();b.tweenTo({P:26},2.2);}},
+        {label:'跳到最优 P=26',onclick:function(b,s){b.finishTween();s.P=26;H.refreshControls(s);}},
+        {label:'顶点代入表',onclick:function(b,s){s.showCalc=!s.showCalc;H.refreshControls(s);}}
+      ]}
+    ],
+    init:function(b,s){s.P=8;s.showCalc=false;},
+    draw:function(b,s){
+      var P=s.P||0;
+      lpAxes(b);
+      // 限制条件直线（虚线）
+      b.line(lpP(0,8),lpP(8,0),C.blue,2.4,'6 4');
+      b.line(lpP(0,5),lpP(10,0),C.purple,2.4,'6 4');
+      b.text({x:lpP(1.2,6.9).x,y:lpP(1.2,6.9).y},'x+y≤8（货架）',C.blue,12,'start',700);
+      b.text({x:lpP(6.4,1.1).x,y:lpP(6.4,1.1).y},'x+2y≤10（本钱）',C.purple,12,'start',700);
+      // 能选的方案区域（填充）
+      b.poly([lpP(0,0),lpP(8,0),lpP(6,2),lpP(0,5)],C.green,.18,C.green,2.2);
+      LP_VERTS.forEach(function(v){
+        var best=v.v===26;
+        b.circle(lpP(v.x,v.y),best?8:5,best?C.red:C.green,'#fff',best?2.8:2);
+        b.text({x:lpP(v.x,v.y).x+(best?12:8),y:lpP(v.x,v.y).y-8},
+          '('+v.x+','+v.y+')→'+v.v+(best?' 最优':''),best?C.red:'var(--mh-muted)',best?12:11,'start',best?800:500);
+      });
+      // 利润线 y=-0.75x+P/4，可拖橙色手柄改 P
+      var xmax=Math.min(10.6,P/3);
+      if(xmax>0.05){
+        var ytop=P/4;
+        b.line(lpP(0,ytop),lpP(xmax,ytop-0.75*xmax),C.orange,3.4);
+        var hp=lpP(0,ytop);
+        if(ytop<=6.5){b.circle(hp,7,C.orange,'#fff',2.4);b.handle(hp,'P',18);}
+        b.text({x:lpP(xmax,ytop-0.75*xmax).x-4,y:lpP(xmax,ytop-0.75*xmax).y-9},
+          '利润线 P='+linNF(P,1),C.orange,12,'end',700);
+      }
+      if(s.showCalc){
+        var tx=lpP(0,0).x+520,ty=lpP(0,6).y;
+        b.text({x:tx,y:ty},'角点代入 P=3x+4y',C.ink,13,'start',800);
+        LP_VERTS.forEach(function(v,i){
+          b.text({x:tx,y:ty+20+i*19},'('+v.x+','+v.y+') → 3×'+v.x+'+4×'+v.y+'='+v.v+(v.v===26?'  ← 最大':''),
+            v.v===26?C.red:'var(--mh-muted)',12,'start',v.v===26?800:500);
+        });
+      }
+      var atBest=Math.abs(P-26)<0.3;
+      b.readout('利润线 P=3x+4y　当前 P='+linNF(P,1)+
+        '　｜　四个角点利润：(0,0)=0、(8,0)=24、(6,2)=26、(0,5)=20'+
+        '　｜　最大 26 元（A 6 件、B 2 件）'+(atBest?'　✓ 已到最优':''));
+    },
+    onDrag:function(b,n,w){
+      if(n==='P'){
+        var m=lpT(w);
+        b.state.P=Math.max(0,Math.min(32,Math.round(4*m.y*2)/2));
+        H.refreshControls(b.state);
+      }
+    }
+  };
+  R(linearLP);
 
   /* ---------- 反比例函数 k 的几何意义 ---------- */
   var inverseFn={
@@ -4653,6 +5056,8 @@ math mtext{font-family:inherit}
   var BRAND_AUTHOR='纳川老师制作';
   /* 更新日志（新→旧）。每条：v=版本号(仅正式版) / date / text=更新内容 */
   var CHANGES=[
+    {v:'v1.2.0',date:'2026-11-25',text:'新增 4 个教学设计模型：变化率与残影（k=Δy/Δx 留痕）、看图猜式（判断 k/b 符号与象限、连对计分）、最优方案·线性规划入门（初中版不等式组+平移）、一次函数进阶页「预测模式」（调 k、b 对齐目标直线）。'},
+    {v:'',date:'2026-11-25',text:'交互与视觉打磨：公式统一 LaTeX/MathML 规范排版；移动端调节面板紧凑化；模型页顶栏随滚动智能收起；画布缩放仅保留锁定键右侧 +/− 按钮，禁用滚轮/双击/捏合；小卡片标签与标题同行完整显示，变号按钮连点状态修正。'},
     {v:'v1.1.0',date:'2026-11-25',text:'一次函数拆分为初级/进阶两页；对比直线默认隐藏、按需开启；k/b 变号改为缓入缓出动画；拖动不再选中文字；锁定提示上移；全站署名与版本号。'},
     {v:'',date:'2026-11-25',text:'开发流程规范化：建立 develop 开发分支，功能先集成验证再合并主分支；新增安全推送脚本，变更全程可追踪；更新日志支持分页浏览。'},
     {v:'v1.0.0',date:'2026-11-24',text:'首个正式发布版：几何手账风格统一全站，67 个交互模型，13 条几何恒等式门禁，移动端/平板画布优先适配。'},
@@ -5087,6 +5492,7 @@ math mtext{font-family:inherit}
           '<button class="mh-fold" id="mh-fold" aria-expanded="false"><span class="mh-fold-t">调节与操作</span><span class="mh-fold-caret">▾</span></button>'+
           '<div class="mh-side-body" id="mh-side-body">'+
             '<h3 class="mh-side-h">调节与操作</h3><p class="mh-side-sub">'+(m.hint||'拖动点、调节参数，观察规律')+'</p>'+
+            (m.scoreBadge?'<div class="mh-quiz-score" id="mh-quiz-score">连对 <b>0</b>　最高连对 <b>0</b></div>':'')+
             '<div id="mh-controls"></div>'+
             '<div class="mh-side-divider"></div>'+
             '<div class="mh-btnrow">'+

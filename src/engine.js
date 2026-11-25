@@ -359,6 +359,25 @@
           g.appendChild(b);
         });
         host.appendChild(g);
+      }else if(c.type==='choice'){
+        /* 单选选项组：按钮点击写入 state[key]，并以 .on 标记当前选项。
+           供「看图猜式」等答题模型使用；refreshControls 会同步选中态。 */
+        var cg=document.createElement('div');cg.className='mh-btnrow';
+        cg.setAttribute('data-choice',c.key);
+        c.items.forEach(function(it){
+          var cb=document.createElement('button');cb.className='mh-mini';
+          cb.textContent=it.label;cb.setAttribute('data-value',String(it.value));
+          if(state[c.key]===it.value)cb.classList.add('on');
+          cb.onclick=function(){
+            state[c.key]=it.value;
+            Array.prototype.forEach.call(cg.children,function(x){x.classList.remove('on');});
+            cb.classList.add('on');
+            if(c.onchange)c.onchange(board,state);
+            board.draw();
+          };
+          cg.appendChild(cb);
+        });
+        host.appendChild(cg);
       }else if(c.type==='button'){
         var btn=document.createElement('button');btn.className='mh-mini mh-wide';
         btn.id='mhb-'+c.key;btn.textContent=c.label;
@@ -382,6 +401,10 @@
       }
       var c=document.getElementById('mhc-'+k);
       if(c)c.checked=!!state[k];
+      var cg=document.querySelector('[data-choice="'+k+'"]');
+      if(cg)Array.prototype.forEach.call(cg.children,function(x){
+        x.classList.toggle('on',x.getAttribute('data-value')===String(state[k]));
+      });
     }
   }
 

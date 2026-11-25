@@ -34,6 +34,8 @@
   var BRAND_AUTHOR='纳川老师制作';
   /* 更新日志（新→旧）。每条：v=版本号(仅正式版) / date / text=更新内容 */
   var CHANGES=[
+    {v:'v1.2.0',date:'2026-11-25',text:'新增 4 个教学设计模型：变化率与残影（k=Δy/Δx 留痕）、看图猜式（判断 k/b 符号与象限、连对计分）、最优方案·线性规划入门（初中版不等式组+平移）、一次函数进阶页「预测模式」（调 k、b 对齐目标直线）。'},
+    {v:'',date:'2026-11-25',text:'交互与视觉打磨：公式统一 LaTeX/MathML 规范排版；移动端调节面板紧凑化；模型页顶栏随滚动智能收起；画布缩放仅保留锁定键右侧 +/− 按钮，禁用滚轮/双击/捏合；小卡片标签与标题同行完整显示，变号按钮连点状态修正。'},
     {v:'v1.1.0',date:'2026-11-25',text:'一次函数拆分为初级/进阶两页；对比直线默认隐藏、按需开启；k/b 变号改为缓入缓出动画；拖动不再选中文字；锁定提示上移；全站署名与版本号。'},
     {v:'',date:'2026-11-25',text:'开发流程规范化：建立 develop 开发分支，功能先集成验证再合并主分支；新增安全推送脚本，变更全程可追踪；更新日志支持分页浏览。'},
     {v:'v1.0.0',date:'2026-11-24',text:'首个正式发布版：几何手账风格统一全站，67 个交互模型，13 条几何恒等式门禁，移动端/平板画布优先适配。'},
@@ -468,6 +470,7 @@
           '<button class="mh-fold" id="mh-fold" aria-expanded="false"><span class="mh-fold-t">调节与操作</span><span class="mh-fold-caret">▾</span></button>'+
           '<div class="mh-side-body" id="mh-side-body">'+
             '<h3 class="mh-side-h">调节与操作</h3><p class="mh-side-sub">'+(m.hint||'拖动点、调节参数，观察规律')+'</p>'+
+            (m.scoreBadge?'<div class="mh-quiz-score" id="mh-quiz-score">连对 <b>0</b>　最高连对 <b>0</b></div>':'')+
             '<div id="mh-controls"></div>'+
             '<div class="mh-side-divider"></div>'+
             '<div class="mh-btnrow">'+
